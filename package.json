@@ -1,0 +1,9 @@
+{
+  "name": "rosmaro",
+  "version": "0.0.1",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "Łukasz Makuch",
+  "license": "MIT"
+}
