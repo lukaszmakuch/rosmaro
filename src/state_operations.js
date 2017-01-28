@@ -1,26 +1,7 @@
+const merge_contexts = require('./context').merge;
 
-const extract_current_history_deep = (flat_desc, state) =>
-{
-
-  const parents = state
-    .map(node => flat_desc[node].parent)
-    .filter(a => a);
-
-  const with_parent_as_key = node_id => ({ [flat_desc[node_id].parent]: node_id });
-  const is_machine = node_id => flat_desc[flat_desc[node_id].parent].type === "machine";
-
-  return state
-    .filter(node_id => flat_desc[node_id].parent)
-    .filter(is_machine)
-    .map(with_parent_as_key)
-    .concat(parents.length > 0 ? extract_current_history(flat_desc, parents) : [])
-};
-
-const extract_current_history = (flat_desc, state) =>
-  Object.assign.apply({}, [{}, ...extract_current_history_deep(flat_desc, state)])
-
+//turns a nested description into a flat one, taking the history into account
 const flatten = (desc, hist) => {
-
   let flat = {};
   let transitions = {};
 
@@ -122,51 +103,68 @@ const flatten = (desc, hist) => {
   return flat;
 };
 
-const follow_arrow = (flat_desc, targets) => {
-  var expanded_targets = [];
+const extract_current_history_deep = (flat_desc, nodes) =>
+{
+
+  const parents = nodes
+    .map(node => flat_desc[node].parent)
+    .filter(a => a);
+
+  const with_parent_as_key = node_id => ({ [flat_desc[node_id].parent]: node_id });
+  const is_machine = node_id => flat_desc[flat_desc[node_id].parent].type === "machine";
+
+  return nodes
+    .filter(node_id => flat_desc[node_id].parent)
+    .filter(is_machine)
+    .map(with_parent_as_key)
+    .concat(parents.length > 0 ? extract_current_history(flat_desc, parents) : [])
+};
+
+const extract_current_history = (flat_desc, state) =>
+  Object.assign.apply({}, [{}, ...extract_current_history_deep(flat_desc, state)])
+
+const follow_arrow = (flat_desc, target_nodes) => {
+  var expanded_nodes = [];
   var changed = false;
-  for (let one_target of targets) {
-    switch (flat_desc[one_target].type) {
+  for (let node of target_nodes) {
+    switch (flat_desc[node].type) {
       case 'leaf':
-        expanded_targets.push(one_target);
+        expanded_nodes.push(node);
         break;
       case 'composite':
-        expanded_targets = expanded_targets.concat(flat_desc[one_target].children);
+        expanded_nodes = expanded_nodes.concat(flat_desc[node].children);
         changed = true;
         break;
       case 'machine':
-        expanded_targets.push(flat_desc[one_target].entry_point);
+        expanded_nodes.push(flat_desc[node].entry_point);
         changed = true;
     }
   }
 
-  return changed ? follow_arrow(flat_desc, expanded_targets) : targets;
+  return changed ? follow_arrow(flat_desc, expanded_nodes) : target_nodes;
 }
 
-const shallow_follow_arrow = (node_state, flat_desc, events) => {
-  const arrow_from_it = flat_desc[node_state]["transitions"][events[node_state]];
+const shallow_follow_arrow = (node, flat_desc, arrow_by_node) => {
+  const arrow_from_it = flat_desc[node]["transitions"][arrow_by_node[node]];
   if (arrow_from_it) {
     return arrow_from_it;
   }
 
-  if (flat_desc[node_state].parent) {
-    const parent = flat_desc[node_state].parent;
+  if (flat_desc[node].parent) {
+    const parent = flat_desc[node].parent;
     return shallow_follow_arrow(
       parent,
       flat_desc,
-      Object.assign({}, events, {[parent]: events[node_state]})
+      Object.assign({}, arrow_by_node, {[parent]: arrow_by_node[node]})
     )
   }
-
 }
 
-const leave_highest_nodes = (flat_desc, state_change_desc) => {
-
+const leave_highest_nodes = (flat_desc, nodes) => {
   var highest_node_index = undefined;
   var highest_nodes = [];
 
-  for (let single_change_desc of state_change_desc) {
-    const target_node = single_change_desc.to;
+  for (const target_node of nodes) {
     const its_depth = flat_desc[target_node].depth;
     if (!highest_node_index || highest_node_index > its_depth) {
       highest_node_index = its_depth;
@@ -180,39 +178,55 @@ const leave_highest_nodes = (flat_desc, state_change_desc) => {
   return highest_nodes;
 }
 
-const origin_as_destination_if_empty = change_desc => {
-  if (!change_desc.to) {
-    return Object.assign({}, change_desc, {to: change_desc.from});
+/*
+Given { A: { arrow: "k", .. }, ... }
+Gives { A: "k", ... }
+*/
+const extract_arrows = transition_requests => {
+  let arrows = {};
+  for (node in transition_requests) {
+    arrows[node] = transition_requests[node].arrow
   }
-
-  return change_desc;
+  return arrows;
 }
 
-const get_next_state = (desc, state, hist, events) => {
-  const flat_desc = flatten(desc, hist);
+const extract_contexts = transition_requests => {
+  let contexts = [];
+  for (node in transition_requests) {
+    contexts.push(transition_requests[node].context);
+  }
 
-  const followed_arrows = state.map(node_state => ({
-    from: node_state,
-    to: shallow_follow_arrow(node_state, flat_desc, events)
-  })).map(origin_as_destination_if_empty)
+  return contexts;
+}
 
-  const highest_nodes = leave_highest_nodes(flat_desc, followed_arrows);
-  const new_state = follow_arrow(
-    flat_desc,
-    leave_highest_nodes(flat_desc, followed_arrows)
-  );
+const get_next_state = (desc, state, transition_requests) => {
+  const flat_desc = flatten(desc, state.history);
+  const arrow_by_node = extract_arrows(transition_requests);
 
-  const history = Object.assign({}, hist, extract_current_history(
+  const nodes_after_following_arrows = state.nodes.map(node => {
+    const dest = shallow_follow_arrow(node, flat_desc, arrow_by_node);
+    return dest ? dest : node;
+  })
+
+  const highest_nodes = leave_highest_nodes(flat_desc, nodes_after_following_arrows);
+  const deepest_nodes = follow_arrow(flat_desc, highest_nodes);
+
+  const history = Object.assign({}, state.history, extract_current_history(
     flat_desc,
     follow_arrow(
       flat_desc,
-      followed_arrows.map(arrow => arrow.to)
+      nodes_after_following_arrows
     )
   ));
 
-  return { state: new_state, history }
-};
+  const new_context = merge_contexts(extract_contexts(transition_requests));
 
+  return {
+    nodes: deepest_nodes,
+    history,
+    context: new_context
+  }
+};
 
 const get_entry_points = desc => {
   switch (desc.type) {
@@ -225,17 +239,17 @@ const get_entry_points = desc => {
   }
 }
 
-const get_initial_state_arr = (desc, name = "") => {
+const get_initial_nodes_as_array = (desc, name = "") => {
   switch (desc.type) {
     case 'machine':
-      var child_res = get_initial_state_arr(
+      var child_res = get_initial_nodes_as_array(
         desc.states.filter(state_desc => state_desc[0] == desc.entry_point)[0][1],
         desc.entry_point
       )
     break;
     case 'composite':
       var child_res = desc.states
-        .map(state_desc => get_initial_state_arr(state_desc[1], state_desc[0]))
+        .map(state_desc => get_initial_nodes_as_array(state_desc[1], state_desc[0]))
         .reduce((so_far, res) => so_far.concat(res), [])
     break;
     case 'prototype':
@@ -253,14 +267,12 @@ const get_initial_state_arr = (desc, name = "") => {
   return res
 }
 
-
-const get_initial_state = desc =>
-  get_initial_state_arr(desc, "")
+const get_initial_nodes = desc =>
+  get_initial_nodes_as_array(desc, "")
   .map(state_parts => state_parts.filter(a => a).join(":"))
-
 
 const get_node_prototype = (desc, node) => {
   return flatten(desc, {})[node].prototype;
 }
 
-module.exports = { flatten, get_next_state, extract_current_history, get_initial_state, get_node_prototype };
+module.exports = { flatten, get_next_state, extract_current_history, get_initial_nodes, get_node_prototype };

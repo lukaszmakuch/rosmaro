@@ -186,51 +186,6 @@ describe("flattening rosmaro description", function () {
   });
 });
 
-describe("getting the next state", function () {
-
-  it ("gets the next state with it's new history", function () {
-
-    const current_state = ["B"];
-    const current_history = {"a": "b"}
-
-    const expected_new_state = ["C:CA:CAB", "C:CB:CBB"];
-    const expected_new_history = {"a": "b", "C:CA": "C:CA:CAB", "C:CB": "C:CB:CBB"};
-
-    const events = {"B": "e"};
-    const new_state = state_operations.get_next_state(desc, current_state, current_history, events);
-
-    assert.deepEqual(
-      {
-        state: expected_new_state,
-        history: expected_new_history
-      },
-      new_state
-    );
-
-  });
-
-  it ("allows to travel the hierarchy up", function () {
-
-    const current_state = ["C:CA:CAB", "C:CB:CBB"];
-    const current_history = {};
-
-    const events = {"C:CA:CAB": "k", "C:CB:CBB": "d"};
-
-    const expected_new_state = ["B"];
-    const epected_new_history = {"C:CA": "C:CA:CAA"}
-
-    assert.deepEqual(
-      {
-        state: expected_new_state,
-        history: epected_new_history
-      },
-      state_operations.get_next_state(desc, current_state, current_history, events)
-    )
-
-  })
-
-});
-
 describe("extracting current history", function () {
   it("follows parents of the current state", function () {
 
@@ -264,12 +219,12 @@ describe("extracting current history", function () {
   });
 })
 
-describe("getting the initial state", function () {
+describe("getting initial nodes", function () {
   it ("is based only on the description of the whole Rosmaro", function () {
 
     assert.deepEqual(
       ["C:CA:CAB", "C:CB:CBB"],
-      state_operations.get_initial_state(desc)
+      state_operations.get_initial_nodes(desc)
     )
 
   });

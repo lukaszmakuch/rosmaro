@@ -9,7 +9,7 @@ describe("transitions", function () {
     //the storage is common for all operations
     const storage = build_storage();
 
-    for (const [action, expected_state] of expected_transitions) {
+    for (const [action, expected_nodes] of expected_transitions) {
 
       //for every operation, we can use a new Rosmaro instance, because
       //all mutable state should be held by the storage
@@ -17,15 +17,11 @@ describe("transitions", function () {
 
       //we want to check the initial state too, so we don't perform the transition
       if (action) {
-        var tmp = await rosmaro.state;
         await rosmaro[action]();
-
-        var tmp = await rosmaro.state;
       }
 
-      //reading the current state and comparing with the expected one
-      const actual_state = await rosmaro.state;
-      assert.deepEqual(expected_state, actual_state);
+      const actual_nodes = await rosmaro.nodes;
+      assert.deepEqual(expected_nodes, actual_nodes);
     }
   }
 
