@@ -1,5 +1,5 @@
-var { get_initial_nodes, get_node_prototype, get_next_state } = require('./state_operations');
-
+var { get_node_prototype, get_next_state } = require('./state_operations')
+var { get_initial_nodes } = require('./desc')
 
 const get_curr_state = async (storage, desc, rosmaro_id) => {
   const received_data = await storage.get_data(rosmaro_id);
@@ -13,20 +13,6 @@ const get_curr_state = async (storage, desc, rosmaro_id) => {
     context: {}
   };
 };
-
-const extend_node_prototype = (prototype, ctx, name, transition_requests) =>
-  Object.assign({}, prototype, {
-
-  context: ctx,
-
-  transition (arrow, context) {
-    transition_requests[name] = {
-      arrow: arrow,
-      context: context
-    };
-
-  }
-})
 
 module.exports = (id, desc, storage) => {
 
@@ -44,7 +30,7 @@ module.exports = (id, desc, storage) => {
         const state = await get_curr_state(storage, desc, id);
         const nodes = state.nodes.map(node => ({
           name: node,
-          obj: extend_node_prototype(get_node_prototype(desc, node), state.context, node, transition_requests)
+          obj: get_node_prototype(desc, node, state.context, transition_requests)
         }));
 
         const nodes_with_matching_method = nodes.filter(node => node.obj[prop_name]);

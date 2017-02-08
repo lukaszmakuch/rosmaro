@@ -1,107 +1,5 @@
 const merge_contexts = require('./context').merge;
-
-//turns a nested description into a flat one, taking the history into account
-const flatten = (desc, hist) => {
-  let flat = {};
-  let transitions = {};
-
-  var i = 0;
-
-  const visit = (name, desc, hist, so_far, depth) => {
-
-    let common_part = so_far.filter(a => a);
-    let composed_name = common_part.concat([name]).join(":");
-    let composer_parent_name = common_part.join(":");
-    composer_parent_name = (composer_parent_name) ? composer_parent_name : undefined;
-
-    switch(desc.type) {
-
-      case "prototype":
-        flat[composed_name] = {
-          depth: depth,
-          type: "leaf",
-          prototype: desc,
-          parent: composer_parent_name,
-          transitions: {}
-        }
-      break;
-
-      case "machine":
-
-        entry_point = desc.history && hist[composed_name]
-          ? hist[composed_name]
-          : common_part.concat([name, desc.entry_point]).join(":");
-
-          if (composed_name) {
-            flat[composed_name] = {
-              depth: depth,
-              type: "machine",
-              transitions: {},
-              parent: composer_parent_name,
-              entry_point: entry_point
-            }
-          }
-
-        for (const [child_name, child_desc, child_transitions] of desc.states) {
-
-          const full_name = common_part.concat([name, child_name]).filter(a => a).join(":");
-
-          transitions[full_name] = {};
-          for (const ev in child_transitions) {
-            const target_name = child_transitions[ev];
-            const full_target_name = common_part.concat([name, target_name]).filter(a => a).join(":");
-            transitions[full_name][ev] = full_target_name;
-          }
-
-          visit(
-            child_name,
-            child_desc,
-            hist,
-            so_far.concat([name]),
-            depth + 1
-          );
-
-        }
-      break;
-
-      case "composite":
-
-        let common = so_far.filter(a => a).concat([name]);
-
-        if(composed_name) {
-          flat[composed_name] = {
-            depth: depth,
-            transitions: {},
-            type: "composite",
-            parent: composer_parent_name,
-            children: desc.states
-            .map(name_and_model => common.concat([name_and_model[0]]).join(":"))
-          }
-
-        }
-
-        for (const [child_name, child_desc] of desc.states) {
-          visit(
-            child_name,
-            child_desc,
-            hist,
-            so_far.concat([name]),
-            depth + 1
-          );
-        }
-
-      break;
-    }
-
-  };
-
-  visit(undefined, desc, hist, [], -1);
-  for (const node in transitions) {
-    flat[node]["transitions"] = transitions[node];
-  }
-
-  return flat;
-};
+const flatten = require('./desc').flatten;
 
 const extract_current_history_deep = (flat_desc, nodes) =>
 {
@@ -152,10 +50,11 @@ const shallow_follow_arrow = (node, flat_desc, arrow_by_node) => {
 
   if (flat_desc[node].parent) {
     const parent = flat_desc[node].parent;
+    const map_arrow = flat_desc[node].map_leaving_transitions
     return shallow_follow_arrow(
       parent,
       flat_desc,
-      Object.assign({}, arrow_by_node, {[parent]: arrow_by_node[node]})
+      Object.assign({}, arrow_by_node, {[parent]: map_arrow(arrow_by_node[node])})
     )
   }
 }
@@ -228,51 +127,21 @@ const get_next_state = (desc, state, transition_requests) => {
   }
 };
 
-const get_entry_points = desc => {
-  switch (desc.type) {
-    case 'machine':
-      return [desc.entry_point]
-    case 'composite':
-      return desc.states.map(name_and_desc => name_and_desc[0])
-    default:
-      return [];
-  }
+const get_node_prototype = (desc, node_name, context, transition_requests) => {
+  const flatten_desc = flatten(desc, {})[node_name]
+  const raw_node_proto = flatten_desc.prototype
+  return Object.assign({}, raw_node_proto, {
+
+    context: flatten_desc.map_ctx_in(context),
+
+    transition (arrow, provided_context) {
+      transition_requests[node_name] = {
+        arrow: arrow,
+        context: provided_context ? flatten_desc.map_ctx_out(provided_context) : context
+      };
+
+    }
+  })
 }
 
-const get_initial_nodes_as_array = (desc, name = "") => {
-  switch (desc.type) {
-    case 'machine':
-      var child_res = get_initial_nodes_as_array(
-        desc.states.filter(state_desc => state_desc[0] == desc.entry_point)[0][1],
-        desc.entry_point
-      )
-    break;
-    case 'composite':
-      var child_res = desc.states
-        .map(state_desc => get_initial_nodes_as_array(state_desc[1], state_desc[0]))
-        .reduce((so_far, res) => so_far.concat(res), [])
-    break;
-    case 'prototype':
-      var child_res = [[]]
-    break;
-  }
-
-  const curr = [[name]]
-
-  let res = [];
-  for (let child_row of child_res) {
-    res.push([name].concat(child_row))
-  }
-
-  return res
-}
-
-const get_initial_nodes = desc =>
-  get_initial_nodes_as_array(desc, "")
-  .map(state_parts => state_parts.filter(a => a).join(":"))
-
-const get_node_prototype = (desc, node) => {
-  return flatten(desc, {})[node].prototype;
-}
-
-module.exports = { flatten, get_next_state, extract_current_history, get_initial_nodes, get_node_prototype };
+module.exports = { get_next_state, extract_current_history, get_node_prototype };
