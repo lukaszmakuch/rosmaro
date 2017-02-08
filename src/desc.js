@@ -42,7 +42,7 @@ const flatten = (desc, hist) => {
           so_far,
           depth,
           ctx => desc.map_input_context(map_ctx_in(ctx)),
-          ctx => desc.map_output_context(map_ctx_out(ctx)),
+          ctx => map_ctx_out(desc.map_output_context(ctx)),
           arrow_mapping_fn
         );
 

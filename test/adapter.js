@@ -7,6 +7,83 @@ const r = desc => build_rosmaro("id", desc, build_storage());
 
 describe("adapter", function () {
 
+  it("may be nested", async function () {
+
+    const desc = {
+      type: "machine",
+      entry_point: "A",
+      states: [
+        ["B", {
+          type: "adapter",
+          map_input_context(ctx) {
+            return { field_c: ctx.field_d }
+          },
+          map_output_context(ctx) {
+            return { field_d: ctx.field_c }
+          },
+          rename_leaving_transitions: {
+            "arrow_c": "arrow_d"
+          },
+          adapted: {
+            type: "adapter",
+            map_input_context(ctx) {
+              return { field_b: ctx.field_c }
+            },
+            map_output_context(ctx) {
+              return { field_c: ctx.field_b }
+            },
+            rename_leaving_transitions: {
+              "arrow_b": "arrow_c"
+            },
+            adapted: {
+              type: "adapter",
+              map_input_context(ctx) {
+                return { field_a: ctx.field_b }
+              },
+              map_output_context(ctx) {
+                return { field_b: ctx.field_a }
+              },
+              rename_leaving_transitions: {
+                "arrow_a": "arrow_b"
+              },
+              adapted: {
+                type: "prototype",
+                follow_arrow() {
+                  this.transition("arrow_a", {field_a : "from_B"})
+                },
+                get_ctx() {
+                  return this.context
+                }
+              }
+            }
+          }
+        }, {
+          "arrow_d": "A"
+        }],
+        ["A", {
+          type: "prototype",
+          get_ctx() {
+            return thix.context
+          },
+          follow_arrow() {
+            this.transition("arrow", {field_d: "from_A"})
+          }
+        }, {
+          "arrow": "B"
+        }]
+      ]
+    }
+
+    const rosmaro = r(desc)
+    await rosmaro.follow_arrow()
+    const B_context = await rosmaro.get_ctx()
+    await rosmaro.follow_arrow();
+    const A_context = await rosmaro.get_ctx();
+
+    assert.deepEqual(B_context, {"B": {field_a: "from_A"}});
+    //assert.deepEqual(A_context, {"A": {field_d: "from_B"}});
+  })
+
   it("maps context and transitions", async function () {
 
     const incompatible = {
