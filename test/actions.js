@@ -81,6 +81,50 @@ describe("node action", function () {
 
     })
 
+    it("is executed when re-entering a submachine", async function () {
+
+      let executed = false;
+
+      const A = {
+        type: "machine",
+        entry_point: "A",
+        states: [
+          ["A", {
+            type: "prototype",
+            on_entry() {
+              executed = true
+            },
+            leave() {
+              this.transition("arrow")
+            }
+          }, {"arrow": "A"}]
+        ]
+      }
+
+      const B = {
+        type: "prototype",
+        on_entry() {
+          this.transition("arrow")
+        }
+      }
+
+      const root = {
+        type: "machine",
+        entry_point: "A",
+        states: [
+          ["A", A, {"arrow": "B"}],
+          ["B", B, {"arrow": "A"}],
+        ]
+      }
+
+      const model = r(root)
+
+      assert(!executed)
+      await model.leave()
+      assert(executed)
+
+    })
+
     it("may cause a transition", async function () {
 
       const A = {
