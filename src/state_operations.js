@@ -118,7 +118,7 @@ const get_next_state = (desc, state, transition_requests) => {
     )
   ));
 
-  const new_context = merge_contexts(extract_contexts(transition_requests));
+  const new_context = merge_contexts([state.context, ...extract_contexts(transition_requests)]);
 
   return {
     nodes: deepest_nodes,

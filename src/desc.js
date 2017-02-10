@@ -1,7 +1,5 @@
 const build_leaving_transitions_mapping_fn = map => from => map[from];
 
-
-
 //turns a nested description into a flat one, taking the history into account
 const flatten = (desc, hist) => {
   let flat = {};
