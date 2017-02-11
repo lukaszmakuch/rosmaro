@@ -21,6 +21,19 @@ const get_nodes = (desc, state, transition_requests) => state.nodes.map(node => 
 
 const get_nodes_with_fn = (nodes, desired_fn) => nodes.filter(node => node.obj[desired_fn]);
 
+const get_names_of_nodes_requesting_transition = transition_requests => {
+  let names = []
+  for (node_name in transition_requests) {
+    names.push(node_name)
+  }
+  return names
+}
+
+const get_nodes_requesting_transition = (all_nodes, transition_requests) => {
+  const requesting_transition = get_names_of_nodes_requesting_transition(transition_requests)
+  return all_nodes.filter(node => requesting_transition.includes(node.name))
+}
+
 module.exports = (id, desc, storage) => {
 
   const rosmaro = new Proxy({}, {
@@ -42,12 +55,18 @@ module.exports = (id, desc, storage) => {
         const nodes_with_matching_method_results = await Promise.all(nodes_with_matching_method
           .map(node => node.obj[prop_name].apply(node.obj, arguments)));
 
+        const nodes_requesting_transition = get_nodes_requesting_transition(nodes, transition_requests)
+        const nodes_requesting_transition_with_before_leave_action = get_nodes_with_fn(nodes_requesting_transition, "before_leave");
+
         const call_result = nodes_with_matching_method.reduce(
           (so_far, node, i) => Object.assign({}, so_far, {[node.name]: nodes_with_matching_method_results[i]}),
           {}
         )
 
         const next_state = get_next_state(desc, state, transition_requests);
+
+        nodes_requesting_transition_with_before_leave_action.forEach(node => node.obj.context = next_state.context)
+        await Promise.all(nodes_requesting_transition_with_before_leave_action.map(node => node.obj["before_leave"]()))
 
         transition_requests = {};
         const new_nodes = get_nodes(desc, next_state, transition_requests)

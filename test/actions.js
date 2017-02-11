@@ -3,6 +3,44 @@ const r = require('./get_in_memory_rosmaro')
 
 describe("node action", function () {
 
+  describe("action before leave", function () {
+
+    it("is triggered before the node is left, but with the new context", async function () {
+
+      let context_before_leaving;
+
+      const model = r({
+        type: "machine",
+        entry_point: "A",
+        states: [
+
+          ["A", {
+            type: "prototype",
+            leave() {
+              this.transition("arrow", {for_arrow: "abc"})
+            },
+            before_leave() {
+              context_before_leaving = this.context
+            }
+          }, {
+            "arrow": "B"
+          }],
+
+          ["B", {
+            type: "prototype"
+          }, {}]
+
+        ]
+      })
+
+      assert(!context_before_leaving)
+      await model.leave()
+      assert.deepEqual({for_arrow: "abc"}, context_before_leaving)
+
+    })
+
+  })
+
   describe("action on entry", function () {
 
     it("doesn't apply to the initial state", async function () {
