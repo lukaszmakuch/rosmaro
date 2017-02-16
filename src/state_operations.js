@@ -3,7 +3,6 @@ const flatten = require('./desc').flatten;
 
 const extract_current_history_deep = (flat_desc, nodes) =>
 {
-
   const parents = nodes
     .map(node => flat_desc[node].parent)
     .filter(a => a);
@@ -43,9 +42,9 @@ const follow_arrow = (flat_desc, target_nodes) => {
 }
 
 const shallow_follow_arrow = (node, flat_desc, arrow_by_node) => {
-  const arrow_from_it = flat_desc[node]["transitions"][arrow_by_node[node]];
-  if (arrow_from_it) {
-    return arrow_from_it;
+  const transition = flat_desc[node]["transitions"][arrow_by_node[node]]
+  if (transition) {
+    return transition.next_state_name;
   }
 
   if (flat_desc[node].parent) {
@@ -98,6 +97,37 @@ const extract_contexts = transition_requests => {
   return contexts;
 }
 
+const get_transition_actions = (flat_desc, transition_requests) => {
+  let before_fns = []
+  let after_fns = []
+  for (node_name in transition_requests) {
+    const arrow = transition_requests[node_name].arrow
+    transition_desc = flat_desc[node_name].transitions[arrow]
+    if(!transition_desc) {
+      continue
+    }
+
+    before_fns.push(transition_desc.before_transition)
+    after_fns.push(transition_desc.after_transition)
+  }
+
+  const chain_fns = fns => async function () {
+    if (!fns.length) {
+      return;
+    }
+
+    const head = fns.slice(0, 1)[0]
+    const tail = fns.slice(1)
+    await Promise.resolve(head())
+    return chain_fns(tail)
+  }
+
+  return {
+    before: chain_fns(before_fns),
+    after: chain_fns(after_fns)
+  }
+}
+
 const get_next_state = (desc, state, transition_requests) => {
   const flat_desc = flatten(desc, state.history);
   const arrow_by_node = extract_arrows(transition_requests);
@@ -120,11 +150,15 @@ const get_next_state = (desc, state, transition_requests) => {
 
   const new_context = merge_contexts([state.context, ...extract_contexts(transition_requests)]);
 
-  return {
+  const next_state = {
     nodes: deepest_nodes,
     history,
     context: new_context
   }
+
+  const transition_actions = get_transition_actions(flat_desc, transition_requests)
+
+  return [next_state, transition_actions]
 };
 
 const get_node_prototype = (desc, node_name, context, transition_requests) => {

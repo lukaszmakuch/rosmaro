@@ -1,5 +1,60 @@
 const build_leaving_transitions_mapping_fn = map => from => map[from];
 
+/*
+
+given: "abc"
+gives {
+  next_state_name: "abc",
+  before_transition: fn,
+  after_transition: fn
+}
+
+given: [fn, fn, next_state_name, fn]
+gives: {
+  next_state_name: next_state_name,
+  before_transition: fn,
+  after_transition: fn
+}
+
+*/
+const flatten_transition_desc = transition_desc => {
+  if (typeof transition_desc === 'string') {
+    return {
+      next_state_name: transition_desc,
+      before_transition: async () => {},
+      after_transition: async () => {}
+    }
+  }
+
+  //if it's just a string, then
+  return transition_desc.reduce((flat_transition_desc, part) => {
+    //it's the name of the next state
+    if (typeof part === 'string') {
+      return Object.assign({}, flat_transition_desc, {
+        next_state_name: part
+      })
+    //it's some transition action
+    } else if (typeof part === 'function') {
+      const get_with_merged_fn = fn_name => Object.assign({}, flat_transition_desc, {
+        [fn_name]: async () => {
+          await Promise.resolve(flat_transition_desc[fn_name]())
+          return part()
+        }
+      })
+      //it's a before transition action
+      if (!flat_transition_desc["next_state_name"]) {
+        return get_with_merged_fn("before_transition")
+      //it's an after transition action
+      } else {
+        return get_with_merged_fn("after_transition")
+      }
+    }
+  }, {
+    before_transition: () => {},
+    after_transition: () => {},
+  })
+}
+
 //turns a nested description into a flat one, taking the history into account
 const flatten = (desc, hist) => {
   let flat = {};
@@ -71,9 +126,16 @@ const flatten = (desc, hist) => {
 
           transitions[full_name] = {};
           for (const ev in child_transitions) {
-            const target_name = child_transitions[ev];
-            const full_target_name = common_part.concat([name, target_name]).filter(a => a).join(":");
-            transitions[full_name][ev] = full_target_name;
+            const child_transition = flatten_transition_desc(child_transitions[ev]);
+
+            const full_target_name = common_part
+              .concat([name, child_transition.next_state_name])
+              .filter(a => a)
+              .join(":")
+
+            transitions[full_name][ev] = Object.assign({}, child_transition, {
+              next_state_name: full_target_name
+            });
           }
 
           visit(

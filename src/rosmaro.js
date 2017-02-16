@@ -36,6 +36,35 @@ const get_nodes_requesting_transition = (all_nodes, transition_requests) => {
 
 module.exports = (id, desc, storage) => {
 
+  const transition = async (desc, state, transition_requests) => {
+    if (Object.getOwnPropertyNames(transition_requests).length == 0) {
+      return state;
+    }
+
+    const nodes = get_nodes(desc, state, {})
+
+    const [next_state, transition_actions] = get_next_state(desc, state, transition_requests)
+    await transition_actions.before()
+
+    const nodes_with_before_leave_action =
+      get_nodes_with_fn(nodes, "before_leave")
+      .map(node => {
+        const new_node = Object.create(node)
+        new_node.obj.context = next_state.context
+        return new_node
+      })
+
+    await Promise.all(nodes_with_before_leave_action.map(node => node.obj["before_leave"]()))
+
+    var next_transition_requests = {};
+    const new_nodes = get_nodes(desc, next_state, next_transition_requests)
+    const new_nodes_with_on_entry_actions = get_nodes_with_fn(new_nodes, "on_entry")
+    await Promise.all(new_nodes_with_on_entry_actions.map(node => node.obj["on_entry"]()))
+    await transition_actions.after()
+
+    return transition(desc, next_state, next_transition_requests)
+  }
+
   const rosmaro = new Proxy({}, {
 
     get: (target, prop_name) => {
@@ -47,7 +76,7 @@ module.exports = (id, desc, storage) => {
       return async function () {
         var transition_requests = {};
 
-        const state = await get_curr_state(storage, desc, id);
+        const state = await get_curr_state(storage, desc, id); //out
         const nodes = get_nodes(desc, state, transition_requests)
 
         const nodes_with_matching_method = get_nodes_with_fn(nodes, prop_name);
@@ -63,18 +92,9 @@ module.exports = (id, desc, storage) => {
           {}
         )
 
-        const next_state = get_next_state(desc, state, transition_requests);
+        const next_state = await transition(desc, state, transition_requests)
 
-        nodes_requesting_transition_with_before_leave_action.forEach(node => node.obj.context = next_state.context)
-        await Promise.all(nodes_requesting_transition_with_before_leave_action.map(node => node.obj["before_leave"]()))
-
-        transition_requests = {};
-        const new_nodes = get_nodes(desc, next_state, transition_requests)
-        const new_nodes_with_on_entry_actions = get_nodes_with_fn(new_nodes, "on_entry")
-        await Promise.all(new_nodes_with_on_entry_actions.map(node => node.obj["on_entry"]()))
-
-        const state_after_on_entry_actions = get_next_state(desc, next_state, transition_requests);
-        await storage.set_data(id, state_after_on_entry_actions);
+        await storage.set_data(id, next_state);
 
         return call_result
       }
