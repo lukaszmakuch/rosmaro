@@ -3,6 +3,49 @@ const r = require('./get_in_memory_rosmaro')
 
 describe("node action", function () {
 
+  describe("actions after leave", function () {
+    it("is triggered after the node is left", async function () {
+
+      let log = [];
+
+      const model = r({
+        type: "machine",
+        entry_point: "A",
+        states: [
+
+          ["A", {
+            type: "prototype",
+            follow_arrow() {
+              this.transition("arrow")
+            },
+            before_leave() {
+              log.push('leaving A')
+            },
+            after_leave() {
+              log.push('left A')
+            }
+          }, {"arrow": "B"}],
+
+          ["B", {
+            type: "prototype",
+            on_entry() {
+              log.push("entering B");
+            }
+          }, {}]
+
+        ]
+      })
+
+      await model.follow_arrow()
+      assert.deepEqual([
+        "leaving A",
+        "entering B",
+        "left A"
+      ], log)
+
+    })
+  })
+
   describe("action before leave", function () {
 
     it("is triggered before the node is left, but with the new context", async function () {

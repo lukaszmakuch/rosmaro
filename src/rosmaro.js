@@ -46,6 +46,8 @@ module.exports = (id, desc, storage) => {
     const [next_state, transition_actions] = get_next_state(desc, state, transition_requests)
     await transition_actions.before()
 
+    const nodes_with_after_leave_action = get_nodes_with_fn(nodes, "after_leave")
+
     const nodes_with_before_leave_action =
       get_nodes_with_fn(nodes, "before_leave")
       .map(node => {
@@ -61,6 +63,8 @@ module.exports = (id, desc, storage) => {
     const new_nodes_with_on_entry_actions = get_nodes_with_fn(new_nodes, "on_entry")
     await Promise.all(new_nodes_with_on_entry_actions.map(node => node.obj["on_entry"]()))
     await transition_actions.after()
+
+    await Promise.all(nodes_with_after_leave_action.map(node => node.obj["after_leave"]()))
 
     return transition(desc, next_state, next_transition_requests)
   }
