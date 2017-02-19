@@ -1,5 +1,7 @@
-var { get_node_prototype, get_next_state } = require('./state_operations')
+var { get_node_prototype, get_next_state, add_nodes_ids } = require('./state_operations')
 var { get_initial_nodes } = require('./desc')
+const uuid = require('node-uuid')
+
 
 const get_curr_state = async (storage, desc, rosmaro_id) => {
   const received_data = await storage.get_data(rosmaro_id);
@@ -7,16 +9,21 @@ const get_curr_state = async (storage, desc, rosmaro_id) => {
     return received_data;
   }
 
-  return {
-    nodes: get_initial_nodes(desc),
+  const initial_nodes = get_initial_nodes(desc)
+
+  const new_state = add_nodes_ids({
+    nodes: initial_nodes,
     history: {},
     context: {}
-  };
+  })
+
+  await storage.set_data(rosmaro_id, new_state)
+  return new_state
 };
 
 const get_nodes = (desc, state, transition_requests) => state.nodes.map(node => ({
   name: node,
-  obj: get_node_prototype(desc, node, state.context, transition_requests)
+  obj: get_node_prototype(desc, node, state, transition_requests)
 }))
 
 const get_nodes_with_fn = (nodes, desired_fn) => nodes.filter(node => node.obj[desired_fn]);

@@ -1,5 +1,6 @@
 const merge_contexts = require('./context').merge;
 const flatten = require('./desc').flatten;
+const uuid = require('node-uuid')
 
 const extract_current_history_deep = (flat_desc, nodes) =>
 {
@@ -128,6 +129,15 @@ const get_transition_actions = (flat_desc, transition_requests) => {
   }
 }
 
+const add_nodes_ids = state => {
+  let nodes_ids = {};
+  for(let node of state.nodes) {
+    nodes_ids[node] = uuid.v1();
+  }
+
+  return Object.assign(state, {nodes_ids: nodes_ids})
+}
+
 const get_next_state = (desc, state, transition_requests) => {
   const flat_desc = flatten(desc, state.history);
   const arrow_by_node = extract_arrows(transition_requests);
@@ -150,32 +160,34 @@ const get_next_state = (desc, state, transition_requests) => {
 
   const new_context = merge_contexts([state.context, ...extract_contexts(transition_requests)]);
 
-  const next_state = {
+  const next_state = add_nodes_ids({
     nodes: deepest_nodes,
     history,
     context: new_context
-  }
+  })
 
   const transition_actions = get_transition_actions(flat_desc, transition_requests)
 
   return [next_state, transition_actions]
 };
 
-const get_node_prototype = (desc, node_name, context, transition_requests) => {
+const get_node_prototype = (desc, node_name, state, transition_requests) => {
   const flatten_desc = flatten(desc, {})[node_name]
   const raw_node_proto = flatten_desc.prototype
   return Object.assign({}, raw_node_proto, {
 
-    context: flatten_desc.map_ctx_in(context),
+    id: state.nodes_ids[node_name],
+
+    context: flatten_desc.map_ctx_in(state.context),
 
     transition (arrow, provided_context) {
       transition_requests[node_name] = {
         arrow: arrow,
-        context: provided_context ? flatten_desc.map_ctx_out(provided_context) : context
+        context: provided_context ? flatten_desc.map_ctx_out(provided_context) : state.context
       };
 
     }
   })
 }
 
-module.exports = { get_next_state, extract_current_history, get_node_prototype };
+module.exports = { get_next_state, extract_current_history, add_nodes_ids, get_node_prototype };

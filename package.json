@@ -5,5 +5,8 @@
     "test": "mocha --harmony"
   },
   "author": "Łukasz Makuch",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "node-uuid": "^1.4.7"
+  }
 }
