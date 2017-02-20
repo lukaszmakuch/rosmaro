@@ -1,9 +1,5 @@
-const assert = require('assert');
-const build_storage = require('./../src/in_memory_storage');
-const build_rosmaro = require('./../src/rosmaro');
-
-//builds an in memory rosmaro
-const r = desc => build_rosmaro("id", desc, build_storage());
+const assert = require('assert')
+const r = require('./get_in_memory_rosmaro')
 
 describe("context", function () {
 

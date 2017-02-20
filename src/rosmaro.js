@@ -41,7 +41,7 @@ const get_nodes_requesting_transition = (all_nodes, transition_requests) => {
   return all_nodes.filter(node => requesting_transition.includes(node.name))
 }
 
-module.exports = (id, desc, storage) => {
+module.exports = (id, desc, storage, lock) => {
 
   const transition = async (desc, state, transition_requests) => {
     if (Object.getOwnPropertyNames(transition_requests).length == 0) {
@@ -81,10 +81,15 @@ module.exports = (id, desc, storage) => {
     get: (target, prop_name) => {
 
       if (prop_name === 'nodes') {
-        return get_curr_state(storage, desc, id).then(state => state.nodes);
+        return lock(id).then(unlock => {
+          const res =  get_curr_state(storage, desc, id).then(state => state.nodes);
+          unlock()
+          return res
+        })
       }
 
       return async function () {
+        const unlock = await lock(id)
         var transition_requests = {};
 
         const state = await get_curr_state(storage, desc, id); //out
@@ -106,7 +111,7 @@ module.exports = (id, desc, storage) => {
         const next_state = await transition(desc, state, transition_requests)
 
         await storage.set_data(id, next_state);
-
+        await unlock()
         return call_result
       }
     }
