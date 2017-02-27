@@ -2,7 +2,6 @@ var { get_node_prototype, get_next_state, add_nodes_ids } = require('./state_ope
 var { get_initial_nodes } = require('./desc')
 const uuid = require('node-uuid')
 
-
 const get_curr_state = async (storage, desc, rosmaro_id) => {
   const received_data = await storage.get_data(rosmaro_id);
   if (received_data) {
@@ -76,6 +75,17 @@ module.exports = (id, desc, storage, lock) => {
     return transition(desc, next_state, next_transition_requests)
   }
 
+  const should_synchronize_call = (nodes, method_name) => {
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
+      if (!node.obj.unsynchronized || !node.obj.unsynchronized.includes(method_name)) {
+        return true
+      }
+    }
+
+    return false;
+  }
+
   const rosmaro = new Proxy({}, {
 
     get: (target, prop_name) => {
@@ -97,6 +107,11 @@ module.exports = (id, desc, storage, lock) => {
 
         const nodes_with_matching_method = get_nodes_with_fn(nodes, prop_name);
 
+        const unsynchronized = !should_synchronize_call(nodes_with_matching_method, prop_name)
+        if (unsynchronized) {
+          await unlock()
+        }
+
         const nodes_with_matching_method_results = await Promise.all(nodes_with_matching_method
           .map(node => node.obj[prop_name].apply(node.obj, arguments)));
 
@@ -111,7 +126,10 @@ module.exports = (id, desc, storage, lock) => {
         const next_state = await transition(desc, state, transition_requests)
 
         await storage.set_data(id, next_state);
-        await unlock()
+        if (!unsynchronized) {
+          await unlock()
+        }
+
         return call_result
       }
     }

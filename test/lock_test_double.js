@@ -17,7 +17,5 @@ module.exports = () => {
     return async () => { unlock() }
   }
 
-  return {
-    lock
-  }
+  return { lock }
 }
