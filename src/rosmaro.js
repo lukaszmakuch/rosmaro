@@ -40,7 +40,20 @@ const get_nodes_requesting_transition = (all_nodes, transition_requests) => {
   return all_nodes.filter(node => requesting_transition.includes(node.name))
 }
 
-module.exports = (id, desc, storage, lock) => {
+const make_locking_fn_throw_catchable_exceptions = lock => async id => {
+  try {
+    const unlock = await lock(id)
+    return async () => {
+      try {
+        await unlock()
+      } catch (err) { throw {type: "unable_to_unlock", previous: err} }
+    }
+  } catch (err) { throw {type: "unable_to_lock", previous: err} }
+}
+
+module.exports = (id, desc, storage, raw_lock) => {
+
+  const lock = make_locking_fn_throw_catchable_exceptions(raw_lock)
 
   const transition = async (desc, state, transition_requests) => {
     if (Object.getOwnPropertyNames(transition_requests).length == 0) {
@@ -98,8 +111,13 @@ module.exports = (id, desc, storage, lock) => {
         })
       }
 
+
+
+
       return async function () {
+
         const unlock = await lock(id)
+
         var transition_requests = {};
 
         const state = await get_curr_state(storage, desc, id); //out

@@ -1,7 +1,8 @@
 const assert = require('assert')
 const build_storage = require('./storage_test_double')
 const build_rosmaro = require('./../src/rosmaro')
-const lock = require('./lock_test_double')().lock
+const make_lock = require('./lock_test_double')
+let locks
 
 const get_locks = locks_count => {
   const make_lock = () => {
@@ -30,6 +31,10 @@ const get_locks = locks_count => {
 }
 
 describe("locking", function () {
+
+  beforeEach(function () {
+    locks = make_lock()
+  })
 
   describe("unsynchronized call", function () {
 
@@ -84,32 +89,9 @@ describe("locking", function () {
         ]
       }
 
-      const model = build_rosmaro("id", desc, storage, lock)
+      const model = build_rosmaro("id", desc, storage, locks.lock)
       return {model, unlock, storage}
     }
-
-    it("skips synchronization only if all composite methods are unsynchronized", async function () {
-      const {unlock, model} = get_model({
-        AA_unsync: true,
-        BA_unsync: false
-      })
-
-      const first_call = model.incr()
-      const second_call = model.incr()
-
-      unlock(0)
-      unlock(2)
-      unlock(1)
-      //second concurrent call
-      unlock(3)
-
-      await first_call
-      await second_call
-
-      const read_number = await model.read()
-      assert.deepEqual({"A:A": 2, "B:A": 2}, read_number)
-    })
-
 
     it("allows to skip synchronization", async function () {
       const {unlock, model} = get_model({
@@ -133,9 +115,31 @@ describe("locking", function () {
       assert.deepEqual({"A:A": 1, "B:A": 1}, read_number)
     })
 
+    it("skips synchronization only if all composite methods are unsynchronized", async function () {
+      const {unlock, model} = get_model({
+        AA_unsync: true,
+        BA_unsync: false
+      })
+
+      const first_call = model.incr()
+      const second_call = model.incr()
+
+      unlock(0)
+      unlock(2)
+      unlock(1)
+      //second concurrent call
+      unlock(3)
+
+      await first_call
+      await second_call
+
+      const read_number = await model.read()
+      assert.deepEqual({"A:A": 2, "B:A": 2}, read_number)
+    })
+
   })
 
-  it ("allows to assume the order in which methods are executed", async function () {
+  it("allows to assume the order in which methods are executed", async function () {
 
     const storage = build_storage()
 
@@ -158,7 +162,7 @@ describe("locking", function () {
       ]
     }
 
-    const r = () => build_rosmaro("test rosmaro", desc, storage, lock)
+    const r = () => build_rosmaro("test rosmaro", desc, storage, locks.lock)
     r().incr()
     r().incr()
     r().incr()
@@ -171,4 +175,87 @@ describe("locking", function () {
 
     assert.equal(got_number["A"], 3)
   })
+
+  it("always locks the stage of reading the state", async function () {
+
+    let method_called = false
+
+    const desc = {
+      type: "machine",
+      entry_point: "A",
+      states: [
+        ["A", {
+          type: "prototype",
+          unsynchronized: ["call_method"],
+          call_method() {
+            method_called = true
+          }
+        }, {"self": "A"}]
+      ]
+    }
+
+    const storage = build_storage()
+    const model = build_rosmaro("id", desc, storage, locks.lock)
+
+    storage.lock()
+
+    const call = model.call_method()
+      .then(() => method_called = true)
+
+    assert.equal(method_called, false)
+
+    storage.unlock()
+
+    await call
+
+    assert.equal(method_called, true)
+  })
+
+  describe("throwing exceptions", function () {
+
+    let model;
+
+    beforeEach(function () {
+      const desc = {
+        type: "machine",
+        entry_point: "A",
+        states: [
+          ["A", {
+            type: "prototype",
+            call() {}
+          }, {self: "A"}]
+        ]
+      }
+
+      model = build_rosmaro("id", desc, build_storage(), locks.lock)
+    })
+
+    it("may throw an exception when locking", async function () {
+      locks.make_locking_fail_with("locking failed")
+      let thrown
+      try { await model.call() } catch (e) { thrown = e }
+      assert.deepEqual(thrown, {
+        type: "unable_to_lock",
+        previous: "locking failed"
+      })
+    })
+
+    it("may throw an exception when unlocking", async function () {
+      locks.make_unlocking_fail_with("unlocking failed")
+      let thrown
+      try { await model.call() } catch (e) { thrown = e }
+      assert.deepEqual(thrown, {
+        type: "unable_to_unlock",
+        previous: "unlocking failed"
+      })
+    })
+
+  })
+
+  it("may throw an exception", function () {
+
+
+
+  })
+
 })
