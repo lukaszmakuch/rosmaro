@@ -59,7 +59,7 @@ describe("adapter", function () {
         ["A", {
           type: "prototype",
           get_ctx() {
-            return thix.context
+            return this.context
           },
           follow_arrow() {
             this.transition("arrow", {field_d: "from_A"})

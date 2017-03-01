@@ -252,10 +252,4 @@ describe("locking", function () {
 
   })
 
-  it("may throw an exception", function () {
-
-
-
-  })
-
 })
