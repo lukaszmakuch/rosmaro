@@ -82,8 +82,38 @@ describe("node action", function () {
 
     })
 
-    it("doesn't allow transitions", function () {
-      //todo
+    it("doesn't allow transitions", async function () {
+
+      const model = r({
+        type: "machine",
+        entry_point: "A",
+        states: [
+
+          ["A", {
+            type: "prototype",
+            leave() {
+              this.transition('x')
+            },
+            before_leave() {
+              this.transition('y')
+            }
+          }, {x: "B", y: "C"}],
+
+          ["B", {
+            type: "prototype"
+          }, {y: 'C'}],
+
+          ["C", {
+            type: "prototype"
+          }, {}]
+
+        ]
+      })
+
+      await model.leave()
+      const nodes = await model.nodes
+      assert.deepEqual(['B'], nodes)
+
     })
 
   })
