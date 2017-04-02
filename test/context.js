@@ -46,11 +46,57 @@ describe("context", function () {
   })
 
   it("only different parts are merged", async function() {
-    //todo: finish this
     const initial_context = { a: "a", b: "b" }
     const set_by_1st_composed_node = { a: "z", b: "b" }
     const set_by_2nd_composed_node = { a: "a", b: "x" }
     const expected_result = { a: "z", b: "x" }
+
+    const model = r({
+      type: "machine",
+      entry_point: "init",
+      states: [
+
+        ["init", {
+          type: "prototype",
+          init() {
+            this.transition("done", initial_context)
+          }
+        }, {done: "change_context"}],
+
+        ["change_context", {
+          type: "composite",
+          states: [
+            ["A", {
+              type: "prototype",
+              change_context() {
+                this.transition("changed", set_by_1st_composed_node)
+              }
+            }],
+            ["B", {
+              type: "prototype",
+              change_context() {
+                this.transition("changed", set_by_2nd_composed_node)
+              }
+            }],
+          ]
+        }, {changed: "context_reader"}],
+
+        ["context_reader", {
+          type: "prototype",
+          read_context() {
+            return this.context
+          }
+        }, {}]
+
+      ]
+    })
+
+    model.init()
+    model.change_context()
+    const actual_context = await model.read_context()
+
+    assert.deepEqual(actual_context['context_reader'], expected_result)
+
   })
 
   it("context of composite states is merged in case of simultaneous transitions", async function () {
