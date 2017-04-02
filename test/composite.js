@@ -1,5 +1,9 @@
 const assert = require('assert')
+const should = require('should')
 const r = require('./get_in_memory_rosmaro')
+const build_storage = require('./storage_test_double')
+const build_rosmaro = require('./../src/rosmaro')
+const lock = require('./lock_test_double')().lock
 
 describe("composite", function () {
 
@@ -141,6 +145,53 @@ describe("composite", function () {
     const nodes2 = await model.nodes
     assert.deepEqual(["B:A", "B:B:B"], nodes2)
 
+  })
+
+  it("doesn't allow to enter an invalid state", async function () {
+
+    const model = build_rosmaro("id", {
+      type: "machine",
+      entry_point: "C",
+      states: [
+
+        ["A", { type: "prototype" }, {}],
+
+        ["B", { type: "prototype" }, {}],
+
+        ["C", {
+          type: "composite",
+          states: [
+
+            ["A", {
+              type: "prototype",
+              follow_arrow() {
+                this.transition("x")
+              }
+            }],
+
+            ["B", {
+              type: "prototype",
+              follow_arrow() {
+                this.transition("y")
+              }
+            }],
+
+          ]
+        }, { x: "A", y: "B" }]
+
+      ]
+    }, build_storage(), lock)
+
+    let thrown = []
+    try { await model.follow_arrow() } catch (e) { thrown.push(e) }
+    try { await model.follow_arrow() } catch (e) { thrown.push(e) }
+    assert.deepEqual(
+      [
+        'transition to an invalid state ["",""]from ["A","B"]',
+        'transition to an invalid state ["",""]from ["A","B"]'
+      ],
+      thrown
+    )
   })
 
 })

@@ -202,6 +202,40 @@ const follow_many_down = (flat_desc, machines_history, nodes) => nodes.reduce((n
   return [...nodes, ...followed_down]
 }, [])
 
+const only_unique = elems => {
+  let unique_elems = []
+  for (let i = 0; i < elems.length; i++) {
+    const e = elems[i]
+    if (unique_elems.includes(e)) {
+      return false
+    } else {
+      unique_elems.push(e)
+    }
+  }
+
+  return true
+}
+
+/*
+nodes like ["A", "B"]
+throw an exception if this state is invalid
+*/
+const deny_unless_valid_state = (flat_desc, nodes) => {
+  //if it's a child of a composite, then put the composite instead of the node itself
+  const not_composite_nodes = nodes.map(n => {
+    const parent = flat_desc[n].parent
+    const parent_desc = flat_desc[parent]
+    return parent_desc && parent_desc.type == 'composite'
+      ? parent
+      : n
+  })
+  const unique_nodes = unique(not_composite_nodes)
+  const parents = unique_nodes.map(n => flat_desc[n].parent)
+  if (!only_unique(parents)) {
+    throw "transition to an invalid state " + JSON.stringify(parents) + "from " + JSON.stringify(unique_nodes)
+  }
+}
+
 /*
 nodes: [{node: "A", active: true, id: "abc"}, {node: "B:C:D", active: false, id: "qwe"}]
 arrows_to_follow: {"B:C:D": "x"},
@@ -212,6 +246,7 @@ result: {
   machines_history,
   changed_nodes: ["A", "B:C:D"]
 }
+it may throw an exception if following into an invalid state
 */
 const follow_many_up = (flat_desc, nodes, arrows_to_follow) => {
 
@@ -245,6 +280,10 @@ const follow_many_up = (flat_desc, nodes, arrows_to_follow) => {
     )
   })
 
+  deny_unless_valid_state(
+    flat_desc,
+    followed_up.map(n => n.next_state_name)
+  )
 
   const merged = followed_up.reduce((so_far, followed_node) => {
     return {

@@ -66,7 +66,7 @@ const flatten = desc => {
     let common_part = so_far.filter(a => a);
     let composed_name = common_part.concat([name]).join(":");
     let composer_parent_name = common_part.join(":");
-    composer_parent_name = composer_parent_name ? composer_parent_name : undefined;
+    composer_parent_name = composer_parent_name ? composer_parent_name : '';
     switch(desc.type) {
 
       case "prototype":
@@ -152,18 +152,15 @@ const flatten = desc => {
 
         let common = so_far.filter(a => a).concat([name]);
 
-        if(composed_name) {
-          flat[composed_name] = {
-            map_ctx_in,
-            map_ctx_out,
-            map_leaving_transitions,
-            depth: depth,
-            transitions: {},
-            type: "composite",
-            parent: composer_parent_name,
-            children: desc.states
-            .map(name_and_model => common.concat([name_and_model[0]]).join(":"))
-          }
+        flat[composed_name] = {
+          map_ctx_in,
+          map_ctx_out,
+          map_leaving_transitions,
+          depth: depth,
+          transitions: {},
+          type: "composite",
+          parent: composer_parent_name,
+          children: desc.states.map(name_and_model => common.concat([name_and_model[0]]).filter(a => a).join(":"))
         }
 
         for (const [child_name, child_desc] of desc.states) {
