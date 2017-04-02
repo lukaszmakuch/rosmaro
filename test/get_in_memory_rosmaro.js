@@ -1,5 +1,5 @@
-const build_storage = require('./../src/in_memory_storage')
+const build_storage = require('./storage_test_double')
 const build_rosmaro = require('./../src/rosmaro')
-const lock = require('./lock_test_double')().lock
+const lock_mock = require('./lock_test_double')
 
-module.exports = desc => build_rosmaro(Math.random(), desc, build_storage(), lock)
+module.exports = desc => build_rosmaro(desc, build_storage(), lock_mock().lock)

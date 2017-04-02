@@ -28,18 +28,18 @@ const get_initial_state = desc => ({
   nodes: get_initial_nodes(desc).map(node => ({ node, id: new_node_id() }))
 })
 
-const get_curr_state = async (storage, desc, rosmaro_id) => {
-  const received_data = await storage.get_data(rosmaro_id);
+const get_curr_state = async (storage, desc) => {
+  const received_data = await storage.get_data()
   if (received_data) {
-    return received_data;
+    return received_data
   }
 
   const new_state = get_initial_state(desc)
-  await storage.set_data(rosmaro_id, new_state)
+  await storage.set_data(new_state)
   return new_state
 };
 
-module.exports = (id, desc, raw_storage, raw_lock) => {
+module.exports = (desc, raw_storage, raw_lock) => {
   const storage = make_storage_throw_catchable_errors(raw_storage)
   const lock = make_locking_fn_throw_catchable_errors(raw_lock)
   const flat_desc = flatten(desc)
@@ -51,9 +51,9 @@ module.exports = (id, desc, raw_storage, raw_lock) => {
       //consider removing it
       if (prop_name === 'nodes') {
         return (async () => {
-          const unlock = await lock(id)
+          const unlock = await lock()
           try {
-            const state = await get_curr_state(storage, desc, id)
+            const state = await get_curr_state(storage, desc)
             return state.nodes.map(n => n.node)
           } finally {
             unlock()
@@ -61,11 +61,19 @@ module.exports = (id, desc, raw_storage, raw_lock) => {
         })()
       }
 
+      if (prop_name === 'remove') {
+        return async () => {
+          await rosmaro.before_leave()
+          await rosmaro.after_leave()
+          await storage.remove_data()
+        }
+      }
+
       return async function () {
 
-        const unlock = await lock(id)
+        const unlock = await lock()
         const state = await get_or_trigger(
-          () => get_curr_state(storage, desc, id),
+          () => get_curr_state(storage, desc),
           unlock
         )
 
@@ -87,7 +95,7 @@ module.exports = (id, desc, raw_storage, raw_lock) => {
             arguments
           )
 
-          await storage.set_data(id, next_state.state)
+          await storage.set_data(next_state.state)
           return next_state.call_results
         } finally {
           if (synchronized) await unlock()
@@ -96,8 +104,8 @@ module.exports = (id, desc, raw_storage, raw_lock) => {
       }
     }
 
-  });
+  })
 
-  return rosmaro;
+  return rosmaro
 
-};
+}

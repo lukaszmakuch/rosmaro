@@ -9,7 +9,5 @@
   "dependencies": {
     "node-uuid": "^1.4.7"
   },
-  "devDependencies": {
-    "should": "^11.2.1"
-  }
+  "devDependencies": {}
 }

@@ -1,9 +1,8 @@
 const assert = require('assert')
-const should = require('should')
 const r = require('./get_in_memory_rosmaro')
 const build_storage = require('./storage_test_double')
 const build_rosmaro = require('./../src/rosmaro')
-const lock = require('./lock_test_double')().lock
+const lock_mock = require('./lock_test_double')
 
 describe("composite", function () {
 
@@ -149,7 +148,7 @@ describe("composite", function () {
 
   it("doesn't allow to enter an invalid state", async function () {
 
-    const model = build_rosmaro("id", {
+    const model = build_rosmaro({
       type: "machine",
       entry_point: "C",
       states: [
@@ -180,7 +179,7 @@ describe("composite", function () {
         }, { x: "A", y: "B" }]
 
       ]
-    }, build_storage(), lock)
+    }, build_storage(), lock_mock().lock)
 
     let thrown = []
     try { await model.follow_arrow() } catch (e) { thrown.push(e) }

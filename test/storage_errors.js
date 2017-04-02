@@ -1,7 +1,7 @@
 const assert = require('assert')
 const build_storage = require('./storage_test_double')
 const build_rosmaro = require('./../src/rosmaro')
-const lock = require('./lock_test_double')().lock
+const lock_mock = require('./lock_test_double')
 
 describe("storage error", function () {
 
@@ -11,7 +11,6 @@ describe("storage error", function () {
   beforeEach(function () {
     storage = build_storage()
     model = build_rosmaro(
-      "id",
       {
         type: "machine",
         entry_point: "A",
@@ -25,7 +24,7 @@ describe("storage error", function () {
         ]
       },
       storage,
-      lock
+      lock_mock().lock
     )
   })
 

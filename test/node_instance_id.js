@@ -1,7 +1,7 @@
 const assert = require('assert')
-const build_storage = require('./../src/in_memory_storage')
+const build_storage = require('./storage_test_double')
 const build_rosmaro = require('./../src/rosmaro')
-const lock = require('./lock_test_double')().lock
+const lock_mock = require('./lock_test_double')
 
 describe("node instance id", function () {
 
@@ -36,7 +36,7 @@ describe("node instance id", function () {
     }
 
     const storage = build_storage()
-    const r = () => build_rosmaro("test rosmaro", desc, storage, lock)
+    const r = () => build_rosmaro(desc, storage, lock_mock().lock)
 
     let A_id1 = await r().get_id()
     A_id1 = A_id1["A"]
@@ -44,6 +44,7 @@ describe("node instance id", function () {
     await r().next()
 
     let B_id1 = await r().get_id()
+
     B_id1 = B_id1["B"]
 
     await r().loop()
@@ -84,7 +85,7 @@ describe("node instance id", function () {
     }
 
     const storage = build_storage()
-    const r = () => build_rosmaro("test rosmaro", desc, storage, lock)
+    const r = () => build_rosmaro(desc, storage, lock_mock().lock)
 
     const read_ids = await r().get_id()
 

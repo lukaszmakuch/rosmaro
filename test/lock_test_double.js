@@ -1,5 +1,5 @@
 module.exports = () => {
-  const locked = {}
+  let locked = []
   let exception_to_throw_on_lock
   let exception_to_throw_on_unlock
 
@@ -16,14 +16,10 @@ module.exports = () => {
     exception_to_throw_on_unlock = exception
   }
 
-  const lock = async resource_name => {
+  const lock = async () => {
 
     if (exception_to_throw_on_lock) {
       throw exception_to_throw_on_lock
-    }
-
-    if (!locked[resource_name]) {
-      locked[resource_name] = []
     }
 
     let unlock;
@@ -31,8 +27,8 @@ module.exports = () => {
       unlock = resolve
     })
 
-    const previous_locks = Promise.all(locked[resource_name])
-    locked[resource_name].push(its_lock)
+    const previous_locks = Promise.all(locked)
+    locked.push(its_lock)
     await previous_locks
     return async () => {
       if (exception_to_throw_on_unlock) {

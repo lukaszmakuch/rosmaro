@@ -1,7 +1,7 @@
 const assert = require('assert')
 const build_storage = require('./storage_test_double')
 const build_rosmaro = require('./../src/rosmaro')
-const lock = require('./lock_test_double')().lock
+const lock_mock = require('./lock_test_double')
 
 describe("error throwing method", function () {
   it("doesn't cause a deadlock", async function () {
@@ -9,7 +9,6 @@ describe("error throwing method", function () {
     let call_count = 0
 
     const model = build_rosmaro(
-      "id",
       {
         type: "machine",
         entry_point: "A",
@@ -24,7 +23,7 @@ describe("error throwing method", function () {
         ]
       },
       build_storage(),
-      lock
+      lock_mock().lock
     )
 
     let thrown = []

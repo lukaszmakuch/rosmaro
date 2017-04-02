@@ -89,7 +89,7 @@ describe("locking", function () {
         ]
       }
 
-      const model = build_rosmaro("id", desc, storage, locks.lock)
+      const model = build_rosmaro(desc, storage, locks.lock)
       return {model, unlock, storage}
     }
 
@@ -162,7 +162,7 @@ describe("locking", function () {
       ]
     }
 
-    const r = () => build_rosmaro("test rosmaro", desc, storage, locks.lock)
+    const r = () => build_rosmaro(desc, storage, locks.lock)
     r().incr()
     r().incr()
     r().incr()
@@ -195,7 +195,7 @@ describe("locking", function () {
     }
 
     const storage = build_storage()
-    const model = build_rosmaro("id", desc, storage, locks.lock)
+    const model = build_rosmaro(desc, storage, locks.lock)
 
     storage.lock()
 
@@ -227,7 +227,7 @@ describe("locking", function () {
         ]
       }
 
-      model = build_rosmaro("id", desc, build_storage(), locks.lock)
+      model = build_rosmaro(desc, build_storage(), locks.lock)
     })
 
     it("may throw an exception when locking", async function () {

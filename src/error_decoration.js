@@ -1,19 +1,24 @@
 const make_storage_throw_catchable_errors = storage => ({
-  async get_data(id) {
+  async get_data() {
     try {
-      return await storage.get_data(id)
+      return await storage.get_data()
     } catch (err) { throw {type: "unable_to_read_data", previous: err} }
   },
-  async set_data(id, data) {
+  async set_data(data) {
     try {
-      return await storage.set_data(id, data)
+      return await storage.set_data(data)
     } catch (err) { throw {type: "unable_to_write_data", previous: err} }
+  },
+  async remove_data() {
+    try {
+      return await storage.remove_data()
+    } catch (err) { throw {type: "unable_to_remove_data", previous: err} }
   }
 })
 
-const make_locking_fn_throw_catchable_errors = lock => async id => {
+const make_locking_fn_throw_catchable_errors = lock => async () => {
   try {
-    const unlock = await lock(id)
+    const unlock = await lock()
     return async () => {
       try {
         await unlock()

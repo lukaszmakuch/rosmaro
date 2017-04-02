@@ -1,8 +1,7 @@
 module.exports = () => {
-
-  const data = {};
-  var locked = false;
-  var actions = [];
+  let data = undefined
+  var locked = false
+  var actions = []
 
   const execute_actions = () => {
     actions.forEach(a => a())
@@ -13,6 +12,10 @@ module.exports = () => {
   var reading_error
 
   return {
+
+    is_empty() {
+      return !data
+    },
 
     fix() {
       writing_error = undefined
@@ -36,12 +39,12 @@ module.exports = () => {
       this.locked = false;
     },
 
-    get_data(rosmaro_id) {
+    get_data() {
       const res = new Promise((resolve, reject) => {
         const to_throw = reading_error
         const action = () => {
           if (to_throw) reject(to_throw)
-          else resolve(data[rosmaro_id])
+          else resolve(data)
         }
         actions.push(action)
       })
@@ -49,14 +52,14 @@ module.exports = () => {
       return res
     },
 
-    set_data(rosmaro_id, new_state_data) {
+    set_data(new_state) {
       const res = new Promise((resolve, reject) => {
         const to_throw = writing_error
         const action = () => {
           if (to_throw) {
             reject(to_throw)
           } else {
-            data[rosmaro_id] = new_state_data
+            data = new_state
             resolve()
           }
         }
@@ -66,5 +69,9 @@ module.exports = () => {
       return res
     },
 
+    remove_data() {
+      data = undefined
+    }
+
   }
-};
+}

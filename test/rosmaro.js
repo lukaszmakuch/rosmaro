@@ -1,7 +1,7 @@
 const assert = require('assert');
-const build_storage = require('./../src/in_memory_storage');
+const build_storage = require('./storage_test_double');
 const build_rosmaro = require('./../src/rosmaro');
-const lock = require('./lock_test_double')().lock
+const lock_mock = require('./lock_test_double')
 
 describe("transitions", function () {
 
@@ -14,7 +14,7 @@ describe("transitions", function () {
 
       //for every operation, we can use a new Rosmaro instance, because
       //all mutable state should be held by the storage
-      const rosmaro = build_rosmaro("it's id", rosmaro_desc, storage, lock);
+      const rosmaro = build_rosmaro(rosmaro_desc, storage, lock_mock().lock);
 
       //we want to check the initial state too, so we don't perform the transition
       if (action) {
