@@ -6,7 +6,7 @@ const lock_mock = require('./lock_test_double')
 
 describe("composite", function () {
 
-  it("allows many transactions withing left nodes", async function () {
+  it("allows many transactions within left nodes", async function () {
 
     const A = {
       type: "prototype",
