@@ -133,7 +133,7 @@ const build_node_obj = (node_desc, id, context) => {
           transition_request = {arrow, context}
         }
       })
-      return async () => {
+      return async function() {
         const call_result = await stateful_instance[prop_name].apply(stateful_instance, arguments)
         return {call_result, transition_request}
       }

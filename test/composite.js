@@ -193,4 +193,42 @@ describe("composite", function () {
     )
   })
 
+  it("calls nodes in the same order as they appear on the list", async function () {
+
+    let log = []
+
+    const model = r({
+      type: "composite",
+      states: [
+
+        ["A", {
+          type: "prototype",
+          writeOn(log) {
+            log.push("A")
+          }
+        }],
+
+        ["B", {
+          type: "prototype",
+          writeOn(log) {
+            log.push("B")
+          }
+        }],
+
+        ["C", {
+          type: "prototype",
+          writeOn(log) {
+            log.push("C")
+          }
+        }],
+
+      ]
+    })
+
+    await model.writeOn(log)
+
+    assert.deepEqual(["A", "B", "C"], log)
+
+  })
+
 })
