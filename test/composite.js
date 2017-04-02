@@ -3,6 +3,79 @@ const r = require('./get_in_memory_rosmaro')
 
 describe("composite", function () {
 
+  it("allows many transactions withing left nodes", async function () {
+
+    const A = {
+      type: "prototype",
+      on_entry() {
+        this.transition("e")
+      }
+    }
+
+    const BA = {
+      type: "prototype",
+      x() {
+        this.transition("x")
+      }
+    }
+
+    const BB = {
+      type: "machine",
+      entry_point: "A",
+      states: [
+
+        ["A", {
+          type: "prototype",
+          x() {
+            this.transition("x")
+          }
+        }, {x: "B"}],
+
+        ["B", {
+          type: "prototype",
+          on_entry() {
+            this.transition("e")
+          }
+        }, {e: "C"}],
+
+        ["C", {
+          type: "prototype",
+          on_entry() {
+            this.transition("e")
+          }
+        }, {e: "D"}],
+
+        ["D", {
+          type: "prototype"
+        }, {}],
+
+      ]
+    }
+
+    const B = {
+      type: "composite",
+      states: [
+        ["A", BA],
+        ["B", BB]
+      ]
+    }
+
+    const model = r({
+      type: "machine",
+      entry_point: "B",
+      states: [
+        ["A", A, {e: "B"}],
+        ["B", B, {x: "A"}]
+      ]
+    })
+
+    await model.x()
+
+    const nodes = await model.nodes
+    assert.deepEqual(["B:A", "B:B:D"], nodes)
+
+  })
+
   it("allows transitions on different levels", async function () {
 
     var entered_BBB = false
