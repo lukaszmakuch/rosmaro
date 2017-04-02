@@ -59,21 +59,16 @@ const shallow_follow_arrow = (node, flat_desc, arrow_by_node) => {
   }
 }
 
+const get_highest_level = (flat_desc, nodes) => Math.min.apply(null, nodes.map(node => flat_desc[node].depth))
+
+const leave_unique_nodes = nodes => nodes.reduce(
+  (uniques, node) => uniques.includes(node) ? uniques : [...uniques, node],
+  []
+)
+
 const leave_highest_nodes = (flat_desc, nodes) => {
-  var highest_node_index = undefined;
-  var highest_nodes = [];
-
-  for (const target_node of nodes) {
-    const its_depth = flat_desc[target_node].depth;
-    if (!highest_node_index || highest_node_index > its_depth) {
-      highest_node_index = its_depth;
-      highest_nodes = [target_node];
-      continue;
-    }
-
-    highest_nodes.push(target_node);
-  }
-
+  const highest_level = get_highest_level(flat_desc, nodes)
+  const highest_nodes = nodes.filter(node => flat_desc[node].depth == highest_level)
   return highest_nodes;
 }
 
@@ -98,6 +93,17 @@ const extract_contexts = transition_requests => {
   return contexts;
 }
 
+const chain_fns = fns => async function () {
+  if (!fns.length) {
+    return;
+  }
+
+  const head = fns.slice(0, 1)[0]
+  const tail = fns.slice(1)
+  await head()
+  return chain_fns(tail)
+}
+
 const get_transition_actions = (flat_desc, transition_requests) => {
   let before_fns = []
   let after_fns = []
@@ -110,17 +116,6 @@ const get_transition_actions = (flat_desc, transition_requests) => {
 
     before_fns.push(transition_desc.before_transition)
     after_fns.push(transition_desc.after_transition)
-  }
-
-  const chain_fns = fns => async function () {
-    if (!fns.length) {
-      return;
-    }
-
-    const head = fns.slice(0, 1)[0]
-    const tail = fns.slice(1)
-    await Promise.resolve(head())
-    return chain_fns(tail)
   }
 
   return {
@@ -147,8 +142,8 @@ const get_next_state = (desc, state, transition_requests) => {
     return dest ? dest : node;
   })
 
-  const highest_nodes = leave_highest_nodes(flat_desc, nodes_after_following_arrows);
-  const deepest_nodes = follow_arrow(flat_desc, highest_nodes);
+  const highest_unique_nodes = leave_unique_nodes(leave_highest_nodes(flat_desc, nodes_after_following_arrows))
+  const deepest_nodes = follow_arrow(flat_desc, highest_unique_nodes)
 
   const history = Object.assign({}, state.history, extract_current_history(
     flat_desc,
@@ -156,9 +151,9 @@ const get_next_state = (desc, state, transition_requests) => {
       flat_desc,
       nodes_after_following_arrows
     )
-  ));
+  ))
 
-  const new_context = merge_contexts([state.context, ...extract_contexts(transition_requests)]);
+  const new_context = merge_contexts([state.context, ...extract_contexts(transition_requests)])
 
   const next_state = add_nodes_ids({
     nodes: deepest_nodes,

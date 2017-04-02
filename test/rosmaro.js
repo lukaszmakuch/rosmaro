@@ -55,7 +55,6 @@ describe("transitions", function () {
 
     const CA = {
       type: "machine",
-      history: true,
       entry_point: "CAB",
       states: [
         ["CAA", test_state, {
@@ -95,7 +94,7 @@ describe("transitions", function () {
       ["k", ["C:CA:CAA", "C:CB:CBA"]],
       ["d", ["B"]],
       ["b", ["A"]],
-      ["c", ["C:CA:CAA", "C:CB:CBB"]]
+      ["c", ["C:CA:CAA", "C:CB:CBA"]]
     ]);
 
   });

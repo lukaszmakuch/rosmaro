@@ -48,7 +48,7 @@ describe("node action", function () {
 
   describe("action before leave", function () {
 
-    it("is triggered before the node is left, but with the new context", async function () {
+    it("is triggered before the node is left", async function () {
 
       let context_before_leaving;
 
@@ -78,7 +78,7 @@ describe("node action", function () {
 
       assert(!context_before_leaving)
       await model.leave()
-      assert.deepEqual({for_arrow: "abc"}, context_before_leaving)
+      assert.deepEqual({}, context_before_leaving)
 
     })
 

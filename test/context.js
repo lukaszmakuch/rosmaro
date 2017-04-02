@@ -45,6 +45,14 @@ describe("context", function () {
     assert.deepEqual(context["B"], expected_context);
   })
 
+  it("only different parts are merged", async function() {
+    //todo: finish this
+    const initial_context = { a: "a", b: "b" }
+    const set_by_1st_composed_node = { a: "z", b: "b" }
+    const set_by_2nd_composed_node = { a: "a", b: "x" }
+    const expected_result = { a: "z", b: "x" }
+  })
+
   it("context of composite states is merged in case of simultaneous transitions", async function () {
 
     const context_returning_node = {

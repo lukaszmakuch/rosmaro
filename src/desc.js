@@ -55,14 +55,14 @@ const flatten_transition_desc = transition_desc => {
   })
 }
 
-//turns a nested description into a flat one, taking the history into account
-const flatten = (desc, hist) => {
+//turns a nested description into a flat one
+const flatten = desc => {
   let flat = {};
   let transitions = {};
   let mapping_fns = {};
   var i = 0;
 
-  const visit = (name, desc, hist, so_far, depth, map_ctx_in, map_ctx_out, map_leaving_transitions) => {
+  const visit = (name, desc, so_far, depth, map_ctx_in, map_ctx_out, map_leaving_transitions) => {
     let common_part = so_far.filter(a => a);
     let composed_name = common_part.concat([name]).join(":");
     let composer_parent_name = common_part.join(":");
@@ -91,7 +91,6 @@ const flatten = (desc, hist) => {
         visit(
           name,
           desc.adapted,
-          hist,
           so_far,
           depth,
           ctx => desc.map_input_context(map_ctx_in(ctx)),
@@ -103,9 +102,7 @@ const flatten = (desc, hist) => {
 
       case "machine":
 
-        entry_point = desc.history && hist[composed_name]
-          ? hist[composed_name]
-          : common_part.concat([name, desc.entry_point]).join(":");
+        default_entry_point = common_part.concat([name, desc.entry_point]).join(":");
 
           if (composed_name) {
             flat[composed_name] = {
@@ -116,7 +113,7 @@ const flatten = (desc, hist) => {
               type: "machine",
               transitions: {},
               parent: composer_parent_name,
-              entry_point: entry_point
+              default_entry_point
             }
           }
 
@@ -141,7 +138,6 @@ const flatten = (desc, hist) => {
           visit(
             child_name,
             child_desc,
-            hist,
             so_far.concat([name]),
             depth + 1,
             map_ctx_in,
@@ -174,7 +170,6 @@ const flatten = (desc, hist) => {
           visit(
             child_name,
             child_desc,
-            hist,
             so_far.concat([name]),
             depth + 1,
             map_ctx_in,
@@ -188,7 +183,7 @@ const flatten = (desc, hist) => {
 
   };
 
-  visit(undefined, desc, hist, [], -1, a => a, a => a, a => a);
+  visit(undefined, desc, [], -1, a => a, a => a, a => a);
   for (const node in transitions) {
     flat[node]["transitions"] = transitions[node];
   }
