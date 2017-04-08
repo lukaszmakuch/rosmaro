@@ -3,6 +3,10 @@ const diff = deep.diff
 const applyChange = deep.applyChange
 
 const merge_contexts = (original_context, new_contexts) => {
+  if (new_contexts.length == 1)  {
+    return new_contexts[0]
+  }
+  
   const diffs = new_contexts
     .map(c => diff(original_context, c))
     .reduce((flat, arr) => [].concat(flat, arr), [])

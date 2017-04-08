@@ -45,6 +45,45 @@ describe("context", function () {
     assert.deepEqual(context["B"], expected_context);
   })
 
+  it("allows to remove parts", async function () {
+
+    const model = r({
+      type: "graph",
+      start: "ctx_setter",
+      nodes: {
+        ctx_setter: {
+          set_ctx() {
+            this.follow("set", { a: 123, b: 456 })
+          }
+        },
+        part_remover: {
+          remove_part() {
+            this.follow("removed", { a: this.context.a })
+          }
+        },
+        ctx_reader: {
+          read_ctx() {
+            return this.context
+          }
+        }
+      },
+      arrows: {
+        ctx_setter: { set: "part_remover" },
+        part_remover: { removed: "ctx_reader" }
+      }
+    })
+
+    await model.set_ctx()
+    await model.remove_part()
+    const got_context = await model.read_ctx()
+
+    assert.deepEqual(
+      { ctx_reader: {a: 123} },
+      got_context
+    )
+
+  })
+
   it("only different parts are merged", async function() {
     const initial_context = { a: "a", b: "b" }
     const set_by_1st_composed_node = { a: "z", b: "b" }
@@ -145,15 +184,15 @@ describe("context", function () {
           }
         }],
       ]
-    });
+    })
 
     await rosmaro.follow_b();
     const got_context = await rosmaro.get_context();
     assert.deepEqual(got_context, {
       "A:B": { first_param: 123, second_param: 456 },
       "B:B": { first_param: 123, second_param: 456 }
-    });
+    })
 
-  });
+  })
 
 })
