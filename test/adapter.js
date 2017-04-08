@@ -6,26 +6,38 @@ describe("adapter", function () {
   it("may be nested", async function () {
 
     const desc = {
-      type: "machine",
-      entry_point: "A",
-      states: [
-        ["B", {
+      type: "graph",
+      start: "A",
+      arrows: {
+        B: { arrow_d: "A" },
+        A: { arrow: "B" }
+      },
+      nodes: {
+        A: {
+          get_ctx() {
+            return this.context
+          },
+          follow_arrow() {
+            this.follow("arrow", {field_d: "from_A"})
+          }
+        },
+        B: {
           type: "adapter",
-          map_input_context(ctx) {
+          map_entering_context(ctx) {
             return { field_c: ctx.field_d }
           },
-          map_output_context(ctx) {
+          map_leaving_context(ctx) {
             return { field_d: ctx.field_c }
           },
-          rename_leaving_transitions: {
+          rename_leaving_arrows: {
             "arrow_c": "arrow_d"
           },
           adapted: {
             type: "adapter",
-            map_input_context(ctx) {
+            map_entering_context(ctx) {
               return { field_b: ctx.field_c }
             },
-            map_output_context(ctx) {
+            map_leaving_context(ctx) {
               return { field_c: ctx.field_b }
             },
             rename_leaving_transitions: {
@@ -33,19 +45,18 @@ describe("adapter", function () {
             },
             adapted: {
               type: "adapter",
-              map_input_context(ctx) {
+              map_entering_context(ctx) {
                 return { field_a: ctx.field_b }
               },
-              map_output_context(ctx) {
+              map_leaving_context(ctx) {
                 return { field_b: ctx.field_a }
               },
               rename_leaving_transitions: {
                 "arrow_a": "arrow_b"
               },
               adapted: {
-                type: "prototype",
                 follow_arrow() {
-                  this.transition("arrow_a", {field_a : "from_B"})
+                  this.follow("arrow_a", {field_a : "from_B"})
                 },
                 get_ctx() {
                   return this.context
@@ -53,21 +64,8 @@ describe("adapter", function () {
               }
             }
           }
-        }, {
-          "arrow_d": "A"
-        }],
-        ["A", {
-          type: "prototype",
-          get_ctx() {
-            return this.context
-          },
-          follow_arrow() {
-            this.transition("arrow", {field_d: "from_A"})
-          }
-        }, {
-          "arrow": "B"
-        }]
-      ]
+        }
+      }
     }
 
     const rosmaro = r(desc)
@@ -83,30 +81,28 @@ describe("adapter", function () {
   it("maps context and transitions", async function () {
 
     const incompatible = {
-      type: "machine",
-      entry_point: "A",
-      states: [
-
-        ["A", {
-          type: "prototype",
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: { a: "B" }
+      },
+      nodes: {
+        A: {
           action() {
-            this.transition("a", { number: this.context.number * 2 })
+            this.follow("a", { number: this.context.number * 2 })
           }
-        }, {"a": "B"}],
-
-        ["B", {
-          type: "prototype",
+        },
+        B: {
           action() {
-            this.transition("a")
+            this.follow("a")
           }
-        }]
-      ]
+        }
+      }
     }
 
     const b = {
-      type: "prototype",
       follow_b() {
-        this.transition("b", { value: 100 })
+        this.follow("b", { value: 100 })
       },
       get_value() {
         return this.context.value;
@@ -116,28 +112,25 @@ describe("adapter", function () {
     const adapted_incompatible = {
       type: "adapter",
       adapted: incompatible,
-      map_input_context(context) {
+      map_entering_context(context) {
         return { number: context.value }
       },
-      map_output_context(context) {
+      map_leaving_context(context) {
         return { value: context.number }
       },
-      rename_leaving_transitions: {
+      rename_leaving_arrows: {
         "a": "b"
       }
     }
 
     const main = {
-      type: "machine",
-      entry_point: "B",
-      states: [
-        ["adapted_incompatible", adapted_incompatible, {
-          "b": "B"
-        }],
-        ["B", b, {
-          "b": "adapted_incompatible"
-        }]
-      ]
+      type: "graph",
+      start: "B",
+      arrows: {
+        adapted_incompatible: { b: "B" },
+        B: { b: "adapted_incompatible" }
+      },
+      nodes: { B: b, adapted_incompatible }
     }
 
     const rosmaro = r(main);

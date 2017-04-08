@@ -5,7 +5,6 @@ describe("context", function () {
 
   it("is empty by default", async function () {
     const rosmaro = r({
-      type: "prototype",
       get_context() {
         return this.context;
       }
@@ -19,22 +18,23 @@ describe("context", function () {
   it("may be set during a transition", async function () {
 
     const rosmaro = r({
-      type: "machine",
-      entry_point: "A",
-      states: [
-        ["A", {
-          type: "prototype",
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: { x: "B" }
+      },
+      nodes: {
+        A: {
           follow_x() {
-            return this.transition("x", {a: 123, b: 456})
+            return this.follow("x", {a: 123, b: 456})
           }
-        }, {"x": "B"}],
-        ["B", {
-          type: "prototype",
+        },
+        B: {
           get_context() {
             return this.context;
           }
-        }, {}]
-      ]
+        }
+      }
     });
 
 
@@ -52,43 +52,46 @@ describe("context", function () {
     const expected_result = { a: "z", b: "x" }
 
     const model = r({
-      type: "machine",
-      entry_point: "init",
-      states: [
+      type: "graph",
+      start: "init",
+      arrows: {
+        init: { done: "change_context" },
+        change_context: { changed: "context_reader" }
+      },
+      nodes: {
 
-        ["init", {
-          type: "prototype",
+        init: {
           init() {
-            this.transition("done", initial_context)
+            this.follow("done", initial_context)
           }
-        }, {done: "change_context"}],
+        },
 
-        ["change_context", {
+        change_context: {
           type: "composite",
-          states: [
-            ["A", {
-              type: "prototype",
-              change_context() {
-                this.transition("changed", set_by_1st_composed_node)
-              }
-            }],
-            ["B", {
-              type: "prototype",
-              change_context() {
-                this.transition("changed", set_by_2nd_composed_node)
-              }
-            }],
-          ]
-        }, {changed: "context_reader"}],
+          nodes: [
 
-        ["context_reader", {
-          type: "prototype",
+            ["A", {
+              change_context() {
+                this.follow("changed", set_by_1st_composed_node)
+              }
+            }],
+
+            ["B", {
+              change_context() {
+                this.follow("changed", set_by_2nd_composed_node)
+              }
+            }]
+
+          ]
+        },
+
+        context_reader: {
           read_context() {
             return this.context
           }
-        }, {}]
+        }
 
-      ]
+      }
     })
 
     model.init()
@@ -102,7 +105,6 @@ describe("context", function () {
   it("context of composite states is merged in case of simultaneous transitions", async function () {
 
     const context_returning_node = {
-      type: "prototype",
       get_context() {
         return this.context;
       }
@@ -110,33 +112,37 @@ describe("context", function () {
 
     const rosmaro = r({
       type: "composite",
-      states: [
+      nodes: [
         ["A", {
-          type: "machine",
-          entry_point: "A",
-          states: [
-            ["A", {
-              type: "prototype",
+          type: "graph",
+          start: "A",
+          arrows: {
+            A: { b: "B" }
+          },
+          nodes: {
+            A: {
               follow_b() {
                 // the only difference compared to the B:A node is the param name
-                return this.transition('b', {first_param: 123})
+                return this.follow('b', {first_param: 123})
               }
-            }, {"b": "B"}],
-            ["B", context_returning_node, {}]
-          ]
+            },
+            B: context_returning_node
+          }
         }],
         ["B", {
-          type: "machine",
-          entry_point: "A",
-          states: [
-            ["A", {
-              type: "prototype",
+          type: "graph",
+          start: "A",
+          arrows: {
+            A: { b: "B" }
+          },
+          nodes: {
+            A: {
               follow_b() {
-                return this.transition('b', {second_param: 456})
+                return this.follow('b', {second_param: 456})
               }
-            }, {"b": "B"}],
-            ["B", context_returning_node, {}]
-          ]
+            },
+            B: context_returning_node
+          }
         }],
       ]
     });

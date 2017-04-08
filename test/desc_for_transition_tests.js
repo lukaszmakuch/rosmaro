@@ -1,58 +1,61 @@
 const test_node = {
-  type: "prototype",
   follow(path) {
-    return this.transition(path);
+    return this.follow(path);
   }
 };
 
 const CB = {
-  type: "machine",
-  entry_point: "CBB",
-  states: [
-    ["CBA", test_node, {
-      m: "CBB"
-    }],
-    ["CBB", test_node, {
-      k: "CBA"
-    }]
-  ]
+  type: "graph",
+  start: "CBB",
+  arrows: {
+    CBA: { m: "CBB" },
+    CBB: { k: "CBA" }
+  },
+  nodes: {
+    CBA: test_node,
+    CBB: test_node
+  }
 };
 
 const CA = {
-  type: "machine",
-  history: true,
-  entry_point: "CAB",
-  states: [
-    ["CAA", test_node, {
-      j: "CAB"
-    }],
-    ["CAB", test_node, {
-      k: "CAA"
-    }]
-  ]
-};
+  type: "graph",
+  start: "CAB",
+  arrows: {
+    CAA: { j: "CAB" },
+    CAB: { k: "CAB" }
+  },
+  nodes: {
+    CAA: test_node,
+    CAB: test_node
+  }
+}
 
 const C = {
   type: "composite",
-  states: [["CA", CA], ["CB", CB]]
+  nodes: [["CA", CA], ["CB", CB]]
 };
 
 const root = {
-  type: "machine",
-  entry_point: "C",
-  states: [
-    ["A", test_node, {
+  type: "graph",
+  start: "C",
+  arrows: {
+    A: {
       a: "B",
       c: "C"
-    }],
-    ["B", test_node, {
+    },
+    B: {
       b: "A",
       e: "C"
-    }],
-    ["C", C, {
+    },
+    C: {
       d: "B"
-    }]
-  ]
+    }
+  },
+  nodes: {
+    A: test_node,
+    B: test_node,
+    C
+  }
 };
 
 module.exports = { desc: root, node: test_node };

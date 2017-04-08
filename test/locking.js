@@ -48,42 +48,46 @@ describe("locking", function () {
 
       const desc = {
         type: "composite",
-        states: [
+        nodes: [
 
           ["A", {
-            type: "machine",
-            entry_point: "A",
-            states: [
-              ["A", Object.assign({
-                type: "prototype",
+            type: "graph",
+            start: "A",
+            arrows: {
+              A: { self: "A" }
+            },
+            nodes: {
+              A: Object.assign({
                 read() {
                   return this.context.numberA
                 },
                 async incr() {
                   const curr = this.context.numberA ? this.context.numberA : 0
                   await get_next_lock()
-                  this.transition("self", {numberA: curr + 1})
+                  this.follow("self", {numberA: curr + 1})
                 }
-              }, AA_proto), {"self": "A"}]
-            ]
+              }, AA_proto)
+            }
           }],
 
           ["B", {
-            type: "machine",
-            entry_point: "A",
-            states: [
-              ["A", Object.assign({
-                type: "prototype",
+            type: "graph",
+            start: "A",
+            arrows: {
+              A: { self: "A" }
+            },
+            nodes: {
+              A: Object.assign({
                 read() {
                   return this.context.numberB
                 },
                 async incr() {
                   const curr = this.context.numberB ? this.context.numberB : 0
                   await get_next_lock()
-                  this.transition("self", {numberB: curr + 1})
+                  this.follow("self", {numberB: curr + 1})
                 }
-              }, BA_proto), {"self": "A"}]
-            ]
+              }, BA_proto)
+            }
           }],
 
         ]
@@ -145,21 +149,23 @@ describe("locking", function () {
 
     var {unlock, get_next_lock} = get_locks(3)
     const desc = {
-      type: "machine",
-      entry_point: "A",
-      states: [
-        ["A", {
-          type: "prototype",
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: { loop: "A" }
+      },
+      nodes: {
+        A: {
           read() {
             return this.context.number
           },
           async incr() {
             const current = this.context.number ? this.context.number : 0;
             await get_next_lock()
-            this.transition("loop", {number: current + 1})
+            this.follow("loop", {number: current + 1})
           }
-        }, {loop: "A"}]
-      ]
+        }
+      }
     }
 
     const r = () => build_rosmaro(desc, storage, locks.lock)
@@ -181,17 +187,19 @@ describe("locking", function () {
     let method_called = false
 
     const desc = {
-      type: "machine",
-      entry_point: "A",
-      states: [
-        ["A", {
-          type: "prototype",
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: { slef: "A" }
+      },
+      nodes: {
+        A: {
           unsynchronized: ["call_method"],
           call_method() {
             method_called = true
           }
-        }, {"self": "A"}]
-      ]
+        }
+      }
     }
 
     const storage = build_storage()
@@ -217,14 +225,16 @@ describe("locking", function () {
 
     beforeEach(function () {
       const desc = {
-        type: "machine",
-        entry_point: "A",
-        states: [
-          ["A", {
-            type: "prototype",
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { self: "A" }
+        },
+        nodes: {
+          A: {
             call() {}
-          }, {self: "A"}]
-        ]
+          }
+        }
       }
 
       model = build_rosmaro(desc, build_storage(), locks.lock)

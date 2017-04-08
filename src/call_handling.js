@@ -51,7 +51,7 @@ const follow_up = (flat_desc, node, arrow, left_parents = []) => {
   //if this node has a parent, then check if it can handle the transition
   const parent_node = flat_desc[node]["parent"]
   if (parent_node) {
-    const map_arrow = flat_desc[node].map_leaving_transitions
+    const map_arrow = flat_desc[node].map_leaving_arrows
     return follow_up(
       flat_desc,
       parent_node,
@@ -67,7 +67,7 @@ const get_first_machine_parent_of_single_node = (flat_desc, node) => {
   const parent = flat_desc[node].parent
   if (!parent) return
   const parent_desc = flat_desc[parent]
-  return (parent_desc.type == 'machine')
+  return (parent_desc.type == 'graph')
     ? parent
     : get_first_machine_parent(flat_desc, parent)
 }
@@ -98,10 +98,10 @@ const follow_down = (flat_desc, machines_history, node) => {
     break;
 
     //if it's a machine, then follow down the current node of this machine
-    case 'machine':
+    case 'graph':
       const current_node = machines_history[node]
         ? machines_history[node]
-        : flat_desc[node].default_entry_point
+        : flat_desc[node].initial_node
       return follow_down(flat_desc, machines_history, current_node)
     break;
   }
@@ -115,7 +115,7 @@ const build_node_obj = (node_desc, id, context) => {
   const stateless_prototype = Object.assign({}, node_prototype, {
     id,
     context: node_desc.map_ctx_in(context),
-    transition (arrow, new_context) {
+    follow (arrow, new_context) {
       const context_to_set = new_context
         ? node_desc.map_ctx_out(new_context)
         : context

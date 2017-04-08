@@ -62,30 +62,30 @@ const flatten = desc => {
   let mapping_fns = {};
   var i = 0;
 
-  const visit = (name, desc, so_far, depth, map_ctx_in, map_ctx_out, map_leaving_transitions) => {
+  const visit = (name, desc, so_far, depth, map_ctx_in, map_ctx_out, map_leaving_arrows) => {
     let common_part = so_far.filter(a => a);
     let composed_name = common_part.concat([name]).join(":");
-    let composer_parent_name = common_part.join(":");
-    composer_parent_name = composer_parent_name ? composer_parent_name : '';
+    let composed_parent_name = common_part.join(":");
+    composed_parent_name = composed_parent_name ? composed_parent_name : '';
     switch(desc.type) {
 
-      case "prototype":
+      case undefined: //a leaf
         flat[composed_name] = {
           depth: depth,
           type: "leaf",
           prototype: desc,
-          parent: composer_parent_name,
+          parent: composed_parent_name,
           transitions: {},
           map_ctx_in,
           map_ctx_out,
-          map_leaving_transitions
+          map_leaving_arrows
         }
       break;
 
       case "adapter":
 
-        const arrow_mapping_fn = arrow =>  desc.rename_leaving_transitions[arrow]
-            ? desc.rename_leaving_transitions[arrow]
+        const arrow_mapping_fn = arrow =>  desc.rename_leaving_arrows[arrow]
+            ? desc.rename_leaving_arrows[arrow]
             : arrow;
 
         visit(
@@ -93,46 +93,48 @@ const flatten = desc => {
           desc.adapted,
           so_far,
           depth,
-          ctx => desc.map_input_context(map_ctx_in(ctx)),
-          ctx => map_ctx_out(desc.map_output_context(ctx)),
+          ctx => desc.map_entering_context(map_ctx_in(ctx)),
+          ctx => map_ctx_out(desc.map_leaving_context(ctx)),
           arrow_mapping_fn
         );
 
       break;
 
-      case "machine":
+      case "graph":
 
-        default_entry_point = common_part.concat([name, desc.entry_point]).join(":");
+        initial_node = common_part.concat([name, desc.start]).join(":");
 
-          if (composed_name) {
-            flat[composed_name] = {
-              map_ctx_in,
-              map_ctx_out,
-              map_leaving_transitions,
-              depth: depth,
-              type: "machine",
-              transitions: {},
-              parent: composer_parent_name,
-              default_entry_point
-            }
+        if (composed_name) {
+          flat[composed_name] = {
+            map_ctx_in,
+            map_ctx_out,
+            map_leaving_arrows,
+            depth: depth,
+            type: "graph",
+            transitions: {},
+            parent: composed_parent_name,
+            initial_node
           }
+        }
 
-        for (const [child_name, child_desc, child_transitions] of desc.states) {
+        for (const child_name in desc.nodes) {
+          const child_desc = desc.nodes[child_name]
+          const child_transitions = desc.arrows[child_name]
 
-          const full_name = common_part.concat([name, child_name]).filter(a => a).join(":");
+          const full_name = common_part.concat([name, child_name]).filter(a => a).join(":")
 
           transitions[full_name] = {};
           for (const ev in child_transitions) {
-            const child_transition = flatten_transition_desc(child_transitions[ev]);
+            const child_transition = flatten_transition_desc(child_transitions[ev])
 
             const full_target_name = common_part
-              .concat([name, child_transition.next_state_name])
-              .filter(a => a)
-              .join(":")
+            .concat([name, child_transition.next_state_name])
+            .filter(a => a)
+            .join(":")
 
             transitions[full_name][ev] = Object.assign({}, child_transition, {
               next_state_name: full_target_name
-            });
+            })
           }
 
           visit(
@@ -142,10 +144,10 @@ const flatten = desc => {
             depth + 1,
             map_ctx_in,
             map_ctx_out,
-            map_leaving_transitions
-          );
-
+            map_leaving_arrows
+          )
         }
+
       break;
 
       case "composite":
@@ -155,15 +157,15 @@ const flatten = desc => {
         flat[composed_name] = {
           map_ctx_in,
           map_ctx_out,
-          map_leaving_transitions,
+          map_leaving_arrows,
           depth: depth,
           transitions: {},
           type: "composite",
-          parent: composer_parent_name,
-          children: desc.states.map(name_and_model => common.concat([name_and_model[0]]).filter(a => a).join(":"))
+          parent: composed_parent_name,
+          children: desc.nodes.map(name_and_model => common.concat([name_and_model[0]]).filter(a => a).join(":"))
         }
 
-        for (const [child_name, child_desc] of desc.states) {
+        for (const [child_name, child_desc] of desc.nodes) {
           visit(
             child_name,
             child_desc,
@@ -190,10 +192,10 @@ const flatten = desc => {
 
 const get_initial_nodes_as_array = (desc, name = "") => {
   switch (desc.type) {
-    case 'machine':
+    case 'graph':
       var child_res = get_initial_nodes_as_array(
-        desc.states.filter(state_desc => state_desc[0] == desc.entry_point)[0][1],
-        desc.entry_point
+        desc.nodes[desc.start],
+        desc.start
       )
     break;
     case 'adapter':
@@ -203,11 +205,11 @@ const get_initial_nodes_as_array = (desc, name = "") => {
       )
     break;
     case 'composite':
-      var child_res = desc.states
+      var child_res = desc.nodes
         .map(state_desc => get_initial_nodes_as_array(state_desc[1], state_desc[0]))
         .reduce((so_far, res) => so_far.concat(res), [])
     break;
-    case 'prototype':
+    case undefined: //a leaf
       var child_res = [[]]
     break;
   }

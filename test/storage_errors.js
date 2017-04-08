@@ -12,16 +12,18 @@ describe("storage error", function () {
     storage = build_storage()
     model = build_rosmaro(
       {
-        type: "machine",
-        entry_point: "A",
-        states: [
-          ["A", {
-            type: "prototype",
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { self: "A" }
+        },
+        nodes: {
+          A: {
             loop() {
-              this.transition("self")
+              this.follow("self")
             }
-          }, {self: "A"}]
-        ]
+          }
+        }
       },
       storage,
       lock_mock().lock

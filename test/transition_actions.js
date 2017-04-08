@@ -35,45 +35,42 @@ describe("transition action", function () {
 
     //should recurrency
     const model = r({
-      type: "machine",
-      entry_point: "A",
-      states: [
-
-        ["A", {
-          type: "prototype",
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: {
+          arrow: [before1, before2, "B", after1, after2]
+        },
+        B: {
+          arrow: [before3, "C", after3]
+        }
+      },
+      nodes: {
+        A: {
           before_leave() {
             log.push("leaving A")
           },
           after_leave: left_A,
           follow_arrow() {
-            this.transition("arrow")
+            this.follow("arrow")
           }
-        }, {
-          "arrow": [before1, before2, "B", after1, after2]
-        }],
-
-        ["B", {
-          type: "prototype",
+        },
+        B: {
           on_entry() {
             log.push("entering B")
-            this.transition("arrow")
+            this.follow("arrow")
           },
           before_leave() {
             log.push("leaving B")
           },
           after_leave: left_B
-        }, {
-          "arrow": [before3, "C", after3]
-        }],
-
-        ["C", {
-          type: "prototype",
+        },
+        C: {
           on_entry() {
             log.push("entering C")
           }
-        }, {}]
-
-      ]
+        }
+      }
     })
 
     assert.deepEqual([], log)

@@ -8,31 +8,30 @@ describe("node instance id", function () {
   it("identifies every single node", async function () {
 
     const desc = {
-      type: "machine",
-      entry_point: "A",
-      states: [
-
-        ["A", {
-          type: "prototype",
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: { next: "B" },
+        B: { self: "B" }
+      },
+      nodes: {
+        A: {
           get_id() {
             return this.id
           },
           next() {
-            this.transition("next")
+            this.follow("next")
           }
-        }, {"next": "B"}],
-
-        ["B", {
-          type: "prototype",
+        },
+        B: {
           get_id() {
             return this.id
           },
           loop() {
-            this.transition("self")
+            this.follow("self")
           }
-        }, {"self": "B"}]
-
-      ]
+        }
+      }
     }
 
     const storage = build_storage()
@@ -65,17 +64,15 @@ describe("node instance id", function () {
 
     const desc = {
       type: "composite",
-      states: [
+      nodes: [
 
         ["A", {
-          type: "prototype",
           get_id() {
             return this.id
           }
         }],
 
         ["B", {
-          type: "prototype",
           get_id() {
             return this.id
           }

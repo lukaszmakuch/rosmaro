@@ -11,28 +11,26 @@ describe("removing the model", function () {
     const storage = build_storage()
 
     const model = build_rosmaro({
-      type: "machine",
-      entry_point: "A",
-      states: [
-
-        ["A", {
-          type: "prototype",
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: { x: "B" }
+      },
+      nodes: {
+        A: {
           fill_in() {
-            this.transition("x", {some: "data"})
+            this.follow("x", {some: "data"})
           }
-        }, {x: "B"}],
-
-        ["B", {
-          type: "prototype",
+        },
+        B: {
           before_leave() {
             log.push("B before")
           },
           after_leave() {
             log.push("B after")
           }
-        }]
-
-      ]
+        }
+      }
     }, storage, lock_mock().lock)
 
     await model.fill_in()

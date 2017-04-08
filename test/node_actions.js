@@ -9,14 +9,15 @@ describe("node action", function () {
       let log = [];
 
       const model = r({
-        type: "machine",
-        entry_point: "A",
-        states: [
-
-          ["A", {
-            type: "prototype",
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { arrow: "B" }
+        },
+        nodes: {
+          A: {
             follow_arrow() {
-              this.transition("arrow")
+              this.follow("arrow")
             },
             before_leave() {
               log.push('leaving A')
@@ -24,16 +25,13 @@ describe("node action", function () {
             after_leave() {
               log.push('left A')
             }
-          }, {"arrow": "B"}],
-
-          ["B", {
-            type: "prototype",
+          },
+          B: {
             on_entry() {
               log.push("entering B");
             }
-          }, {}]
-
-        ]
+          }
+        }
       })
 
       await model.follow_arrow()
@@ -53,27 +51,22 @@ describe("node action", function () {
       let context_before_leaving;
 
       const model = r({
-        type: "machine",
-        entry_point: "A",
-        states: [
-
-          ["A", {
-            type: "prototype",
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { arrow: "B" }
+        },
+        nodes: {
+          A: {
             leave() {
-              this.transition("arrow", {for_arrow: "abc"})
+              this.follow("arrow", {for_arrow: "abc"})
             },
             before_leave() {
               context_before_leaving = this.context
             }
-          }, {
-            "arrow": "B"
-          }],
-
-          ["B", {
-            type: "prototype"
-          }, {}]
-
-        ]
+          },
+          B: {}
+        }
       })
 
       assert(!context_before_leaving)
@@ -85,29 +78,25 @@ describe("node action", function () {
     it("doesn't allow transitions", async function () {
 
       const model = r({
-        type: "machine",
-        entry_point: "A",
-        states: [
-
-          ["A", {
-            type: "prototype",
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { x: "B", y: "C" },
+          B: { y: "C" },
+          C: {}
+        },
+        nodes: {
+          A: {
             leave() {
-              this.transition('x')
+              this.follow('x')
             },
             before_leave() {
-              this.transition('y')
+              this.follow('y')
             }
-          }, {x: "B", y: "C"}],
-
-          ["B", {
-            type: "prototype"
-          }, {y: 'C'}],
-
-          ["C", {
-            type: "prototype"
-          }, {}]
-
-        ]
+          },
+          B: {},
+          C: {}
+        }
       })
 
       await model.leave()
@@ -125,7 +114,6 @@ describe("node action", function () {
       let executed = false
 
       const model = r({
-        type: "prototype",
         on_entry() {
           executed = true
         }
@@ -140,26 +128,24 @@ describe("node action", function () {
       let executed = false
 
       const A = {
-        type: "prototype",
         follow_arrow() {
-          this.transition("arrow")
+          this.follow("arrow")
         }
       }
 
       const B = {
-        type: "prototype",
         on_entry() {
           executed = true
         }
       }
 
       const root = {
-        type: "machine",
-        entry_point: "A",
-        states: [
-          ["A", A, {"arrow": "B"}],
-          ["B", B, {}]
-        ]
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { "arrow": "B" }
+        },
+        nodes: { A, B }
       }
 
       const model = r(root)
@@ -175,19 +161,21 @@ describe("node action", function () {
       let executed = false
 
       const model = r({
-        type: "machine",
-        entry_point: "A",
-        states: [
-          ["A", {
-            type: "prototype",
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { arrow: "A" }
+        },
+        nodes: {
+          A: {
             on_entry() {
               executed = true
             },
             follow_arrow() {
-              this.transition("arrow")
+              this.follow("arrow")
             }
-          }, {"arrow": "A"}],
-        ]
+          }
+        }
       })
 
       assert(!executed)
@@ -201,39 +189,41 @@ describe("node action", function () {
       let executed = false;
 
       const A = {
-        type: "machine",
-        entry_point: "A",
-        states: [
-          ["A", {
-            type: "prototype",
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { arrow: "A" }
+        },
+        nodes: {
+          A: {
             on_entry() {
               executed = true
             },
             leave() {
-              this.transition("arrow")
+              this.follow("arrow")
             }
-          }, {"arrow": "A"}]
-        ]
+          }
+        }
       }
 
       const B = {
-        type: "prototype",
         on_entry() {
-          this.transition("arrow")
+          this.follow("arrow")
         }
       }
 
       const root = {
-        type: "machine",
-        entry_point: "A",
-        states: [
-          ["A", A, {"arrow": "B"}],
-          ["B", B, {"arrow": "A"}],
-        ]
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { arrow: "B" },
+          B: { arrow: "A" }
+        },
+        nodes: { A, B }
       }
 
-      const model = r(root)
 
+      const model = r(root)
       assert(!executed)
       await model.leave()
       assert(executed)
@@ -243,9 +233,8 @@ describe("node action", function () {
     it("may cause a transition", async function () {
 
       const A = {
-        type: "prototype",
         follow_arrow() {
-          this.transition("arrow")
+          this.follow("arrow")
         },
         get_received() {
           return this.context.given
@@ -253,19 +242,19 @@ describe("node action", function () {
       }
 
       const B = {
-        type: "prototype",
         on_entry() {
-          this.transition("arrow", {given: 123})
+          this.follow("arrow", {given: 123})
         }
       }
 
       const root = {
-        type: "machine",
-        entry_point: "A",
-        states: [
-          ["A", A, {"arrow": "B"}],
-          ["B", B, {"arrow": "A"}]
-        ]
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { arrow: "B" },
+          B: { arrow: "A" }
+        },
+        nodes: { A, B }
       }
 
       const model = r(root)

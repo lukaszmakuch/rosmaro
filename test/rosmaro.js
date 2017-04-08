@@ -1,3 +1,4 @@
+
 const assert = require('assert');
 const build_storage = require('./storage_test_double');
 const build_rosmaro = require('./../src/rosmaro');
@@ -29,65 +30,59 @@ describe("transitions", function () {
   it("allows transitions between states on the same level", function () {
 
     const test_state = {
-      type: "prototype",
-      a() { return this.transition("a"); },
-      b() { return this.transition("b"); },
-      c() { return this.transition("c"); },
-      d() { return this.transition("d"); },
-      e() { return this.transition("e"); },
-      j() { return this.transition("j"); },
-      k() { return this.transition("k"); },
-      m() { return this.transition("m"); }
+      a() { return this.follow("a"); },
+      b() { return this.follow("b"); },
+      c() { return this.follow("c"); },
+      d() { return this.follow("d"); },
+      e() { return this.follow("e"); },
+      j() { return this.follow("j"); },
+      k() { return this.follow("k"); },
+      m() { return this.follow("m"); }
     };
 
     const CB = {
-      type: "machine",
-      entry_point: "CBB",
-      states: [
-        ["CBA", test_state, {
-          m: "CBB"
-        }],
-        ["CBB", test_state, {
-          k: "CBA"
-        }]
-      ]
+      type: "graph",
+      start: "CBB",
+      arrows: {
+        CBA: { m: "CBB" },
+        CBB: { k: "CBA"}
+      },
+      nodes: { CBA: test_state, CBB: test_state }
     };
 
     const CA = {
-      type: "machine",
-      entry_point: "CAB",
-      states: [
-        ["CAA", test_state, {
-          j: "CAB"
-        }],
-        ["CAB", test_state, {
-          k: "CAA"
-        }]
-      ]
+      type: "graph",
+      start: "CAB",
+      arrows: {
+        CAA: { j: "CAB" },
+        CAB: { k: "CAA" }
+      },
+      nodes: { CAA: test_state, CAB: test_state }
     };
 
     const C = {
       type: "composite",
-      states: [["CA", CA], ["CB", CB]]
+      nodes: [["CA", CA], ["CB", CB]]
     };
 
     const root = {
-      type: "machine",
-      entry_point: "C",
-      states: [
-        ["A", test_state, {
+      type: "graph",
+      start: "C",
+      arrows: {
+        A: {
           a: "B",
           c: "C"
-        }],
-        ["B", test_state, {
+        },
+        B: {
           b: "A",
           e: "C"
-        }],
-        ["C", C, {
+        },
+        C: {
           d: "B"
-        }]
-      ]
-    };
+        }
+      },
+      nodes: { A: test_state, B: test_state, C }
+    }
 
     return assert_transitions(root, [
       [null, ["C:CA:CAB", "C:CB:CBB"]],
@@ -101,40 +96,43 @@ describe("transitions", function () {
 
   it("allows independent transitions in concurrent states", function () {
     const make_node = actions_to_events => {
-      let proto = {type: "prototype"};
+      let proto = {};
       for (const action in actions_to_events) {
         proto[action] = function () {
-          return this.transition(actions_to_events[action])
+          return this.follow(actions_to_events[action])
         }
       }
       return proto;
     }
 
     const A = {
-      type: "machine",
-      entry_point: "A1",
-      states: [
-        ["A1", make_node({"x_from_A1": "x"}), {
-          "x": "A2"
-        }],
-        ["A2", make_node({}), {}],
-      ]
+      type: "graph",
+      start: "A1",
+      arrows: {
+        A1: {
+          x: "A2"
+        }
+      },
+      nodes: {
+        A1: make_node({"x_from_A1": "x"}),
+        A2: make_node({})
+      }
     }
 
     const B = {
-      type: "machine",
-      entry_point: "B1",
-      states: [
-        ["B1", make_node({"x_from_B1": "x"}), {
-          "x": "B2"
-        }],
-        ["B2", make_node({}), {}],
-      ]
+      type: "graph",
+      start: "B1",
+      arrows: {
+        B1: {
+          x: "B2"
+        }
+      },
+      nodes: { B1: make_node({"x_from_B1": "x"}), B2: make_node({}) }
     }
 
     const root_with_concurrent_states = {
       type: "composite",
-      states: [["A", A], ["B", B]]
+      nodes: [["A", A], ["B", B]]
     };
 
     return assert_transitions(root_with_concurrent_states, [

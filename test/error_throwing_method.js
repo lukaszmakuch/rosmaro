@@ -10,17 +10,19 @@ describe("error throwing method", function () {
 
     const model = build_rosmaro(
       {
-        type: "machine",
-        entry_point: "A",
-        states: [
-          ["A", {
-            type: "prototype",
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { self: "A" }
+        },
+        nodes: {
+          A: {
             fail() {
               call_count++
               throw `error${call_count}`
             }
-          }, {self: "A"}]
-        ]
+          }
+        }
       },
       build_storage(),
       lock_mock().lock

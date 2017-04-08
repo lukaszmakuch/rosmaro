@@ -9,67 +9,62 @@ describe("composite", function () {
   it("allows many transactions within left nodes", async function () {
 
     const A = {
-      type: "prototype",
       on_entry() {
-        this.transition("e")
+        this.follow("e")
       }
     }
 
     const BA = {
-      type: "prototype",
       x() {
-        this.transition("x")
+        this.follow("x")
       }
     }
 
     const BB = {
-      type: "machine",
-      entry_point: "A",
-      states: [
-
-        ["A", {
-          type: "prototype",
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: { x: "B" },
+        B: { e: "C" },
+        C: { e: "D" },
+        D: {}
+      },
+      nodes: {
+        A: {
           x() {
-            this.transition("x")
+            this.follow("x")
           }
-        }, {x: "B"}],
-
-        ["B", {
-          type: "prototype",
+        },
+        B: {
           on_entry() {
-            this.transition("e")
+            this.follow("e")
           }
-        }, {e: "C"}],
-
-        ["C", {
-          type: "prototype",
+        },
+        C: {
           on_entry() {
-            this.transition("e")
+            this.follow("e")
           }
-        }, {e: "D"}],
-
-        ["D", {
-          type: "prototype"
-        }, {}],
-
-      ]
+        },
+        D: {}
+      }
     }
 
     const B = {
       type: "composite",
-      states: [
+      nodes: [
         ["A", BA],
         ["B", BB]
       ]
     }
 
     const model = r({
-      type: "machine",
-      entry_point: "B",
-      states: [
-        ["A", A, {e: "B"}],
-        ["B", B, {x: "A"}]
-      ]
+      type: "graph",
+      start: "B",
+      arrows: {
+        A: { e: "B" },
+        B: { x: "A" }
+      },
+      nodes: { A, B }
     })
 
     await model.x()
@@ -84,54 +79,51 @@ describe("composite", function () {
     var entered_BBB = false
 
     const model = r({
-      type: "machine",
-      entry_point: "B",
-      states: [
-
-        ["A", {
-          type: "prototype",
+      type: "graph",
+      start: "B",
+      arrows: {
+        A: { a: "B" },
+        B: { a: "A" }
+      },
+      nodes: {
+        A: {
           follow_arrow() {
-            this.transition("a")
+            this.follow("a")
           }
-        }, {a: "B"}],
-
-        ["B", {
-          type: "composite",
-          states: [
+        },
+        B: {
+            type: "composite",
+            nodes: [
 
             ["A", {
-              type: "prototype",
               follow_arrow() {
-                this.transition("a")
+                this.follow("a")
               }
             }],
 
             ["B", {
-              type: "machine",
-              entry_point: "A",
-              states: [
-
-                ["A", {
-                  type: "prototype",
+              type: "graph",
+              start: "A",
+              arrows: {
+                A: { a: "B" }
+              },
+              nodes: {
+                A: {
                   follow_arrow() {
-                    this.transition("a")
+                    this.follow("a")
                   }
-                }, {a: "B"}],
-
-                ["B", {
-                  type: "prototype",
+                },
+                B: {
                   on_entry() {
                     entered_BBB = true
                   }
-                }, {}]
-
-              ]
+                }
+              }
             }]
 
           ]
-        }, {a: "A"}]
-
-      ]
+        }
+      }
     })
 
     await model.follow_arrow()
@@ -149,36 +141,34 @@ describe("composite", function () {
   it("doesn't allow to enter an invalid state", async function () {
 
     const model = build_rosmaro({
-      type: "machine",
-      entry_point: "C",
-      states: [
-
-        ["A", { type: "prototype" }, {}],
-
-        ["B", { type: "prototype" }, {}],
-
-        ["C", {
+      type: "graph",
+      start: "C",
+      arrows: {
+        C: {
+          x: "A",
+          y: "B"
+        }
+      },
+      nodes: {
+        A: {},
+        B: {},
+        C: {
           type: "composite",
-          states: [
-
+          nodes: [
             ["A", {
-              type: "prototype",
               follow_arrow() {
-                this.transition("x")
+                this.follow("x")
               }
             }],
 
             ["B", {
-              type: "prototype",
               follow_arrow() {
-                this.transition("y")
+                this.follow("y")
               }
             }],
-
           ]
-        }, { x: "A", y: "B" }]
-
-      ]
+        }
+      }
     }, build_storage(), lock_mock().lock)
 
     let thrown = []
@@ -199,24 +189,21 @@ describe("composite", function () {
 
     const model = r({
       type: "composite",
-      states: [
+      nodes: [
 
         ["A", {
-          type: "prototype",
           writeOn(log) {
             log.push("A")
           }
         }],
 
         ["B", {
-          type: "prototype",
           writeOn(log) {
             log.push("B")
           }
         }],
 
         ["C", {
-          type: "prototype",
           writeOn(log) {
             log.push("C")
           }
