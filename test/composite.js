@@ -218,4 +218,32 @@ describe("composite", function () {
 
   })
 
+  it("allows one of the composed nodes to stay the same", async function () {
+
+    const model = r({
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: { arrow: "B" }
+      },
+      nodes: {
+        A: {
+          type: "composite",
+          nodes: [
+            ["A", {}],
+            ["B", {
+              follow_arrow() {
+                this.follow("arrow")
+              }
+            }]
+          ]
+        },
+        B: {}
+      }
+    })
+
+    await model.follow_arrow()
+
+  })
+
 })

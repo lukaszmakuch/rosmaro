@@ -280,11 +280,6 @@ const follow_many_up = (flat_desc, nodes, arrows_to_follow) => {
     )
   })
 
-  deny_unless_valid_state(
-    flat_desc,
-    followed_up.map(n => n.next_state_name)
-  )
-
   const merged = followed_up.reduce((so_far, followed_node) => {
     return {
       nodes: [...so_far.nodes, {node: followed_node.next_state_name, active: followed_node.active, id: followed_node.id}],
@@ -305,8 +300,17 @@ const follow_many_up = (flat_desc, nodes, arrows_to_follow) => {
     changed_nodes: []
   })
 
+  const new_nodes = remove_duplicated_nodes(update_node_activity(merged.nodes, merged.left_parents))
+
+  deny_unless_valid_state(
+    flat_desc,
+    new_nodes
+      .filter(n => n.active)
+      .map(n => n.node)
+  )
+
   return {
-    nodes: remove_duplicated_nodes(update_node_activity(merged.nodes, merged.left_parents)),
+    nodes: new_nodes,
     before_transition: merged.before_transition,
     after_transition: merged.after_transition,
     machines_history: merged.machines_history,
