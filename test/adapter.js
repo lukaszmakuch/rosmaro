@@ -78,39 +78,86 @@ describe("adapter", function () {
     assert.deepEqual(A_context, {"A": {field_d: "from_B"}});
   })
 
-  it("allows to set just different arrows", async function () {
+  describe("partially configured adapters", function () {
 
-    const model = r({
-      type: "graph",
-      start: "A",
-      arrows: {
-        A: { arrow: "B" }
-      },
-      nodes: {
-        A: {
-          type: "adapter",
-          adapted: {
-            follow_arrow() {
-              this.follow("incompatible_arrow")
+    it("allows to set just different arrows", async function () {
+
+      const model = r({
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { arrow: "B" }
+        },
+        nodes: {
+          A: {
+            type: "adapter",
+            adapted: {
+              follow_arrow() {
+                this.follow("incompatible_arrow")
+              }
+            },
+            map_entering_context(context) {
+              return context
+            },
+            map_leaving_context(context) {
+              return context
+            },
+            rename_leaving_arrows: {
+              incompatible_arrow: "arrow"
             }
           },
-          map_entering_context(context) {
-            return context
-          },
-          map_leaving_context(context) {
-            return context
-          },
-          rename_leaving_arrows: {
-            incompatible_arrow: "arrow"
-          }
-        },
-        B: {}
-      }
+          B: {}
+        }
+      })
+
+      await model.follow_arrow()
+      const nodes = await model.nodes
+      assert.deepEqual(["B"], nodes)
+
     })
 
-    await model.follow_arrow()
-    const nodes = await model.nodes
-    assert.deepEqual(["B"], nodes)
+    it("allows to set just context mapping functions", async function () {
+
+      const model = r({
+        type: "graph",
+        start: "A",
+        arrows: {
+          A: { arrow: "B" },
+          B: { arrow: "A" }
+        },
+        nodes: {
+          A: {
+            go_to_adapted() {
+              this.follow("arrow", { number: 1 })
+            },
+            read_number() {
+              return this.context.number
+            }
+          },
+          B: {
+            type: "adapter",
+            adapted: {
+              incr() {
+                this.follow("arrow", { value: this.context.value + 1 })
+              }
+            },
+            map_entering_context(ctx) {
+              return { value: ctx.number }
+            },
+            map_leaving_context(ctx) {
+              return { number: ctx.value }
+            }
+          }
+        }
+      })
+
+      await model.go_to_adapted()
+      await model.incr()
+      const incremented = await model.read_number()
+
+      assert.equal(2, incremented.A)
+
+    })
 
   })
 
