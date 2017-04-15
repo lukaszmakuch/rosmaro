@@ -178,7 +178,7 @@ const remove_duplicated_nodes = nodes => {
   })
 
   let result_nodes = [];
-  for (node in nodes_map) {
+  for (const node in nodes_map) {
     result_nodes.push(nodes_map[node])
   }
 
