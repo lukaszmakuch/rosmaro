@@ -48,10 +48,11 @@ const follow_up = (flat_desc, node, arrow, left_parents = []) => {
     )
   }
 
+
   //if this node has a parent, then check if it can handle the transition
-  const parent_node = flat_desc[node]["parent"]
-  if (parent_node) {
-    const map_arrow = flat_desc[node].map_leaving_arrows
+  if (node) { //it must have a parent
+    const parent_node = flat_desc[node]["parent"]
+    const map_arrow = flat_desc[parent_node].map_leaving_arrows
     return follow_up(
       flat_desc,
       parent_node,
@@ -86,7 +87,7 @@ const follow_down = (flat_desc, machines_history, node) => {
     //if it's a leaf, then it's the final node
     case 'leaf':
       return [node]
-    break;
+    break
 
     //if it's a composite, then result is the result of following down all the
     //composed nodes
@@ -95,15 +96,20 @@ const follow_down = (flat_desc, machines_history, node) => {
         (targets, child) => targets.concat(follow_down(flat_desc, machines_history, child)),
         []
       )
-    break;
+    break
 
-    //if it's a machine, then follow down the current node of this machine
+    //it's an adapter - just follow down
+    case 'adapter':
+      return follow_down(flat_desc, machines_history, flat_desc[node].adapted)
+    break
+
+    //if it's a graph, then follow down the current node of this graph
     case 'graph':
       const current_node = machines_history[node]
         ? machines_history[node]
         : flat_desc[node].initial_node
       return follow_down(flat_desc, machines_history, current_node)
-    break;
+    break
   }
 }
 
