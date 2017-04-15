@@ -228,4 +228,50 @@ describe("adapter", function () {
 
   })
 
+  it("renames only leaving arrows", async function () {
+
+    const node_following_a = {
+      follow_arrow() {
+        this.follow("a")
+      }
+    }
+
+    const graph_with_leaving_a = {
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: { a: "B" }
+      },
+      nodes: {
+        A: node_following_a,
+        B: node_following_a
+      }
+    }
+
+    const adapted = {
+      type: "adapter",
+      rename_leaving_arrows: { a: "b" },
+      adapted: graph_with_leaving_a
+    }
+
+    const target = {}
+
+    const model = r({
+      type: "graph",
+      start: "adapted",
+      arrows: {
+        adapted: { b: "target" }
+      },
+      nodes: { adapted, target }
+    })
+
+    await model.follow_arrow()
+    const first_target = await model.nodes
+    await model.follow_arrow()
+    const final_target = await model.nodes
+
+    assert.deepEqual(["adapted:adapted:B"], first_target)
+    assert.deepEqual(["target"], final_target)
+  })
+
 });
