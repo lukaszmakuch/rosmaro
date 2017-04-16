@@ -24,19 +24,19 @@ Method calls may be synchronized using optional pessimistic locks.
 ```js
 //That's a regular frog.
 const frog = {
-	introduce_yourself() {
-		console.log("Ribbit! Ribbit!")
-	}
+  introduce_yourself() {
+    console.log("Ribbit! Ribbit!")
+  }
 }
 
 //The Prince pays special attention to pizza.
 const prince = {
-	introduce_yourself() {
-		console.log("I am The Prince of Rosmaro!")
-	},
-	eat(dish) {
-		if (dish === "pizza") this.follow("ate_pizza")
-	}
+  introduce_yourself() {
+    console.log("I am The Prince of Rosmaro!")
+  },
+  eat(dish) {
+    if (dish === "pizza") this.follow("ate_pizza")
+  }
 }
 
 //An evil witch cast a spell on The Prince of Rosmaro.
@@ -90,4 +90,5 @@ Coming soon.
 Name | Description | Url
 --- | --- | ---
 ||
+
 If you know a compatible locking mechanism which is not mentioned above, create a pull request! :)
