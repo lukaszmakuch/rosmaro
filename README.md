@@ -4,7 +4,7 @@ Changes of behavior modeled as a graph.
 ## Brief description
 Rosmaro is a library that allows to model changes of behavior as a graph.
 
-Every node represents some behavior and can follow an arrow to a different node, and thus change the behavior.
+Every node represents some behavior and can follow an arrow to a different node, and thus change the behavior of the model.
 
 A graph is made of nodes.
 
