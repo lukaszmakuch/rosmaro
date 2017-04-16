@@ -1,7 +1,7 @@
 {
   "name": "rosmaro",
   "license": "MIT",
-  "description": "Changes of behaviour described as a graph.",
+  "description": "Changes of behavior described as a graph.",
   "keywords": ["fsm", "dispatch"],
   "version": "0.0.1",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
