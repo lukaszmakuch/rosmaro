@@ -1,4 +1,4 @@
-const new_node_id = require('node-uuid').v1
+const new_node_id = require('uuid/v1')
 const {merge_contexts} = require('./context')
 
 //nodes like ["A:A:A", "A:A:B"]

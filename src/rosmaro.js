@@ -7,7 +7,7 @@ const {
   make_locking_fn_throw_catchable_errors,
   get_or_trigger
 } = require('./error_decoration')
-const new_node_id = require('node-uuid').v1
+const new_node_id = require('uuid/v1')
 const {
   get_next_state,
   should_synchronize_call

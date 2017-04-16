@@ -3,11 +3,12 @@
   "license": "MIT",
   "description": "Changes of behavior described as a graph.",
   "keywords": ["fsm", "dispatch"],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
 
   "dependencies": {
-    "node-uuid": "^1.4.7"
+    "uuid": "^3.0.1",
+    "deep-diff": "^0.3.4"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
