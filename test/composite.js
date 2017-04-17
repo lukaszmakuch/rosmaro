@@ -6,7 +6,7 @@ const lock_mock = require('./lock_test_double')
 
 describe("composite", function () {
 
-  it("allows many transactions within left nodes", async function () {
+  it("allows many transitions within left nodes", async function () {
 
     const A = {
       on_entry() {
@@ -74,7 +74,7 @@ describe("composite", function () {
 
   })
 
-  it("allows leaving a composite to node on different levels", async function () {
+  it("allows leaving a composite to nodes on different levels", async function () {
 
     let log = []
 
