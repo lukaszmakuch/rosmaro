@@ -3,7 +3,7 @@
   "license": "MIT",
   "description": "Changes of behavior described as a graph.",
   "keywords": ["fsm", "dispatch"],
-  "version": "0.0.2",
+  "version": "0.0.4",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
 
   "dependencies": {
