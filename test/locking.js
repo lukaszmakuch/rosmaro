@@ -3,6 +3,7 @@ const build_storage = require('./storage_test_double')
 const build_rosmaro = require('./../src/rosmaro')
 const make_lock = require('./lock_test_double')
 let locks
+const assert_error = require('./errors').assert_error
 
 const get_locks = locks_count => {
   const make_lock = () => {
@@ -241,23 +242,19 @@ describe("locking", function () {
     })
 
     it("may throw an exception when locking", async function () {
-      locks.make_locking_fail_with("locking failed")
+      const locking_error = new Error("locking failed")
+      locks.make_locking_fail_with(locking_error)
       let thrown
       try { await model.call() } catch (e) { thrown = e }
-      assert.deepEqual(thrown, {
-        type: "unable_to_lock",
-        previous: "locking failed"
-      })
+      assert_error({ thrown, expected_parent: locking_error, type: "unable_to_lock" })
     })
 
     it("may throw an exception when unlocking", async function () {
-      locks.make_unlocking_fail_with("unlocking failed")
+      const unlocking_error = new Error("unlocking failed")
+      locks.make_unlocking_fail_with(unlocking_error)
       let thrown
       try { await model.call() } catch (e) { thrown = e }
-      assert.deepEqual(thrown, {
-        type: "unable_to_unlock",
-        previous: "unlocking failed"
-      })
+      assert_error({ thrown, expected_parent: unlocking_error, type: "unable_to_unlock" })
     })
 
   })

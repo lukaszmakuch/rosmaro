@@ -176,8 +176,8 @@ describe("composite", function () {
     try { await model.follow_arrow() } catch (e) { thrown.push(e) }
     assert.deepEqual(
       [
-        'transition to an invalid state ["",""]from ["A","B"]',
-        'transition to an invalid state ["",""]from ["A","B"]'
+        new Error('transition to an invalid state ["",""]from ["A","B"]'),
+        new Error('transition to an invalid state ["",""]from ["A","B"]')
       ],
       thrown
     )

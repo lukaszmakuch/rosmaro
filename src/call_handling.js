@@ -238,7 +238,7 @@ const deny_unless_valid_state = (flat_desc, nodes) => {
   const unique_nodes = unique(not_composite_nodes)
   const parents = unique_nodes.map(n => flat_desc[n].parent)
   if (!only_unique(parents)) {
-    throw "transition to an invalid state " + JSON.stringify(parents) + "from " + JSON.stringify(unique_nodes)
+    throw new Error("transition to an invalid state " + JSON.stringify(parents) + "from " + JSON.stringify(unique_nodes))
   }
 }
 
