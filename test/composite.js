@@ -74,6 +74,66 @@ describe("composite", function () {
 
   })
 
+  it("allows leaving a composite to node on different levels", async function () {
+
+    let log = []
+
+    const A = {
+      on_entry() {
+        log.push("entered A")
+      }
+    }
+
+    const BA = {
+      on_entry() {
+        log.push("entered BA")
+      },
+    }
+
+    const BBA = {
+      follow_arrow() {
+        this.follow("x")
+      }
+    }
+
+    const BBB = {
+      follow_arrow() {
+        this.follow("y")
+      }
+    }
+
+    const BB = {
+      type: "composite",
+      nodes: [
+        ["BBA", BBA],
+        ["BBB", BBB]
+      ]
+    }
+
+    const B = {
+      type: "graph",
+      start: "BB",
+      arrows: {
+        BB: { x: "BA" }
+      },
+      nodes: { BA, BB }
+    }
+
+    const root = {
+      type: "graph",
+      start: "B",
+      arrows: {
+        B: { y: "A" }
+      },
+      nodes: { A, B }
+    }
+
+    const model = r(root)
+    await model.follow_arrow()
+
+    assert.deepEqual(log, ["entered BA", "entered A"])
+  })
+
   it("allows transitions on different levels", async function () {
 
     var entered_BBB = false
