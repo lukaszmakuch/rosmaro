@@ -2,10 +2,12 @@
   "name": "rosmaro",
   "license": "MIT",
   "description": "Changes of behavior described as a graph.",
-  "keywords": ["fsm", "dispatch"],
+  "keywords": [
+    "fsm",
+    "dispatch"
+  ],
   "version": "0.0.4",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
-
   "dependencies": {
     "uuid": "^3.0.1",
     "deep-diff": "^0.3.4"
@@ -13,14 +15,13 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-preset-env": "^1.4.0",
-    "babel-register": "^6.24.1"
+    "babel-register": "^6.24.1",
+    "mocha": "^3.2.0"
   },
-
   "main": "./dist/rosmaro.js",
-
   "scripts": {
     "build": "babel src -d dist",
-    "test": "mocha --compilers js:babel-register",
+    "test": "./node_modules/mocha/bin/mocha --compilers js:babel-register",
     "prepublish": "npm run build"
   }
 }
