@@ -6,7 +6,7 @@
     "fsm",
     "dispatch"
   ],
-  "version": "0.0.4",
+  "version": "0.0.6",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
   "dependencies": {
     "uuid": "^3.0.1",
