@@ -89,6 +89,6 @@ Coming soon.
 
 Name | Description | Url
 --- | --- | ---
-||
+rosmaro-redlock | Uses Redis with [node-redlock](https://github.com/mike-marcacci/node-redlock). | [github.com/lukaszmakuch/rosmaro-redlock](https://github.com/lukaszmakuch/rosmaro-redlock)
 
 If you know a compatible locking mechanism which is not mentioned above, create a pull request! :)
