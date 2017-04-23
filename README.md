@@ -77,15 +77,15 @@ $ npm i rosmaro
 You'll also need compatible storage and locking mechanisms.
 
 ### Storages
-Coming soon.
+Here's a list of recommended storage mechanisms:
 
 Name | Description | Url
 --- | --- | ---
-||
+rosmaro-redis-storage | Uses Redis with the [redis](https://github.com/NodeRedis/node_redis) package. | [github.com/lukaszmakuch/rosmaro-redis-storage](https://github.com/lukaszmakuch/rosmaro-redis-storage)
 
 If you know a compatible storage which is not mentioned above, create a pull request! :)
 ### Locking mechanisms
-Coming soon.
+Here's a list of recommended locking mechanisms:
 
 Name | Description | Url
 --- | --- | ---
