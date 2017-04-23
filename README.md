@@ -3,7 +3,7 @@ Changes of behavior modeled as a graph.
 ***
 It's like an object where *this* is a statechart.
 
-These are the [main goal of Rosmaro](https://lukaszmakuch.github.io/rosmaro/#why-is-it-interesting) achieved by putting different behaviors into separated nodes of a graph:
+These are the [main goals of Rosmaro](https://lukaszmakuch.github.io/rosmaro/#why-is-it-interesting) achieved by putting different behaviors into separated nodes of a graph:
 * decoupled code
 * readable model
 * limited *if* statements
