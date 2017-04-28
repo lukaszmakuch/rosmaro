@@ -4,7 +4,7 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -12,7 +12,7 @@
     
     <url>
      <loc>/getting-started/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -21,25 +21,25 @@
         
     <url>
      <loc>/building-blocks/leaves/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/building-blocks/graphs/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/building-blocks/composites/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/building-blocks/adapters/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -49,13 +49,13 @@
         
     <url>
      <loc>/transitions/correct/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/transitions/incorrect/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -65,19 +65,19 @@
         
     <url>
      <loc>/working-with-rosmaro/names-of-nodes/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/working-with-rosmaro/returning-values/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/working-with-rosmaro/locking/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
@@ -87,13 +87,13 @@
         
     <url>
      <loc>/contribution/storage-specification/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/contribution/locks-specification/</loc>
-     <lastmod>2017-04-23</lastmod>
+     <lastmod>2017-04-28</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
