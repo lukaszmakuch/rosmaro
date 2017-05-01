@@ -6,6 +6,36 @@ const lock_mock = require('./lock_test_double')
 
 describe("composite", function () {
 
+  it("may do a loop", async function () {
+
+    const A = {
+      type: "composite",
+      nodes: [
+        ["A", { follow_arrow() {} }],
+        ["B", { follow_arrow() {} }],
+        ["C", { follow_arrow() { this.follow("self") } }],
+        ["D", { follow_arrow() {} }],
+      ]
+    }
+
+    const root = {
+      type: "graph",
+      start: "A",
+      arrows: {
+        A: { self: "A" }
+      },
+      nodes: { A }
+    }
+
+    const model = r(root)
+
+    await model.follow_arrow()
+    const nodes = await model.nodes
+    assert.deepEqual(["A:A", "A:B", "A:C", "A:D"], nodes)
+
+
+  })
+
   it("allows many transitions within left nodes", async function () {
 
     const A = {

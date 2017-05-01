@@ -153,7 +153,7 @@ left_parents like ["B:C"]
 result like [{node: "A", active: true}, {node: "B:C:D", active: false}]
 */
 const update_node_activity = (nodes, left_parents) => nodes.map(node_props => {
-  const is_node_parent = maybe_parent => node_props.node.startsWith(maybe_parent)
+  const is_node_parent = maybe_parent => node_props.node.startsWith(maybe_parent + ":")
   const deativate = left_parents.some(is_node_parent)
   return deativate
     ? Object.assign({}, node_props, {active: false})
