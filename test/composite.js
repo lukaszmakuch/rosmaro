@@ -6,6 +6,23 @@ const lock_mock = require('./lock_test_double')
 
 describe("composite", function () {
 
+  it("gives each composed node a different id", async function () {
+
+    const id_reader = { read_id() { return this.id } }
+
+    const model = r({
+      type: "composite",
+      nodes: [
+        ["A", id_reader],
+        ["B", id_reader],
+      ]
+    })
+
+    const given_ids = await model.read_id()
+    assert(given_ids["A"] != given_ids["B"])
+
+  })
+
   it("may do a loop", async function () {
 
     const A = {
