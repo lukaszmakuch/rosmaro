@@ -432,7 +432,7 @@ const tick = async (flat_desc, context, machines_history, nodes, method_name, ar
     nodes: followed.nodes,
     any_transition_occured,
     context: new_context,
-    machines_history: Object.assign({}, followed.machines_history, machines_history),
+    machines_history: Object.assign({}, machines_history, followed.machines_history),
     before_transition: followed.before_transition,
     after_transition: followed.after_transition,
     before_leaving_node: leave_fns.before,
