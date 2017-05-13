@@ -61,6 +61,9 @@
         </ul>
     
 
+    <li class="toctree-l2"><a href="#rosmaro-elsewhere">Rosmaro elsewhere</a></li>
+    
+
     <li class="toctree-l2"><a href="#license">License</a></li>
     
 
@@ -144,6 +147,11 @@
     </ul>
 	    </li>
           
+            <li class="toctree-l1">
+		
+    <a class="" href="elsewhere/">Rosmaro elsewhere</a>
+	    </li>
+          
         </ul>
       </div>
       &nbsp;
@@ -193,30 +201,35 @@
 <p>The state of a Rosmaro model is serializable and stored using a compatible <a href="./contribution/storage-specification">storage mechanism</a>.</p>
 <p>Method calls may be synchronized using optional pessimistic <a href="./contribution/locks-specification">locks</a>.</p>
 <h2 id="a-simple-example-the-prince-of-rosmaro">A simple example - The Prince of Rosmaro</h2>
-<pre><code class="js">//That's a regular frog.
+<div id="prince">
+const rosmaro = require('rosmaro')
+const storage = require('rosmaro-in-memory-storage')()
+const lock = require('rosmaro-process-wide-lock')()
+
+//That's a regular frog.
 const frog = {
   introduce_yourself() {
-    console.log(&quot;Ribbit! Ribbit!&quot;)
+    console.log("Ribbit! Ribbit!")
   }
 }
 
 //The Prince pays special attention to pizza.
 const prince = {
   introduce_yourself() {
-    console.log(&quot;I am The Prince of Rosmaro!&quot;)
+    console.log("I am The Prince of Rosmaro!")
   },
   eat(dish) {
-    if (dish === &quot;pizza&quot;) this.follow(&quot;ate_pizza&quot;)
+    if (dish === "pizza") this.follow("ate_pizza")
   }
 }
 
 //An evil witch cast a spell on The Prince of Rosmaro.
 //Nothing bad happens unless he eats a pizza!
 const cursed_prince_description = {
-  type: &quot;graph&quot;,
-  start: &quot;prince&quot;,
+  type: "graph",
+  start: "prince",
   arrows: {
-    prince: { ate_pizza: &quot;frog&quot; }
+    prince: { ate_pizza: "frog" }
   },
   nodes: { prince, frog }
 }
@@ -224,18 +237,23 @@ const cursed_prince_description = {
 const cursed_prince = rosmaro(cursed_prince_description, storage, lock)
 
 await cursed_prince.introduce_yourself() //I am The Prince of Rosmaro!
-await cursed_prince.eat(&quot;yakisoba&quot;)
+await cursed_prince.eat("yakisoba")
 await cursed_prince.introduce_yourself() //I am The Prince of Rosmaro!
-await cursed_prince.eat(&quot;pizza&quot;)
+await cursed_prince.eat("pizza")
 await cursed_prince.introduce_yourself() //Ribbit! Ribbit!
-</code></pre>
+</div>
 
+<script src="https://embed.runkit.com" data-element-id="prince" data-node-version="7.10.0"></script>
+
+<p>Feel free to play around and simply type your code above! </p>
 <h3 id="why-is-it-interesting">Why is it interesting?</h3>
 <p>The frog is nothing but a frog. Knows just to how to do the <em>Ribbit!</em> sound.</p>
 <p>The Prince can introduce himself and if you give him a pizza, he follows the path of the one who ate a pizza. That's all he does.</p>
 <p>The model of the Cursed Prince connects the Prince and the frog with the <em>ate_pizza</em> arrow.</p>
 <p>This way the model of the frog, the model of the Prince and the model of the Cursed Prince stay separated.</p>
 <p>Would you like to change the Prince into a unicorn instead of a frog? Or maybe into an electric kettle? Feel free! Just model the unicorn or the kettle and change what the <em>ate_pizza</em> arrow is pointing at! No need to change the Prince himself.</p>
+<h1 id="rosmaro-elsewhere">Rosmaro elsewhere</h1>
+<p>If you'd like to learn more about Rosmaro and the story behind it, please check the <a href="./elsewhere">Rosmaro elsewhere</a> chapter.</p>
 <h1 id="license">License</h1>
 <p>Rosmaro is licensed under the MIT license.</p>
               
@@ -290,5 +308,5 @@ await cursed_prince.introduce_yourself() //Ribbit! Ribbit!
 
 <!--
 MkDocs version : 0.16.3
-Build Date UTC : 2017-04-28 20:47:55
+Build Date UTC : 2017-05-13 00:26:30
 -->
