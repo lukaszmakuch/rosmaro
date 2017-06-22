@@ -277,7 +277,7 @@
         }, 
         {
             "location": "/elsewhere/", 
-            "text": "Below is a list of materials somehow related to Rosmaro.\n\n\n\n\nState machines to the rescue of complex forms\n - a blog post about building a wizard with Rosmaro\n\n\nDecomposing wizards with Rosmaro\n - a video similar to the post above, showing a wizard build with Rosmaro\n\n\nBalancing IF statements and nodes with Rosmaro \n\n\n\n\nDo you know something that should be mentioned above? Let me know and I'll include it! :)", 
+            "text": "Below is a list of materials somehow related to Rosmaro.\n\n\n\n\nState machines to the rescue of complex forms\n - a blog post about building a wizard with Rosmaro\n\n\nAn example wizard implemented using Rosmaro\n - the source code of the application described in the post above\n\n\nDecomposing wizards with Rosmaro\n - a video similar to the post above, showing a wizard build with Rosmaro\n\n\nBalancing IF statements and nodes with Rosmaro\n - a video on finding the optimal number of if statements\n\n\n\n\nDo you know something that should be mentioned above? Let me know and I'll include it! :)", 
             "title": "Rosmaro elsewhere"
         }
     ]
