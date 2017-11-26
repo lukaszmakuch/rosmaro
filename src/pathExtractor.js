@@ -1,27 +1,10 @@
-// "A:B:C" into ["A", "B", "C"]
-// "" into []
-const splitNodePath = fullNodePath => fullNodePath
-  ? fullNodePath.split(":")
-  : [];
+import {splitNodePath, prefixNodeBindings, getSubGraph} from './utils';
 
 // A graph which only node is a leaf together with its (empty) FSM state.
 const leafPath = {
   FSMState: {},
   graph: {type: 'leaf'}
 };
-
-// ("A", ":", "B") => "A:B"
-// ("A", ":", "") => "A"
-const prefixWithSeparator = (prefix, separator, string) => string
-  ? prefix + separator + string
-  : prefix;
-
-// {'': 1, 'A', 2} => {'X' => 1, 'X:A' => 2}
-const prefixKeys = (prefix, separator, obj) => 
-  Object.keys(obj).reduce((prefixed, key) => ({
-    ...prefixed,
-    [prefixWithSeparator(prefix, ":", key)]: obj[key]
-  }), {});
 
 // for a graph example, check its unit test
 // nodes like ["A", "B", "C"]
@@ -36,9 +19,9 @@ const extractRecursively = (
   if (graph.type === 'leaf') return leafPath;
 
   const [node, ...remainingNodes] = nodes;
-  const subGraph = graph.nodes[node];
+  const subGraph = getSubGraph(graph, node);
   const pathFromSubGraph = extractRecursively(subGraph, remainingNodes);
-  const subGraphFSMState = prefixKeys(node, ":", pathFromSubGraph.FSMState);
+  const subGraphFSMState = prefixNodeBindings(node, pathFromSubGraph.FSMState);
   // handling a compound node depending on its type
   return ({
     graph: () => {

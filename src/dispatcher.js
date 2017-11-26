@@ -1,3 +1,5 @@
+import {prefixNode, getSubGraph} from './utils';
+
 const mergeCtxs = (ctx1, ctx2) => ({
   ...ctx1,
   ...ctx2
@@ -16,31 +18,10 @@ const extractBound = (allBound, desiredRoot) =>
     };
   }, {});
 
-const prepend = (prefix, node) => node
-  ? prefix + ":" + node
-  : prefix;
-
-const prependToBound = (bound, nodePrefix) =>
-  Object.keys(bound).reduce((expanded, node) => ({
-    ...expanded,
-    [prepend(nodePrefix, node)]: bound[node]
-  }), {})
-
-const extendArrows = (callRes, prefix) => {
-  return arrows.map(compoundArrow => {
-    const arrow = compoundArrow[1][0];
-    return []
-  });
-  return {
-    ...callRes,
-    arrows: prependToBound(callRes.arrows, prefix)
-  };
-};
-
 // arrows like [ [[CBA, x], [CB, y], [C, z]], ... ]
 // res like [ [[XCBA, x], [XCB, y], [XC, z]], ... ]
 const prefixArrows = (prefix, arrows) => arrows.map(arrow => arrow.map(
-  version => [prepend(prefix, version[0]), version[1]]
+  version => [prefixNode(prefix, version[0]), version[1]]
 ));
 
 // arrows like [ [[CBA, x], [CB, y], [C, z]], ... ]
@@ -52,8 +33,6 @@ const addMissingHighestArrow = arrows => arrows.map(arrow => {
     ? [...arrow, ['', highest[1]]]
     : arrow;
 });
-
-const getSubGraph = (graph, node) => graph.nodes[node];
 
 const dispatch = ({
   graph, 
