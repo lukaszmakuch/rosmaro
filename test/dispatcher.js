@@ -4,28 +4,17 @@ import {mapArrows} from './../src/utils';
 
 /*
 TODO:
-[ ] context of composite states is merged in case of simultaneous transitions
-[ ] only different parts are merged
-[ ] allows to remove parts
 [ ] adapting capabilities
-[ ] renaming only leaving arrows
 [ ] decorating nodes to adapt them
 [ ] flat graph
-[ ] nested graph
 [ ] async
 [ ] history?
 [ ] optional,
 [ ] optional "dummy" bindings
-[ ] starting with a leaf
-[ ] starting with a graph
-[ ] starting with a composite
 [ ] composite of composites
 [ ] mapping entering context
 [ ] mapping leaving context
-[ ] altering method name
-[ ] altering call result
 [ ] call result of a composite
-[ ] rename leaving arrows
 [ ] context partitioning
 [ ] altering arguments
 [ ] passing parameters
@@ -97,6 +86,98 @@ describe("dispatcher", () => {
         method: "a",
         params: []
       }));
+
+    });
+
+  });
+
+  describe('merging the context', () => {
+
+    it('allows parts to be removed', () => {
+      const initCtx = {a: 2, b: 3};
+      const graph = {type: 'leaf'};
+      const bindings = {
+        '': () => {
+          return {ctx: {a: 2}};
+        },
+      };
+      const {ctx} = dispatch({
+        graph,
+        FSMState: {},
+        bindings,
+        ctx: initCtx,
+        method: "",
+        params: []
+      });
+      const expectedCtx = {a: 2};
+      assert.deepEqual(expectedCtx, ctx);
+    });
+
+    describe('composites', () => {
+      const graph = {
+        type: 'composite',
+        nodes: {
+          A: {
+            type: 'graph',
+            nodes: {
+              A: {type: 'leaf'}
+            }
+          },
+          B: {
+            type: 'graph',
+            nodes: {
+              A: {type: 'leaf'}
+            }
+          }
+        }
+      };
+      const FSMState = {
+        'A': 'A',
+        'B': 'A',
+      };
+
+      it('merges only different parts', () => {
+        const initCtx = {a: "a", b: "b"};
+        const bindings = {
+          'A:A': ({method, ctx, params}) => {
+            return {arrow: 'x', ctx: {a: "z", b: "b"}};
+          },
+          'B:A': ({method, ctx, params}) => {
+            return {arrow: 'y', ctx: {a: "a", b: "x"}};
+          }
+        };
+        const {ctx} = dispatch({
+          graph,
+          FSMState,
+          bindings,
+          ctx: initCtx,
+          method: "",
+          params: []
+        });
+        const expectedCtx = {a: "z", b: "x"};
+        assert.deepEqual(expectedCtx, ctx);
+      });
+
+      it('merges the context in case of simultaneous transitions', () => {
+        const bindings = {
+          'A:A': ({method, ctx, params}) => {
+            return {arrow: 'x', ctx: {a: 2}};
+          },
+          'B:A': ({method, ctx, params}) => {
+            return {arrow: 'y', ctx: {b: 3}};
+          }
+        };
+        const {ctx} = dispatch({
+          graph,
+          FSMState,
+          bindings,
+          ctx: {},
+          method: "",
+          params: []
+        });
+        const expectedCtx = {a: 2, b: 3};
+        assert.deepEqual(expectedCtx, ctx);
+      })
 
     });
 

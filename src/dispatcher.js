@@ -1,9 +1,26 @@
 import {prefixNode, getSubGraph} from './utils';
+import deep from 'deep-diff';
+const diff = deep.diff
+const applyChange = deep.applyChange
 
-const mergeCtxs = (ctx1, ctx2) => ({
-  ...ctx1,
-  ...ctx2
-});
+const mergeCtxs = (original, newOnes) => {
+  if (newOnes.length == 1) return newOnes[0];
+  
+  let diffs = newOnes
+    .map(c => diff(original, c))
+    .reduce((flat, arr) => [].concat(flat, arr), [])
+  let res = {...original};
+  diffs
+    .filter(a => a)
+    .filter(d => d.kind != "D")
+    .forEach(d => applyChange(res, true, d))
+
+  return res
+}
+
+const defaultParentBinding = ({method, ctx, params, child}) => {
+  return child({method, ctx, params});
+};
 
 const extractBound = (allBound, desiredRoot) =>
   Object.keys(allBound).reduce((extracted, node) => {
@@ -42,7 +59,7 @@ const dispatch = ({
   method, 
   params
 }) => {
-  const binding = bindings[''];
+  const binding = bindings[''] || defaultParentBinding;
   const nodeType = graph.type;
   return ({
 
@@ -59,7 +76,7 @@ const dispatch = ({
       const composedNodes = Object.keys(graph.nodes);
 
       const childFn = ({method, ctx, params}) => {
-        return composedNodes.reduce((soFar, childNode) => {
+        const compNodesRes = composedNodes.reduce((soFar, childNode) => {
           const rawChildRes = dispatch({
             graph: getSubGraph(graph, childNode),
             FSMState: extractBound(FSMState, childNode),
@@ -75,10 +92,15 @@ const dispatch = ({
 
           return {
             arrows: [...soFar.arrows, ...childRes.arrows],
-            ctx: mergeCtxs(soFar.ctx, childRes.ctx),
+            ctxs: [...soFar.ctxs, childRes.ctx],
             res: {...soFar.res, [childNode]: childRes.res}
           };
-        }, {arrows: [], ctx: {}, res: undefined});
+        }, {arrows: [], ctxs: [], res: undefined});
+        return {
+          arrows: compNodesRes.arrows,
+          res: compNodesRes.res,
+          ctx: mergeCtxs(ctx, compNodesRes.ctxs)
+        }
       };
 
       const childRes = binding({method, ctx, params, child: childFn});
