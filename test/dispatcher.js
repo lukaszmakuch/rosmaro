@@ -4,6 +4,9 @@ import {mapArrows} from './../src/utils';
 
 /*
 TODO:
+[ ] context of composite states is merged in case of simultaneous transitions
+[ ] only different parts are merged
+[ ] allows to remove parts
 [ ] adapting capabilities
 [ ] renaming only leaving arrows
 [ ] decorating nodes to adapt them
@@ -50,14 +53,9 @@ describe("dispatcher", () => {
         }
       };
 
-      const FSMAtA = {
+      const FSMState = {
         '': 'graph_with_leaving_a',
         'graph_with_leaving_a': 'a'
-      };      
-
-      const FSMAtB = {
-        '': 'graph_with_leaving_a',
-        'graph_with_leaving_a': 'b'
       };
 
       const bindings = {
@@ -69,7 +67,6 @@ describe("dispatcher", () => {
         'graph_with_leaving_a': ({method, ctx, params, child}) => {
           const childRes = child({method, ctx, params});
           const arrows = mapArrows({a: 'b'}, childRes.arrows);
-          console.log(require('util').inspect({arrows}, false, 30));
           return {
             arrows,
             ctx: childRes.ctx,
@@ -96,23 +93,7 @@ describe("dispatcher", () => {
         res: undefined
       }, dispatch({
         graph,
-        FSMState: FSMAtA,
-        bindings,
-        ctx: {},
-        method: "a",
-        params: []
-      }));
-      
-      // Following a by graph_with_leaving_a:b
-      assert.deepEqual({
-        arrows: [
-          [['graph_with_leaving_a:b', 'a'], ['graph_with_leaving_a', 'b'], ['', 'b']]
-        ],
-        ctx: {},
-        res: undefined
-      }, dispatch({
-        graph,
-        FSMState: FSMAtB,
+        FSMState,
         bindings,
         ctx: {},
         method: "a",
