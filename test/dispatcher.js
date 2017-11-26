@@ -5,16 +5,10 @@ import {mapArrows} from './../src/utils';
 /*
 TODO:
 [ ] adapting capabilities
-[ ] decorating nodes to adapt them
-[ ] flat graph
 [ ] async
 [ ] history?
 [ ] optional,
-[ ] optional "dummy" bindings
 [ ] composite of composites
-[ ] mapping entering context
-[ ] mapping leaving context
-[ ] call result of a composite
 [ ] context partitioning
 [ ] altering arguments
 [ ] passing parameters
@@ -46,10 +40,6 @@ describe("dispatcher", () => {
       };
 
       const bindings = {
-
-        '': ({method, ctx, params, child}) => {
-          return child({method, ctx, params});
-        },
 
         'graph_with_leaving_a': ({method, ctx, params, child}) => {
           const childRes = child({method, ctx, params});
@@ -210,14 +200,6 @@ describe("dispatcher", () => {
     };
 
     const bindings = {
-
-      '': ({method, ctx, params, child}) => {
-        return child({method, ctx, params});
-      },
-
-      'B': ({method, ctx, params, child}) => {
-        return child({method, ctx, params});
-      },
 
       'B:B': ({method, ctx, params, child}) => {
         const childRes = child({method, ctx, params});
