@@ -53,7 +53,7 @@ const addMissingHighestArrow = arrows => arrows.map(arrow => {
     : arrow;
 });
 
-const getSubGraph = (graph, node) => ({'': graph.nodes[node]});
+const getSubGraph = (graph, node) => graph.nodes[node];
 
 const dispatch = ({
   graph, 
@@ -64,7 +64,7 @@ const dispatch = ({
   params
 }) => {
   const binding = bindings[''];
-  const nodeType = graph[''].type;
+  const nodeType = graph.type;
   return ({
 
     'leaf': () => {
@@ -77,12 +77,12 @@ const dispatch = ({
     },
 
     'composite': () => {
-      const composedNodes = Object.keys(graph[''].nodes);
+      const composedNodes = Object.keys(graph.nodes);
 
       const childFn = ({method, ctx, params}) => {
         return composedNodes.reduce((soFar, childNode) => {
           const rawChildRes = dispatch({
-            graph: getSubGraph(graph[''], childNode),
+            graph: getSubGraph(graph, childNode),
             FSMState: extractBound(FSMState, childNode),
             bindings: extractBound(bindings, childNode),
             ctx,
@@ -114,7 +114,7 @@ const dispatch = ({
       const activeChild = FSMState[''];
       const childFn = ({method, ctx, params}) => {
         const childRes = dispatch({
-          graph: getSubGraph(graph[''], activeChild),
+          graph: getSubGraph(graph, activeChild),
           FSMState: extractBound(FSMState, activeChild),
           bindings: extractBound(bindings, activeChild),
           ctx,

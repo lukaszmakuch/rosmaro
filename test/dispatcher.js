@@ -38,16 +38,14 @@ describe("dispatcher", () => {
     it('allows to rename a graph leaving arrow', () => {
 
       const graph = {
-        '': {
-          type: 'graph',
-          nodes: {
-            target: {type: 'leaf'},
-            graph_with_leaving_a: {
-              type: 'graph',
-              nodes: {
-                a: {type: 'leaf'},
-                b: {type: 'leaf'}
-              }
+        type: 'graph',
+        nodes: {
+          target: {type: 'leaf'},
+          graph_with_leaving_a: {
+            type: 'graph',
+            nodes: {
+              a: {type: 'leaf'},
+              b: {type: 'leaf'}
             }
           }
         }
@@ -106,20 +104,18 @@ describe("dispatcher", () => {
 
   it("calls bound methods based on the FSM state", () => {
     const graph = {
-      '': {
-        type: 'graph',
-        nodes: {
-          A: {type: 'leaf'},
-          B: {
-            type: 'graph',
-            nodes: {
-              A: {type: 'leaf'},
-              B: {
-                type: 'composite',
-                nodes: {
-                  A: {type: 'leaf'},
-                  B: {type: 'leaf'},
-                }
+      type: 'graph',
+      nodes: {
+        A: {type: 'leaf'},
+        B: {
+          type: 'graph',
+          nodes: {
+            A: {type: 'leaf'},
+            B: {
+              type: 'composite',
+              nodes: {
+                A: {type: 'leaf'},
+                B: {type: 'leaf'},
               }
             }
           }
