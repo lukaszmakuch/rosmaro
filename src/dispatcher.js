@@ -26,9 +26,31 @@ const prependToBound = (bound, nodePrefix) =>
     [prepend(nodePrefix, node)]: bound[node]
   }), {})
 
-const extendArrows = (callRes, prefix) => ({
-  ...callRes,
-  arrows: prependToBound(callRes.arrows, prefix)
+const extendArrows = (callRes, prefix) => {
+  return arrows.map(compoundArrow => {
+    const arrow = compoundArrow[1][0];
+    return []
+  });
+  return {
+    ...callRes,
+    arrows: prependToBound(callRes.arrows, prefix)
+  };
+};
+
+// arrows like [ [[CBA, x], [CB, y], [C, z]], ... ]
+// res like [ [[XCBA, x], [XCB, y], [XC, z]], ... ]
+const prefixArrows = (prefix, arrows) => arrows.map(arrow => arrow.map(
+  version => [prepend(prefix, version[0]), version[1]]
+));
+
+// arrows like [ [[CBA, x], [CB, y], [C, z]], ... ]
+// res like [ [[CBA, x], [CB, y], [C, z], ['', z]], ... ]
+const addMissingHighestArrow = arrows => arrows.map(arrow => {
+  const highest = arrow[arrow.length - 1];
+  const highestMissing = highest[0] != '';
+  return highestMissing
+    ? [...arrow, ['', highest[1]]]
+    : arrow;
 });
 
 const getSubGraph = (graph, node) => ({'': graph.nodes[node]});
@@ -48,7 +70,7 @@ const dispatch = ({
     'leaf': () => {
       const leafRes = binding({method, ctx, params});
       return {
-        arrows: {'': leafRes.arrow},
+        arrows: [[['', leafRes.arrow]]],
         ctx: leafRes.ctx,
         res: leafRes.res
       }
@@ -59,30 +81,39 @@ const dispatch = ({
 
       const childFn = ({method, ctx, params}) => {
         return composedNodes.reduce((soFar, childNode) => {
-          const childRes = extendArrows(dispatch({
+          const rawChildRes = dispatch({
             graph: getSubGraph(graph[''], childNode),
             FSMState: extractBound(FSMState, childNode),
             bindings: extractBound(bindings, childNode),
             ctx,
             method,
             params
-          }), childNode);
+          });
+          const childRes = {
+            ...rawChildRes,
+            arrows: prefixArrows(childNode, rawChildRes.arrows)
+          };
 
           return {
-            arrows: {...soFar.arrows, ...childRes.arrows},
+            arrows: [...soFar.arrows, ...childRes.arrows],
             ctx: mergeCtxs(soFar.ctx, childRes.ctx),
             res: {...soFar.res, [childNode]: childRes.res}
           };
-        }, {arrows: {}, ctx: {}, res: undefined});
+        }, {arrows: [], ctx: {}, res: undefined});
       };
 
-      return binding({method, ctx, params, child: childFn});
+      const childRes = binding({method, ctx, params, child: childFn});
+
+      return {
+        ...childRes,
+        arrows: addMissingHighestArrow(childRes.arrows)
+      };
     },
 
     'graph': () => {
       const activeChild = FSMState[''];
       const childFn = ({method, ctx, params}) => {
-        return dispatch({
+        const childRes = dispatch({
           graph: getSubGraph(graph[''], activeChild),
           FSMState: extractBound(FSMState, activeChild),
           bindings: extractBound(bindings, activeChild),
@@ -90,10 +121,17 @@ const dispatch = ({
           method,
           params
         });
+        return {
+          ...childRes,
+          arrows: prefixArrows(activeChild, childRes.arrows)
+        };
       }
 
       const childRes = binding({method, ctx, params, child: childFn});
-      return extendArrows(childRes, activeChild);
+      return {
+        ...childRes,
+        arrows: addMissingHighestArrow(childRes.arrows)
+      };
     },
   })[nodeType]();
 };
