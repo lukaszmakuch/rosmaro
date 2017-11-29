@@ -3,18 +3,165 @@ import dispatch from './../src/dispatcher';
 import {mapArrows} from './../src/utils';
 
 /*
-TODO:
-[ ] adapting capabilities
 [ ] async
+[ ] optional arrows
 [ ] history?
-[ ] optional,
-[ ] composite of composites
-[ ] context partitioning
-[ ] altering arguments
-[ ] passing parameters
 */
 
 describe("dispatcher", () => {
+
+  describe('async', () => {
+    const asyncBinding = async ({ctx}) => {
+      return {arrow: 'x', ctx};
+    };
+    it('leaves', async () => {
+      const graph = {type: 'leaf'};
+      const bindings = {
+        '': asyncBinding
+      };
+      const callRes = dispatch({
+        graph,
+        FSMState: {},
+        bindings,
+        ctx: {},
+        method: "",
+        params: []
+      });
+      assert(callRes.then);
+      const finalCallRes = await callRes;
+      assert.deepEqual({
+        arrows: [
+          [['', 'x']]
+        ],
+        ctx: {},
+        res: undefined
+      }, finalCallRes);
+    });
+    it('graph children', async () => {
+      const graph = {
+        type: 'graph',
+        nodes: {A: {type: 'leaf'}}
+      };
+      const FSMState = {'': 'A'};
+      const bindings = {
+        'A': asyncBinding
+      };
+      const callRes = dispatch({
+        graph,
+        FSMState,
+        bindings,
+        ctx: {},
+        method: "",
+        params: []
+      });
+      assert(callRes.then);
+      const finalCallRes = await callRes;
+      assert.deepEqual({
+        arrows: [
+          [['A', 'x'], ['', 'x']]
+        ],
+        ctx: {},
+        res: undefined
+      }, finalCallRes);
+    });
+    it('graph bindings', async () => {
+      const graph = {
+        type: 'graph',
+        nodes: {A: {type: 'leaf'}}
+      };
+      const FSMState = {'': 'A'};
+      const bindings = {
+        '': async ({child}) => {
+          return await child({ctx: {}});
+        },
+        'A': async () => ({res: "leaf res", ctx: {}})
+      };
+      const callRes = dispatch({
+        graph,
+        FSMState,
+        bindings,
+        ctx: {},
+        method: "",
+        params: []
+      });
+      const finalCallRes = await callRes;
+      assert.deepEqual({
+        arrows: [
+          [['A', undefined], ['', undefined]]
+        ],
+        ctx: {},
+        res: "leaf res"
+      }, finalCallRes);
+    });
+    it('composite children', async () => {
+      const graph = {
+        type: 'composite',
+        nodes: {
+          A: {type: 'leaf'},
+          B: {type: 'leaf'},
+        }
+      };
+      const bindings = {
+        'A': async () => ({res: 'ARes', ctx: {}}),
+        'B': async () => ({res: 'BRes', ctx: {}}),
+      };
+      const callRes = dispatch({
+        graph,
+        FSMState: {},
+        bindings,
+        ctx: {},
+        method: "",
+        params: []
+      });
+      const finalCallRes = await callRes;
+      assert.deepEqual({
+        arrows: [
+          [['A', undefined], ['', undefined]],
+          [['B', undefined], ['', undefined]]
+        ],
+        ctx: {},
+        res: {A: 'ARes', B: 'BRes'}
+      }, finalCallRes);
+    });
+    it('composite bindings', async () => {
+      const graph = {
+        type: 'composite',
+        nodes: {
+          A: {type: 'leaf'},
+          B: {type: 'leaf'},
+        }
+      };
+      const bindings = {
+        '': async ({child, ctx}) => {
+          const childRes = child({ctx});
+          return {
+            res: childRes.res.A + "_" + childRes.res.B,
+            ctx: {},
+            arrows: childRes.arrows
+          };
+        },
+        'A': () => ({res: 'ARes', ctx: {}}),
+        'B': () => ({res: 'BRes', ctx: {}}),
+      };
+      const callRes = dispatch({
+        graph,
+        FSMState: {},
+        bindings,
+        ctx: {},
+        method: "",
+        params: []
+      });
+      const finalCallRes = await callRes;
+      assert.deepEqual({
+        arrows: [
+          [['A', undefined], ['', undefined]],
+          [['B', undefined], ['', undefined]]
+        ],
+        ctx: {},
+        res: "ARes_BRes",
+      }, finalCallRes);
+    });
+  });
 
   describe('adapting', () => {
 

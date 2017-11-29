@@ -22,6 +22,10 @@ const defaultParentBinding = ({method, ctx, params, child}) => {
   return child({method, ctx, params});
 };
 
+const withResolved = (val, cb) => val.then 
+  ? val.then(cb) 
+  : cb(val);
+
 const extractBound = (allBound, desiredRoot) =>
   Object.keys(allBound).reduce((extracted, node) => {
     if (!node.startsWith(desiredRoot)) return extracted;
@@ -51,6 +55,21 @@ const addMissingHighestArrow = arrows => arrows.map(arrow => {
     : arrow;
 });
 
+const extractPromises = maybePromises => maybePromises.reduce(
+  (grouped, maybePromise) => {
+    return maybePromise.then
+      ? {
+        ...grouped,
+        promises: [...grouped.promises, maybePromise],
+      }
+      : {
+        ...grouped,
+        notPromises: [...grouped.notPromises, maybePromise],
+      };
+  },
+  {promises: [], notPromises: []}
+);
+
 const dispatch = ({
   graph, 
   FSMState, 
@@ -65,19 +84,24 @@ const dispatch = ({
 
     'leaf': () => {
       const leafRes = binding({method, ctx, params});
-      return {
+      return withResolved(leafRes, (leafRes) => ({
         arrows: [[['', leafRes.arrow]]],
         ctx: leafRes.ctx,
         res: leafRes.res
-      }
+      }));
     },
 
     'composite': () => {
       const composedNodes = Object.keys(graph.nodes);
 
       const childFn = ({method, ctx, params}) => {
-        const compNodesRes = composedNodes.reduce((soFar, childNode) => {
-          const rawChildRes = dispatch({
+
+        const compNodesRes = extractPromises(composedNodes.reduce((allRes, childNode) => {
+          const addNode = rawRes => ({
+            node: childNode,
+            callRes: rawRes
+          });
+          const rawRes = dispatch({
             graph: getSubGraph(graph, childNode),
             FSMState: extractBound(FSMState, childNode),
             bindings: extractBound(bindings, childNode),
@@ -85,30 +109,50 @@ const dispatch = ({
             method,
             params
           });
-          const childRes = {
-            ...rawChildRes,
-            arrows: prefixArrows(childNode, rawChildRes.arrows)
-          };
+          const callRes = withResolved(rawRes, addNode);
+          return [...allRes, callRes];
+        }, []));
 
+        const withCompNodeRes = (resolvedCompNodeRes) => {
+          const allCompNodeRes = [
+            ...resolvedCompNodeRes, 
+            ...compNodesRes.notPromises
+          ]
+          // prefix arrows
+          .map(compNodeRes => ({
+            ...compNodeRes.callRes,
+            node: compNodeRes.node,
+            arrows: prefixArrows(compNodeRes.node, compNodeRes.callRes.arrows)
+          }))
+          // merge composite results together (except the context)
+          .reduce((soFar, nodeRes) => {
+            return {
+              arrows: [...soFar.arrows, ...nodeRes.arrows],
+              ctxs: [...soFar.ctxs, nodeRes.ctx],
+              res: {...soFar.res, [nodeRes.node]: nodeRes.res}
+            };
+          }, {arrows: [], ctxs: [], res: undefined});
           return {
-            arrows: [...soFar.arrows, ...childRes.arrows],
-            ctxs: [...soFar.ctxs, childRes.ctx],
-            res: {...soFar.res, [childNode]: childRes.res}
-          };
-        }, {arrows: [], ctxs: [], res: undefined});
-        return {
-          arrows: compNodesRes.arrows,
-          res: compNodesRes.res,
-          ctx: mergeCtxs(ctx, compNodesRes.ctxs)
+            arrows: allCompNodeRes.arrows,
+            res: allCompNodeRes.res,
+            ctx: mergeCtxs(ctx, allCompNodeRes.ctxs)
+          }
+        };
+
+        // there are some promises waiting to be resolved
+        if (compNodesRes.promises.length > 0) {
+          return Promise.all(compNodesRes.promises).then(withCompNodeRes);
+        } else {
+          return withCompNodeRes([]);
         }
+
       };
 
       const childRes = binding({method, ctx, params, child: childFn});
-
-      return {
+      return withResolved(childRes, childRes => ({
         ...childRes,
         arrows: addMissingHighestArrow(childRes.arrows)
-      };
+      }))
     },
 
     'graph': () => {
@@ -122,17 +166,17 @@ const dispatch = ({
           method,
           params
         });
-        return {
+        return withResolved(childRes, childRes => ({
           ...childRes,
           arrows: prefixArrows(activeChild, childRes.arrows)
-        };
+        }));
       }
 
       const childRes = binding({method, ctx, params, child: childFn});
-      return {
+      return withResolved(childRes, childRes => ({
         ...childRes,
         arrows: addMissingHighestArrow(childRes.arrows)
-      };
+      }));
     },
   })[nodeType]();
 };
