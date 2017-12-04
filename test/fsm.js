@@ -1,118 +1,170 @@
 import assert from 'assert';
 import fsm from './../src/fsm';
 
+const testTransition = ({graph, FSMState, arrows, expectedRes}) => () => {
+  const actualRes = fsm({graph, FSMState, arrows});
+  assert.deepEqual(expectedRes, actualRes);
+};
+
 describe('fsm', () => {
 
-  describe('composite', () => {
+  describe('one level graph', () => {
 
-    it('handles entry points for composed nodes', () => {
+    describe('correct transition', () => {
 
-      const graph = {
+      it('supports loops', testTransition({
 
-        'main': {
-          type: 'graph',
-          nodes: ['main:A', 'main:B'],
-          parent: null,
-          arrows: {
-            'main:A': {
-              x: {target: 'main:B', entryPoint: 'p'}
+        graph: {
+
+          main: {
+            type: 'graph',
+            nodes: ['main:A'],
+            parent: null,
+            arrows: {
+              'main:A': {
+                self: {target: 'main:A', entryPoint: 'start'}
+              }
             },
-            'main:B': {}
+            entryPoints: {
+              start: {target: 'main:A', entryPoint: 'start'}
+            }
           },
-          entryPoints: {
-            start: {target: 'main:A', entryPoint: 'start'}
+
+          'main:A': {
+            type: 'leaf',
+            parent: 'main'
           }
+
         },
 
-        'main:A': {
-          type: 'leaf',
-          parent: 'main'
+        FSMState: {
+          'main': 'main:A'
         },
 
-        'main:B': {
-          type: 'composite',
-          nodes: ['main:B:A', 'main:B:B'],
-          parent: 'main'
-        },
+        arrows: [[['main:A', 'self']]],
 
-        'main:B:A': {
-          type: 'graph',
-          nodes: ['main:B:A:A', 'main:B:A:B'],
-          parent: 'main:B',
-          arrows: {
-            'main:B:A:A': {
-              x: {target: 'main:B:A:B', entryPoint: 'start'}
-            },
-            'main:B:A:B': {}
-          },
-          entryPoints: {
-            start: {target: 'main:B:A:A', entryPoint: 'start'},
-            p: {target: 'main:B:A:B', entryPoint: 'start'},
+        expectedRes: {
+          leftNodes: [],
+          enteredNodes: [],
+          FSMState: {
+            'main': 'main:A'
           }
-        },
-
-        'main:B:B': {
-          type: 'graph',
-          nodes: ['main:B:B:A', 'main:B:B:B'],
-          parent: 'main:B',
-          arrows: {
-            'main:B:B:A': {
-              x: {target: 'main:B:B:B', entryPoint: 'start'}
-            },
-            'main:B:B:B': {}
-          },
-          entryPoints: {
-            start: {target: 'main:B:B:A', entryPoint: 'start'},
-            p: {target: 'main:B:B:B', entryPoint: 'start'},
-          }
-        },
-
-        'main:B:B:A': {
-          type: 'leaf',
-          parent: 'main:B:B'
-        },
-
-        'main:B:B:B': {
-          type: 'leaf',
-          parent: 'main:B:B'
-        },
-
-        'main:B:A:A': {
-          type: 'leaf',
-          parent: 'main:B:A'
-        },
-
-        'main:B:A:B': {
-          type: 'leaf',
-          parent: 'main:B:A'
         }
 
-      };
+      }));
 
-      const FSMState = {
-        'main': 'main:A',
-        'main:B:A': 'main:B:A:A',
-        'main:B:B': 'main:B:B:A'
-      };
+    })
 
-      const arrows = [
-        [['main:A', 'x'], ['main', 'x']]
-      ];
+  });
 
-      const expectedRes = {
-        FSMState: {
-          'main': 'main:B',
-          'main:B:A': 'main:B:A:B',
-          'main:B:B': 'main:B:B:B'
+  describe('composite', () => {
+    describe('correct transition', () => {
+
+      it('handles entry points for composed nodes', testTransition({
+        graph: {
+
+          'main': {
+            type: 'graph',
+            nodes: ['main:A', 'main:B'],
+            parent: null,
+            arrows: {
+              'main:A': {
+                x: {target: 'main:B', entryPoint: 'p'}
+              },
+              'main:B': {}
+            },
+            entryPoints: {
+              start: {target: 'main:A', entryPoint: 'start'}
+            }
+          },
+
+          'main:A': {
+            type: 'leaf',
+            parent: 'main'
+          },
+
+          'main:B': {
+            type: 'composite',
+            nodes: ['main:B:A', 'main:B:B'],
+            parent: 'main'
+          },
+
+          'main:B:A': {
+            type: 'graph',
+            nodes: ['main:B:A:A', 'main:B:A:B'],
+            parent: 'main:B',
+            arrows: {
+              'main:B:A:A': {
+                x: {target: 'main:B:A:B', entryPoint: 'start'}
+              },
+              'main:B:A:B': {}
+            },
+            entryPoints: {
+              start: {target: 'main:B:A:A', entryPoint: 'start'},
+              p: {target: 'main:B:A:B', entryPoint: 'start'},
+            }
+          },
+
+          'main:B:B': {
+            type: 'graph',
+            nodes: ['main:B:B:A', 'main:B:B:B'],
+            parent: 'main:B',
+            arrows: {
+              'main:B:B:A': {
+                x: {target: 'main:B:B:B', entryPoint: 'start'}
+              },
+              'main:B:B:B': {}
+            },
+            entryPoints: {
+              start: {target: 'main:B:B:A', entryPoint: 'start'},
+              p: {target: 'main:B:B:B', entryPoint: 'start'},
+            }
+          },
+
+          'main:B:B:A': {
+            type: 'leaf',
+            parent: 'main:B:B'
+          },
+
+          'main:B:B:B': {
+            type: 'leaf',
+            parent: 'main:B:B'
+          },
+
+          'main:B:A:A': {
+            type: 'leaf',
+            parent: 'main:B:A'
+          },
+
+          'main:B:A:B': {
+            type: 'leaf',
+            parent: 'main:B:A'
+          }
+
         },
-        leftNodes: ['main:A'],
-        enteredNodes: ['main:B', 'main:B:A', 'main:B:B', 'main:B:A:B', 'main:B:B:B']
-      };
 
-      const actualRes = fsm({graph, FSMState, arrows});
+        FSMState: {
+          'main': 'main:A',
+          'main:B:A': 'main:B:A:A',
+          'main:B:B': 'main:B:B:A'
+        },
 
-      assert.deepEqual(expectedRes, actualRes);
+        arrows: [
+          [['main:A', 'x'], ['main', 'x']]
+        ],
 
+        expectedRes: {
+          FSMState: {
+            'main': 'main:B',
+            'main:B:A': 'main:B:A:B',
+            'main:B:B': 'main:B:B:B'
+          },
+          leftNodes: ['main:A'],
+          enteredNodes: ['main:B', 'main:B:A', 'main:B:B', 'main:B:A:B', 'main:B:B:B']
+        }
+
+      }));
+      
     });
 
   });

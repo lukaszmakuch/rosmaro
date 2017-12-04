@@ -2,6 +2,7 @@ import zip from 'lodash/zip';
 import flatten from 'lodash/flatten';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
+import difference from 'lodash/difference';
 
 // [{'a': 'a:b'}, {'b': 'b:a'}] => {'a': 'a:b', 'b': 'b:a'}
 const mergeNewFSMStates = FSMStates => 
@@ -112,9 +113,11 @@ export default ({
   ];
   const newFSMState = mergeNewFSMStates(allNewFSMStates);
 
+  const leftNodes = mergeNodes(allFollowedUp, 'leftNodes');
+  const enteredNodes = mergeNodes(allFollowedDown, 'enteredNodes');
   return {
     FSMState: {...FSMState, ...newFSMState},
-    leftNodes: mergeNodes(allFollowedUp, 'leftNodes'),
-    enteredNodes: mergeNodes(allFollowedDown, 'enteredNodes')
+    leftNodes: difference(leftNodes, enteredNodes),
+    enteredNodes: difference(enteredNodes, leftNodes)
   };
 };
