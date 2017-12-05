@@ -56,10 +56,10 @@ const followDown = ({FSMState, graph, target, entryPoint}) => {
 
   // the target is a graph, need to go the specified entry point
   if (targetNode.type === 'graph') {
-    const pickedGraphChild = target == 'recent'
+    const pickedGraphChild = targetNode.entryPoints[entryPoint].target == 'recent'
       ? {
         target: FSMState[target],
-        entryPoint
+        entryPoint: targetNode.entryPoints[entryPoint].entryPoint
       }
       : targetNode.entryPoints[entryPoint];
 

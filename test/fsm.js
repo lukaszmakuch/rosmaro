@@ -254,6 +254,119 @@ describe('fsm', () => {
 
       }));
 
+      it('may do a loop to :start', testTransition({
+
+        graph: {
+
+          'main': {
+            type: 'graph',
+            nodes: ['main:A'],
+            parent: null,
+            arrows: {
+              'main:A': {
+                x: {target: 'main:A', entryPoint: 'start'}
+              }
+            },
+            entryPoint: {
+              start: {target: 'main:A', entryPoint: 'start'}
+            }
+          },
+
+          'main:A': {
+            type: 'graph',
+            nodes: ['main:A:A', 'main:A:B'],
+            parent: 'main',
+            arrows: {
+              'main:A:A': {
+                x: {target: 'main:A:B', entryPoint: 'start'}
+              },
+              'main:A:B': {}
+            },
+            entryPoints: {
+              start: {target: 'main:A:A', entryPoint: 'start'}
+            }
+          },
+
+          'main:A:A': {type: 'leaf', parent: 'main:A'},
+          'main:A:B': {type: 'leaf', parent: 'main:A'},
+
+        },
+
+        FSMState: {
+          'main': 'main:A',
+          'main:A': 'main:A:B'
+        },
+
+        arrows: [[['main:A:B', 'x'], ['main:A', 'x']]],
+
+        expectedRes: {
+          FSMState: {
+            'main': 'main:A',
+            'main:A': 'main:A:A'
+          },
+          leftNodes: ['main:A:B'],
+          enteredNodes: ['main:A:A']
+        }
+
+      }));
+
+      it('may do a loop to :history', testTransition({
+
+        graph: {
+
+          'main': {
+            type: 'graph',
+            nodes: ['main:A'],
+            parent: null,
+            arrows: {
+              'main:A': {
+                x: {target: 'main:A', entryPoint: 'history'}
+              }
+            },
+            entryPoint: {
+              start: {target: 'main:A', entryPoint: 'start'}
+            }
+          },
+
+          'main:A': {
+            type: 'graph',
+            nodes: ['main:A:A', 'main:A:B'],
+            parent: 'main',
+            arrows: {
+              'main:A:A': {
+                x: {target: 'main:A:B', entryPoint: 'start'}
+              },
+              'main:A:B': {}
+            },
+            entryPoints: {
+              history: {target: 'recent', entryPoint: 'start'},
+              start: {target: 'main:A:A', entryPoint: 'start'}
+            }
+          },
+
+          'main:A:A': {type: 'leaf', parent: 'main:A'},
+          'main:A:B': {type: 'leaf', parent: 'main:A'},
+
+        },
+
+        FSMState: {
+          'main': 'main:A',
+          'main:A': 'main:A:B'
+        },
+
+        arrows: [[['main:A:B', 'x'], ['main:A', 'x']]],
+
+        expectedRes: {
+          FSMState: {
+            'main': 'main:A',
+            'main:A': 'main:A:B'
+          },
+          leftNodes: [],
+          enteredNodes: []
+        }
+
+      }));
+
     });
 
     describe('incorrect transition', () => {});
