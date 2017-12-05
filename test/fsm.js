@@ -24,7 +24,7 @@ describe('fsm', () => {
 
           main: {
             type: 'graph',
-            nodes: ['main:A', 'main:B', 'mainC'],
+            nodes: ['main:A', 'main:B', 'main:C'],
             parent: null,
             arrows: {
               'main:B': {
@@ -498,7 +498,7 @@ describe('fsm', () => {
             'main:B': 'main:B:B',
           },
           leftNodes: ['main:A:A', 'main:B:A'],
-          enteredNodes: ['main:A:B', 'main:B:B']
+          enteredNodes: ['main:B:B', 'main:A:B']
         }
 
       }));
@@ -546,6 +546,105 @@ describe('fsm', () => {
           },
           leftNodes: ['main:A:A', 'main:A:B', 'main:A'],
           enteredNodes: ['main:B']
+        }
+
+      }));
+
+      it('leaving a composite means leaving all of its nodes', testTransition({
+
+        graph: {
+
+          main: {
+            type: 'graph',
+            nodes: ['main:A', 'main:B'],
+            parent: null,
+            arrows: {
+              'main:A': {x: {target: 'main:B', entryPoint: 'start'}}
+            }
+          },
+
+          'main:A': {
+            type: 'composite',
+            parent: 'main',
+            nodes: ['main:A:A', 'main:A:B']
+          },
+
+          'main:A:A': {type: 'leaf', parent: 'main:A'},
+          'main:A:B': {type: 'leaf', parent: 'main:A'},
+          'main:B': {type: 'leaf', parent: 'main'},
+
+        },
+
+        arrows: [[['main:A:A', 'x'], ['main:A', 'x']]],
+
+        FSMState: {
+          'main': 'main:A'
+        },
+
+        expectedRes: {
+          FSMState: {
+            'main': 'main:B'
+          },
+          leftNodes: ['main:A:A', 'main:A:B', 'main:A'],
+          enteredNodes: ['main:B']
+        }
+
+      }));
+
+      it('goes from two orthogonal nodes to two nodes on different levels', testTransition({
+
+        graph: {
+
+          'main': {
+            type: 'graph',
+            parent: null,
+            nodes: ['main:A', 'main:B'],
+            arrows: {
+              'main:A': {y: {target: 'main:B', entryPoint: 'start'}}
+            },
+            entryPoints: {start: {target: 'main:A', entryPoint: 'start'}}
+          },
+
+          'main:A': {
+            type: 'graph',
+            parent: 'main',
+            nodes: ['main:A:A', 'main:A:B'],
+            arrows: {
+              'main:A:A': {x: {target: 'main:A:B', entryPoint: 'start'}}
+            },
+            entryPoints: {start: {target: 'main:A:A', entryPoint: 'start'}}
+          },
+
+          'main:A:A': {
+            type: 'composite',
+            parent: 'main:A',
+            nodes: ['main:A:A:A', 'main:A:A:B']
+          },
+
+          'main:A:A:A': {type: 'leaf', parent: 'main:A:A'},
+          'main:A:A:B': {type: 'leaf', parent: 'main:A:A'},
+          'main:A:B': {type: 'leaf', parent: 'main:A'},
+          'main:B': {type: 'leaf', parent: 'main'}
+
+        },
+
+        arrows: [
+          [['main:A:A:A', 'x'], ['main:A:A', 'x'], ['main:A', 'x']],
+          [['main:A:A:B', 'y'], ['main:A:A', 'y'], ['main:A', 'y']]
+        ],
+
+        FSMState: {
+          'main': 'main:A',
+          'main:A': 'main:A:A'
+        },
+
+        expectedRes: {
+          FSMState: {
+            'main': 'main:B',
+            'main:A': 'main:A:B'
+          },
+          leftNodes: ['main:A:A:A', 'main:A:A:B', 'main:A:A', 'main:A:B', 'main:A'],
+          enteredNodes: ['main:B', 'main:A:B']
         }
 
       }));
@@ -650,7 +749,7 @@ describe('fsm', () => {
             'main:B:B': 'main:B:B:B'
           },
           leftNodes: ['main:A'],
-          enteredNodes: ['main:B', 'main:B:A', 'main:B:B', 'main:B:A:B', 'main:B:B:B']
+          enteredNodes: ['main:B', 'main:B:B', 'main:B:A', 'main:B:B:B', 'main:B:A:B']
         }
 
       }));

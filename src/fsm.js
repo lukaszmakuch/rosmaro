@@ -1,25 +1,17 @@
-import zip from 'lodash/zip';
-import uniq from 'lodash/uniq';
-import flatten from 'lodash/flatten';
-import filter from 'lodash/filter';
 import map from 'lodash/map';
-import difference from 'lodash/difference';
+import graphDiff from './graphDiff';
 
 // [{'a': 'a:b'}, {'b': 'b:a'}] => {'a': 'a:b', 'b': 'b:a'}
 const mergeNewFSMStates = FSMStates => 
   FSMStates.reduce((merged, state) => ({...merged, ...state}), {});
 
-const mergeNodes = (followed, nodes) => 
-  filter(flatten(zip(...map(followed, nodes))));
-
-// res {leftNodes: [], newFSMState: {}, target: 'a:b:c', entryPoint: 'p'}
+// res {newFSMState: {}, target: 'a:b:c', entryPoint: 'p'}
 const followUp = ({arrow, graph}) => {
   const noArrowToFollow = arrow.length === 0;
   if (noArrowToFollow) return "fail";
 
   // if arrow is [['a:b', 'x'], ['a', 'y']] then srcNode is 'a:b' and the arrowName is 'x'
   const [[srcNode, arrowName], ...higherArrows] = arrow;
-  const leftNode = srcNode;
   const parent = graph[srcNode].parent;
   const parentIsGraph = graph[parent].type === "graph";
   // only a graph may have arrows
@@ -32,7 +24,6 @@ const followUp = ({arrow, graph}) => {
       graph
     });
     return {
-      leftNodes: [leftNode, ...higherRes.leftNodes],
       newFSMState: higherRes.newFSMState,
       target: higherRes.target,
       entryPoint: higherRes.entryPoint
@@ -42,7 +33,6 @@ const followUp = ({arrow, graph}) => {
   // this arrow points to some node at this level
   const newFSMState = {[parent]: arrowTarget.target};
   return {
-    leftNodes: [leftNode],
     newFSMState,
     ...arrowTarget
   };
@@ -53,8 +43,7 @@ const followDown = ({FSMState, graph, target, entryPoint}) => {
 
   // the target is a leaf, no need to go deeper
   if (targetNode.type === 'leaf') return {
-    newFSMState: {},
-    enteredNodes: [target]
+    newFSMState: {}
   }
 
   // the target is a graph, need to go the specified entry point
@@ -75,8 +64,7 @@ const followDown = ({FSMState, graph, target, entryPoint}) => {
       newFSMState: {
         [target]: pickedGraphChild.target,
         ...followedFromChild.newFSMState
-      },
-      enteredNodes: [target, ...followedFromChild.enteredNodes]
+      }
     };
   }
 
@@ -85,13 +73,8 @@ const followDown = ({FSMState, graph, target, entryPoint}) => {
     const followedOrthogonal = targetNode.nodes
       .map(node => followDown({FSMState, graph, target: node, entryPoint}));
     const newFSMState = mergeNewFSMStates(map(followedOrthogonal, 'newFSMState'));
-    const enteredNodes = [
-      target, 
-      ...flatten(zip(...map(followedOrthogonal, 'enteredNodes')))
-    ];
     return {
-      newFSMState,
-      enteredNodes
+      newFSMState
     };
   }
 
@@ -113,13 +96,10 @@ export default ({
     ...map(allFollowedUp, 'newFSMState'),
     ...map(allFollowedDown, 'newFSMState')
   ];
-  const newFSMState = mergeNewFSMStates(allNewFSMStates);
+  const newFSMState = {...FSMState, ...mergeNewFSMStates(allNewFSMStates)};
 
-  const leftNodes = mergeNodes(allFollowedUp, 'leftNodes');
-  const enteredNodes = mergeNodes(allFollowedDown, 'enteredNodes');
   return {
-    FSMState: {...FSMState, ...newFSMState},
-    leftNodes: uniq(difference(leftNodes, enteredNodes)),
-    enteredNodes: uniq(difference(enteredNodes, leftNodes))
+    FSMState: newFSMState,
+    ...graphDiff({graph, oldFSMState: FSMState, newFSMState})
   };
 };

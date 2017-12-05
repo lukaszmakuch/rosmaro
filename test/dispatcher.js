@@ -2,12 +2,6 @@ import assert from 'assert';
 import dispatch from './../src/dispatcher';
 import {mapArrows} from './../src/utils';
 
-/*
-[ ] async
-[ ] optional arrows
-[ ] history?
-*/
-
 describe("dispatcher", () => {
 
   describe('async', () => {
