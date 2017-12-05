@@ -8,8 +8,7 @@ const testTransition = ({graph, FSMState, arrows, expectedRes}) => () => {
 
 const expectError = ({graph, FSMState, arrows}) => () => {
   const actualRes = fsm({graph, FSMState, arrows});
-  //TODO: implement this
-  assert(false);
+  assert(actualRes === 'fail');
 };
 
 describe('fsm', () => {
@@ -104,7 +103,7 @@ describe('fsm', () => {
 
     describe('incorrect transition', () => {
 
-      xit('cannot leave the root', expectError({
+      it('cannot leave the root', expectError({
 
         graph: {
 
@@ -128,7 +127,7 @@ describe('fsm', () => {
           'main': 'main:A'
         },
 
-        arrow: [[['main:A', 'x']]]
+        arrows: [[['main:A', 'x']]]
 
       }));
 
@@ -754,6 +753,51 @@ describe('fsm', () => {
 
       }));
       
+    });
+
+    describe('incorrect transition', () => {
+
+      it('cannot make two nodes of the same graph active', expectError({
+
+        graph: {
+
+          'main': {
+            type: 'graph',
+            parent: null,
+            nodes: ['main:A', 'main:B', 'main:C'],
+            arrows: {
+              'main:A': {
+                x: {target: 'main:C', entryPoint: 'start'},
+                y: {target: 'main:B', entryPoint: 'start'},
+              }
+            },
+            entryPoints: {start: {target: 'main:A', entryPoint: 'start'}}
+          },
+
+          'main:A': {
+            type: 'composite',
+            parent: 'main',
+            nodes: ['main:A:A', 'main:A:B']
+          },
+
+          'main:A:A': {type: 'leaf', parent: 'main:A'},
+          'main:A:B': {type: 'leaf', parent: 'main:A'},
+          'main:B': {type: 'leaf', parent: 'main'},
+          'main:C': {type: 'leaf', parent: 'main'}
+
+        },
+
+        FSMState: {
+          'main': 'main:A'
+        },
+
+        arrows: [
+          [['main:A:B', 'x'], ['main:A', 'x']],
+          [['main:A:A', 'y'], ['main:A', 'y']],
+        ]
+
+      }));
+
     });
 
   });
