@@ -17,8 +17,7 @@ const followUp = ({arrow, graph}) => {
   if (noArrowToFollow) return "fail";
 
   // if arrow is [['a:b', 'x'], ['a', 'y']] then srcNode is 'a:b' and the arrowName is 'x'
-  const [[srcNode, arrowName], highestArrows] = arrow;
-
+  const [[srcNode, arrowName], ...higherArrows] = arrow;
   const leftNode = srcNode;
   const parent = graph[srcNode].parent;
   const arrowTarget = graph[parent].arrows[srcNode][arrowName];
@@ -26,7 +25,7 @@ const followUp = ({arrow, graph}) => {
   // this arrow doesn't point anything at this level, need to go up
   if (!arrowTarget) {
     const higherRes = followUp({
-      arrow: highestArrows,
+      arrow: higherArrows,
       graph
     });
     return {
