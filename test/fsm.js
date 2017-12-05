@@ -367,6 +367,70 @@ describe('fsm', () => {
 
       }));
 
+      it('may have a custom entry point', testTransition({
+
+        graph: {
+
+          'main': {
+            type: 'graph',
+            parent: null,
+            nodes: ['main:A', 'main:B'],
+            arrows: {
+              'main:B': {
+                'x': {target: 'main:A', entryPoint: 'center'}
+              },
+              'main:A': {}
+            },
+            entryPoints: {
+              start: {target: 'main:A', entryPoint: 'start'}
+            }
+          },
+
+          'main:A': {
+            type: 'graph',
+            parent: 'main',
+            nodes: ['main:A:A', 'main:A:B', 'main:A:C'],
+            arrows: {
+              'main:A:A': {
+                x: {target: 'main:A:A', entryPoint: 'start'}
+              },
+              'main:A:B': {
+                x: {target: 'main:A:C', entryPoint: 'start'}
+              },
+              'main:A:C': {}
+            },
+            entryPoints: {
+              start: {target: 'main:A:A', entryPoint: 'start'},
+              center: {target: 'main:A:B', entryPoint: 'start'}
+            }
+          },
+
+          'main:A:A': {type: 'leaf', parent: 'main'},
+          'main:A:B': {type: 'leaf', parent: 'main'},
+          'main:A:C': {type: 'leaf', parent: 'main'},
+
+          'main:B': {type: 'leaf', parent: 'main'}
+
+        },
+
+        FSMState: {
+          'main': 'main:B',
+          'main:A': 'main:A:C'
+        },
+
+        arrows: [[['main:B', 'x']]],
+
+        expectedRes: {
+          FSMState: {
+            'main': 'main:A',
+            'main:A': 'main:A:B'
+          },
+          leftNodes: ['main:B'],
+          enteredNodes: ['main:A', 'main:A:B']
+        }
+
+      }));
+
     });
 
     describe('incorrect transition', () => {});
@@ -375,6 +439,116 @@ describe('fsm', () => {
 
   describe('composite', () => {
     describe('correct transition', () => {
+
+      it('within two composed graphs', testTransition({
+
+        graph: {
+
+          main: {
+            type: 'composite',
+            nodes: ['main:A', 'main:B'],
+            parent: null
+          },
+
+          'main:A': {
+            type: 'graph',
+            parent: 'main',
+            arrows: {
+              'main:A:A': {
+                x: {target: 'main:A:B', entryPoint: 'start'}
+              }
+            },
+            nodes: ['main:A:A', 'main:A:B'],
+            entryPoints: {start: {target: 'main:A:A', entryPoint: 'start'}}
+          },
+
+          'main:A:A': {type: 'leaf', parent: 'main:A'},
+          'main:A:B': {type: 'leaf', parent: 'main:A'},
+
+          'main:B': {
+            type: 'graph',
+            parent: 'main',
+            arrows: {
+              'main:B:A': {
+                x: {target: 'main:B:B', entryPoint: 'start'}
+              }
+            },
+            nodes: ['main:B:A', 'main:B:B'],
+            entryPoints: {start: {target: 'main:B:A', entryPoint: 'start'}}
+          },
+
+          'main:B:A': {type: 'leaf', parent: 'main:B'},
+          'main:B:B': {type: 'leaf', parent: 'main:B'},
+
+        },
+
+        FSMState: {
+          'main:A': 'main:A:A',
+          'main:B': 'main:B:A',
+        },
+
+        arrows: [
+          [['main:A:A', 'x']],
+          [['main:B:A', 'x']],
+        ],
+
+        expectedRes: {
+          FSMState: {
+            'main:A': 'main:A:B',
+            'main:B': 'main:B:B',
+          },
+          leftNodes: ['main:A:A', 'main:B:A'],
+          enteredNodes: ['main:A:B', 'main:B:B']
+        }
+
+      }));
+
+      it('goes from two nodes to one', testTransition({
+
+        graph: {
+
+          'main': {
+            type: 'graph',
+            nodes: ['main:A', 'main:B'],
+            arrows: {
+              'main:A': {
+                x: {target: 'main:B', entryPoint: 'start'}
+              }
+            },
+            parent: null,
+            entryPoints: {start: {target: 'main:A', entryPoint: 'start'}}
+          },
+
+          'main:A': {
+            type: 'composite',
+            parent: 'main',
+            nodes: ['main:A:A', 'main:A:B']
+          },
+
+          'main:A:A': {type: 'leaf', parent: 'main:A'},
+          'main:A:B': {type: 'leaf', parent: 'main:A'},
+          'main:B': {type: 'leaf', parent: 'main'}
+
+        },
+
+        arrows: [
+          [['main:A:A', 'x'], ['main:A', 'x']],
+          [['main:A:B', 'x'], ['main:A', 'x']],
+        ],
+
+        FSMState: {
+          'main': 'main:A'
+        },
+
+        expectedRes: {
+          FSMState: {
+            'main': 'main:B'
+          },
+          leftNodes: ['main:A:A', 'main:A:B', 'main:A'],
+          enteredNodes: ['main:B']
+        }
+
+      }));
 
       it('handles entry points for composed nodes', testTransition({
         graph: {

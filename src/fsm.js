@@ -1,4 +1,5 @@
 import zip from 'lodash/zip';
+import uniq from 'lodash/uniq';
 import flatten from 'lodash/flatten';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
@@ -20,7 +21,9 @@ const followUp = ({arrow, graph}) => {
   const [[srcNode, arrowName], ...higherArrows] = arrow;
   const leftNode = srcNode;
   const parent = graph[srcNode].parent;
-  const arrowTarget = graph[parent].arrows[srcNode][arrowName];
+  const parentIsGraph = graph[parent].type === "graph";
+  // only a graph may have arrows
+  const arrowTarget = parentIsGraph && graph[parent].arrows[srcNode][arrowName];
 
   // this arrow doesn't point anything at this level, need to go up
   if (!arrowTarget) {
@@ -116,7 +119,7 @@ export default ({
   const enteredNodes = mergeNodes(allFollowedDown, 'enteredNodes');
   return {
     FSMState: {...FSMState, ...newFSMState},
-    leftNodes: difference(leftNodes, enteredNodes),
-    enteredNodes: difference(enteredNodes, leftNodes)
+    leftNodes: uniq(difference(leftNodes, enteredNodes)),
+    enteredNodes: uniq(difference(enteredNodes, leftNodes))
   };
 };
