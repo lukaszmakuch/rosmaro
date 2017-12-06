@@ -1,50 +1,19 @@
 /*
-map like {a: 'b', b: 'c'}
+map like {x: 'y'}
 arrows like [
-  [['D:C:B', 'y'], ['C:B', 'y'], ['B', 'a']]
-  [['C:B', 'y'], ['B', 'y']]
-  [['B', 'b']]
+  [['main:a:a:a', 'x'], ['main:a:a', 'x'], ['main:a', 'x']],
+  ...
 ]
 res like [
-  [['D:C:B', 'y'], ['C:B', 'y'], ['B', 'a'], ['', 'b']]
-  [['C:B', 'y'], ['B', 'y']]
-  [['B', 'b'], ['', 'c']]
+  [['main:a:a:a', 'x'], ['main:a:a', 'x'], ['main:a', 'y']],
+    ...
 ]
 */
 export const mapArrows = (map, arrows) => arrows.map(arrow => {
-  const highest = arrow[arrow.length - 1];
-  const newArrow = map[highest[1]];
-  return newArrow
-    ? [...arrow, ['', newArrow]]
-    : arrow;
+  const previousOnes = arrow.slice(0, -1);
+  const lastOne = arrow[arrow.length - 1];
+  const newLastOne = map[lastOne[1]]
+    ? [lastOne[0], map[lastOne[1]]]
+    : lastOne;
+  return [...previousOnes, newLastOne];
 });
-
-// ("A", ":", "B") => "A:B"
-// ("A", ":", "") => "A"
-export const prefixWithSeparator = (prefix, separator, string) => string
-  ? prefix + separator + string
-  : prefix;
-
-// ("A", "") => "A"
-// ("A", "B") => "A:B"
-export const prefixNode = (prefix, node) => 
-  prefixWithSeparator(prefix, ":", node);
-
-// ("X", ":", {'': 1, 'A', 2}) => {'X' => 1, 'X:A' => 2}
-export const prefixKeys = (prefix, separator, obj) => 
-  Object.keys(obj).reduce((prefixed, key) => ({
-    ...prefixed,
-    [prefixNode(prefix, key)]: obj[key]
-  }), {});
-
-  // ("X", {'': 1, 'A', 2}) => {'X' => 1, 'X:A' => 2}
-export const prefixNodeBindings = (prefix, bindings) =>
-  prefixKeys(prefix, ":", bindings);
-
-export const getSubGraph = (graph, node) => graph.nodes[node];
-
-// "A:B:C" into ["A", "B", "C"]
-// "" into []
-export const splitNodePath = fullNodePath => fullNodePath
-  ? fullNodePath.split(":")
-  : [];

@@ -9,9 +9,11 @@ describe("dispatcher", () => {
       return {arrow: 'x', ctx};
     };
     it('leaves', async () => {
-      const graph = {type: 'leaf'};
+      const graph = {
+        main: {type: 'leaf'}
+      };
       const bindings = {
-        '': asyncBinding
+        'main': asyncBinding
       };
       const callRes = dispatch({
         graph,
@@ -25,7 +27,7 @@ describe("dispatcher", () => {
       const finalCallRes = await callRes;
       assert.deepEqual({
         arrows: [
-          [['', 'x']]
+          [['main', 'x']]
         ],
         ctx: {},
         res: undefined
@@ -33,12 +35,12 @@ describe("dispatcher", () => {
     });
     it('graph children', async () => {
       const graph = {
-        type: 'graph',
-        nodes: {A: {type: 'leaf'}}
+        'main': {type: 'graph', nodes: ['main:A']},
+        'main:A': {type: 'leaf', parent: 'main'}
       };
-      const FSMState = {'': 'A'};
+      const FSMState = {'main': 'main:A'};
       const bindings = {
-        'A': asyncBinding
+        'main:A': asyncBinding
       };
       const callRes = dispatch({
         graph,
@@ -52,7 +54,7 @@ describe("dispatcher", () => {
       const finalCallRes = await callRes;
       assert.deepEqual({
         arrows: [
-          [['A', 'x'], ['', 'x']]
+          [['main:A', 'x']]
         ],
         ctx: {},
         res: undefined
@@ -60,15 +62,15 @@ describe("dispatcher", () => {
     });
     it('graph bindings', async () => {
       const graph = {
-        type: 'graph',
-        nodes: {A: {type: 'leaf'}}
+        'main': {type: 'graph', nodes: ['main:A']},
+        'main:A': {type: 'leaf', parent: 'main'}
       };
-      const FSMState = {'': 'A'};
+      const FSMState = {'main': 'main:A'};
       const bindings = {
-        '': async ({child}) => {
+        'main': async ({child}) => {
           return await child({ctx: {}});
         },
-        'A': async () => ({res: "leaf res", ctx: {}})
+        'main:A': async () => ({res: "leaf res", ctx: {}})
       };
       const callRes = dispatch({
         graph,
@@ -81,7 +83,7 @@ describe("dispatcher", () => {
       const finalCallRes = await callRes;
       assert.deepEqual({
         arrows: [
-          [['A', undefined], ['', undefined]]
+          [['main:A', undefined]]
         ],
         ctx: {},
         res: "leaf res"
@@ -89,15 +91,13 @@ describe("dispatcher", () => {
     });
     it('composite children', async () => {
       const graph = {
-        type: 'composite',
-        nodes: {
-          A: {type: 'leaf'},
-          B: {type: 'leaf'},
-        }
+        'main': {type: 'composite', nodes: ['main:A', 'main:B']},
+        'main:A': {type: 'leaf', parent: 'main'},
+        'main:B': {type: 'leaf', parent: 'main'}
       };
       const bindings = {
-        'A': async () => ({res: 'ARes', ctx: {}}),
-        'B': async () => ({res: 'BRes', ctx: {}}),
+        'main:A': async () => ({res: 'ARes', ctx: {}}),
+        'main:B': async () => ({res: 'BRes', ctx: {}}),
       };
       const callRes = dispatch({
         graph,
@@ -110,8 +110,8 @@ describe("dispatcher", () => {
       const finalCallRes = await callRes;
       assert.deepEqual({
         arrows: [
-          [['A', undefined], ['', undefined]],
-          [['B', undefined], ['', undefined]]
+          [['main:A', undefined]],
+          [['main:B', undefined]]
         ],
         ctx: {},
         res: {A: 'ARes', B: 'BRes'}
@@ -119,14 +119,12 @@ describe("dispatcher", () => {
     });
     it('composite bindings', async () => {
       const graph = {
-        type: 'composite',
-        nodes: {
-          A: {type: 'leaf'},
-          B: {type: 'leaf'},
-        }
+        'main': {type: 'composite', nodes: ['main:A', 'main:B']},
+        'main:A': {type: 'leaf', parent: 'main'},
+        'main:B': {type: 'leaf', parent: 'main'}
       };
       const bindings = {
-        '': async ({child, ctx}) => {
+        'main': async ({child, ctx}) => {
           const childRes = child({ctx});
           return {
             res: childRes.res.A + "_" + childRes.res.B,
@@ -134,8 +132,8 @@ describe("dispatcher", () => {
             arrows: childRes.arrows
           };
         },
-        'A': () => ({res: 'ARes', ctx: {}}),
-        'B': () => ({res: 'BRes', ctx: {}}),
+        'main:A': () => ({res: 'ARes', ctx: {}}),
+        'main:B': () => ({res: 'BRes', ctx: {}}),
       };
       const callRes = dispatch({
         graph,
@@ -148,8 +146,8 @@ describe("dispatcher", () => {
       const finalCallRes = await callRes;
       assert.deepEqual({
         arrows: [
-          [['A', undefined], ['', undefined]],
-          [['B', undefined], ['', undefined]]
+          [['main:A', undefined]],
+          [['main:B', undefined]]
         ],
         ctx: {},
         res: "ARes_BRes",
@@ -162,27 +160,24 @@ describe("dispatcher", () => {
     it('allows to rename a graph leaving arrow', () => {
 
       const graph = {
-        type: 'graph',
-        nodes: {
-          target: {type: 'leaf'},
-          graph_with_leaving_a: {
-            type: 'graph',
-            nodes: {
-              a: {type: 'leaf'},
-              b: {type: 'leaf'}
-            }
-          }
-        }
+        'main': {type: 'graph', nodes: ['main:target', 'main:graph_with_leaving_a']},
+        'main:target': {type: 'leaf', parent: 'main'},
+        'main:graph_with_leaving_a': {
+          type: 'graph', 
+          nodes: ['main:graph_with_leaving_a:a', 'main:graph_with_leaving_a:b']
+        },
+        'main:graph_with_leaving_a:a': {type: 'leaf', parent: 'main:graph_with_leaving_a'},
+        'main:graph_with_leaving_a:b': {type: 'leaf', parent: 'main:graph_with_leaving_a'}
       };
 
       const FSMState = {
-        '': 'graph_with_leaving_a',
-        'graph_with_leaving_a': 'a'
+        'main': 'main:graph_with_leaving_a',
+        'main:graph_with_leaving_a': 'main:graph_with_leaving_a:a'
       };
 
       const bindings = {
 
-        'graph_with_leaving_a': ({method, ctx, params, child}) => {
+        'main:graph_with_leaving_a': ({method, ctx, params, child}) => {
           const childRes = child({method, ctx, params});
           const arrows = mapArrows({a: 'b'}, childRes.arrows);
           return {
@@ -192,11 +187,11 @@ describe("dispatcher", () => {
           };
         },
 
-        'graph_with_leaving_a:a': ({method, ctx, params}) => {
+        'main:graph_with_leaving_a:a': ({method, ctx, params}) => {
           if (method == "a") return {arrow: 'a', ctx};
         },
 
-        'graph_with_leaving_a:b': ({method, ctx, params}) => {
+        'main:graph_with_leaving_a:b': ({method, ctx, params}) => {
           if (method == "a") return {arrow: 'a', ctx};
         },
 
@@ -205,7 +200,7 @@ describe("dispatcher", () => {
       // Following a by graph_with_leaving_a:a
       assert.deepEqual({
         arrows: [
-          [['graph_with_leaving_a:a', 'a'], ['graph_with_leaving_a', 'b'], ['', 'b']]
+          [['main:graph_with_leaving_a:a', 'a'], ['main:graph_with_leaving_a', 'b'],]
         ],
         ctx: {},
         res: undefined
@@ -226,9 +221,11 @@ describe("dispatcher", () => {
 
     it('allows parts to be removed', () => {
       const initCtx = {a: 2, b: 3};
-      const graph = {type: 'leaf'};
+      const graph = {
+        'main': {type: 'leaf'}
+      };
       const bindings = {
-        '': () => {
+        'main': () => {
           return {ctx: {a: 2}};
         },
       };
@@ -246,34 +243,26 @@ describe("dispatcher", () => {
 
     describe('composites', () => {
       const graph = {
-        type: 'composite',
-        nodes: {
-          A: {
-            type: 'graph',
-            nodes: {
-              A: {type: 'leaf'}
-            }
-          },
-          B: {
-            type: 'graph',
-            nodes: {
-              A: {type: 'leaf'}
-            }
-          }
-        }
+        'main': {type: 'composite', nodes: ['main:A', 'main:B']},
+        'main:A': {type: 'graph', nodes: ['main:A:A', 'main:A:B'], parent: 'main'},
+        'main:B': {type: 'graph', nodes: ['main:B:A', 'main:B:B'], parent: 'main'},
+        'main:A:A': {type: 'leaf', parent: 'main:A'},
+        'main:A:B': {type: 'leaf', parent: 'main:A'},
+        'main:B:A': {type: 'leaf', parent: 'main:B'},
+        'main:B:B': {type: 'leaf', parent: 'main:B'}
       };
       const FSMState = {
-        'A': 'A',
-        'B': 'A',
+        'main:A': 'main:A:A',
+        'main:B': 'main:B:A',
       };
 
       it('merges only different parts', () => {
         const initCtx = {a: "a", b: "b"};
         const bindings = {
-          'A:A': ({method, ctx, params}) => {
+          'main:A:A': ({method, ctx, params}) => {
             return {arrow: 'x', ctx: {a: "z", b: "b"}};
           },
-          'B:A': ({method, ctx, params}) => {
+          'main:B:A': ({method, ctx, params}) => {
             return {arrow: 'y', ctx: {a: "a", b: "x"}};
           }
         };
@@ -291,10 +280,10 @@ describe("dispatcher", () => {
 
       it('merges the context in case of simultaneous transitions', () => {
         const bindings = {
-          'A:A': ({method, ctx, params}) => {
+          'main:A:A': ({method, ctx, params}) => {
             return {arrow: 'x', ctx: {a: 2}};
           },
-          'B:A': ({method, ctx, params}) => {
+          'main:B:A': ({method, ctx, params}) => {
             return {arrow: 'y', ctx: {b: 3}};
           }
         };
@@ -316,33 +305,23 @@ describe("dispatcher", () => {
 
   it("calls bound methods based on the FSM state", () => {
     const graph = {
-      type: 'graph',
-      nodes: {
-        A: {type: 'leaf'},
-        B: {
-          type: 'graph',
-          nodes: {
-            A: {type: 'leaf'},
-            B: {
-              type: 'composite',
-              nodes: {
-                A: {type: 'leaf'},
-                B: {type: 'leaf'},
-              }
-            }
-          }
-        }
-      }
+      'main': {type: 'graph', nodes: ['main:A', 'main:B']},
+      'main:A': {type: 'leaf', parent: 'main'},
+      'main:B': {type: 'graph', nodes: ['main:B:A', 'main:B:B'], parent: 'main'},
+      'main:B:A': {type: 'leaf', parent: 'main:B'},
+      'main:B:B': {type: 'composite', nodes: ['main:B:B:A', 'main:B:B:B'], parent: 'main:B'},
+      'main:B:B:A': {type: 'leaf', parent: 'main:B:B'},
+      'main:B:B:B': {type: 'leaf', parent: 'main:B:B'}
     };
 
     const FSMState = {
-      '': 'B',
-      'B': 'B'
+      'main': 'main:B',
+      'main:B': 'main:B:B'
     };
 
     const bindings = {
 
-      'B:B': ({method, ctx, params, child}) => {
+      'main:B:B': ({method, ctx, params, child}) => {
         const childRes = child({method, ctx, params});
         return {
           ...childRes,
@@ -350,7 +329,7 @@ describe("dispatcher", () => {
         }
       },
 
-      "B:B:A": ({method, ctx, params}) => {
+      "main:B:B:A": ({method, ctx, params}) => {
         switch (method) {
           case 'followArrows': 
             return {arrow: 'x', ctx, res: 'ARes'};
@@ -358,7 +337,7 @@ describe("dispatcher", () => {
         }
       },
 
-      "B:B:B": ({method, ctx, params}) => {
+      "main:B:B:B": ({method, ctx, params}) => {
         switch (method) {
           case 'followArrows': 
             return {arrow: 'y', ctx, res: 'BRes'};
@@ -379,10 +358,11 @@ describe("dispatcher", () => {
       method: "followArrows",
       params: []
     });
+
     const expectedCallRes = {
       arrows: [
-        [['B:B:A', 'x'], ['B:B', 'x'], ['B', 'x'], ['', 'x']],
-        [['B:B:B', 'y'], ['B:B', 'y'], ['B', 'y'], ['', 'y']]
+        [['main:B:B:A', 'x'], ['main:B:B', 'x'], ['main:B', 'x']],
+        [['main:B:B:B', 'y'], ['main:B:B', 'y'], ['main:B', 'y']]
       ],
       ctx: {a: 100, b: 200},
       res: 'ARes_BRes'

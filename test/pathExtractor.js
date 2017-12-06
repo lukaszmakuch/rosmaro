@@ -2,26 +2,30 @@ import assert from 'assert';
 import extractPath from './../src/pathExtractor';
 
 const testExtracting = ({
-  wholeGraph,
+  graph,
   targetNode,
   expected
 }) => () => {
-  const {graph: graph, FSMState} = extractPath(wholeGraph, targetNode);
-  assert.deepEqual(expected.graph, graph);
-  assert.deepEqual(expected.FSMState, FSMState);
+  const {graph: gotGraph, FSMState: gotFSMState} = extractPath(graph, targetNode);
+  assert.deepEqual(expected.graph, gotGraph);
+  assert.deepEqual(expected.FSMState, gotFSMState);
 };
 
 describe("graph path extractor", () => {
   describe('returning the root as a leaf', () => {
     it('may be actually a leaf', testExtracting({
 
-      wholeGraph: {type: 'leaf'},
+      graph: {
+        'main': {type: 'leaf', parent: null}
+      },
 
-      targetNode: '',
+      targetNode: 'main',
 
       expected:{
 
-        graph: {type: 'leaf'},
+        graph: {
+          'main': {type: 'leaf', parent: null}
+        },
 
         FSMState: {}
       }
@@ -31,13 +35,17 @@ describe("graph path extractor", () => {
 
   it('returns a graph as a leaf', testExtracting({
 
-    wholeGraph: {type: 'graph'},
+    graph: {
+      'main': {type: 'graph', parent: null}
+    },
 
-    targetNode: '',
+    targetNode: 'main',
 
     expected:{
 
-      graph: {type: 'leaf'},
+      graph: {
+        'main': {type: 'leaf', parent: null}
+      },
 
       FSMState: {}
     }
@@ -46,13 +54,17 @@ describe("graph path extractor", () => {
 
   it('returns a composite as a leaf', testExtracting({
 
-    wholeGraph: {type: 'composite'},
+    graph: {
+      'main': {type: 'composite', parent: null}
+    },
 
-    targetNode: '',
+    targetNode: 'main',
 
     expected:{
 
-      graph: {type: 'leaf'},
+      graph: {
+        'main': {type: 'leaf', parent: null}
+      },
 
       FSMState: {}
     }
@@ -60,55 +72,31 @@ describe("graph path extractor", () => {
   }));
   it('allows to reach a particular node as a leaf', testExtracting({
     
-    wholeGraph: {
-      type: 'graph',
-      nodes: {
-        A: {type: 'leaf'},
-        B: {
-          type: 'composite',
-          nodes: {
-            A: {
-              type: 'graph',
-              nodes: {
-                A: {type: 'leaf'},
-                B: {
-                  type: 'graph',
-                  nodes: {
-                    A: {type: 'leaf'}
-                  }
-                }
-              }
-            },
-            B: {type: 'leaf'}
-          }
-        }
-      }
+    graph: {
+      'main': {type: 'graph', nodes: ['main:A', 'main:B']},
+      'main:A': {type: 'leaf', parent: 'main'},
+      'main:B': {type: 'composite', nodes: ['main:B:A', 'main:B:B'], parent: 'main'},
+      'main:B:A': {type: 'graph', nodes: ['main:B:A:A', 'main:B:A:B'], parent: 'main:B'},
+      'main:B:A:A': {type: 'leaf', parent: 'main:B:A'},
+      'main:B:A:B': {type: 'graph', children: ['main:B:A:B:A'], parent: 'main:B:A'},
+      'main:B:A:B:A': {type: 'leaf', parent: 'main:B:A:B'},
+      'main:B:B:': {type: 'leaf', parent: 'main:B'}
     },
 
-    targetNode: 'B:A:B',
+    targetNode: 'main:B:A:B',
     
     expected: {
       
       graph: {
-        type: 'graph',
-        nodes: {
-          B: {
-            type: 'composite',
-            nodes: {
-              A: {
-                type: 'graph',
-                nodes: {
-                  B: {type: 'leaf'}
-                }
-              }
-            }
-          }
-        }
+        'main': {type: 'graph', nodes: ['main:B']},
+        'main:B': {type: 'composite', nodes: ['main:B:A'], parent: 'main'},
+        'main:B:A': {type: 'graph', nodes: ['main:B:A:B'], parent: 'main:B'},
+        'main:B:A:B': {type: 'leaf', parent: 'main:B:A'}
       },
       
       FSMState: {
-        '': 'B',
-        'B:A': 'B'
+        'main': 'main:B',
+        'main:B:A': 'main:B:A:B'
       }
 
     },

@@ -1,60 +1,42 @@
-import {splitNodePath, prefixNodeBindings, getSubGraph} from './utils';
+const mergeExtracts = (a, b) => ({
+  graph: {...a.graph, ...b.graph},
+  FSMState: {...a.FSMState, ...b.FSMState}
+});
 
-// A graph which only node is a leaf together with its (empty) FSM state.
-const leafPath = {
-  FSMState: {},
-  graph: {type: 'leaf'}
-};
+const extract = (graph, targetNode, child) => {
 
-// for a graph example, check its unit test
-// nodes like ["A", "B", "C"]
-const extractRecursively = (
-  graph,
-  nodes
-) => {
-  // asking for the root
-  if (nodes.length === 0) return leafPath;
+  //we cannot go higher
+  if (!targetNode) return {FSMState: {}, graph: {}};
 
-  // the current node is a leaf
-  if (graph.type === 'leaf') return leafPath;
-
-  const [node, ...remainingNodes] = nodes;
-  const subGraph = getSubGraph(graph, node);
-  const pathFromSubGraph = extractRecursively(subGraph, remainingNodes);
-  const subGraphFSMState = prefixNodeBindings(node, pathFromSubGraph.FSMState);
-  // handling a compound node depending on its type
-  return ({
-    graph: () => {
-      const FSMState = {
-        '': node,
-        ...subGraphFSMState
-      };
-      return {
-        graph: {
-          type: 'graph',
-          nodes: {
-            [node]: pathFromSubGraph.graph
-          }
-        },
-        FSMState
+  //we're visiting some compound node
+  if (child) {
+    const targetExtract = {
+      FSMState: graph[targetNode].type === 'graph'
+        ? {[targetNode]: child}
+        : {},
+      graph: {
+        [targetNode]: {
+          ...graph[targetNode],
+          nodes: [child]
+        }
       }
-    },
+    };
+    const higherExtracts = extract(graph, graph[targetNode].parent, targetNode);
+    return mergeExtracts(targetExtract, higherExtracts);
+  }
 
-    composite: () => {
-      return {
-        graph: {
-          type: 'composite',
-          nodes: {
-            [node]: pathFromSubGraph.graph
-          }
-        },
-        FSMState: subGraphFSMState
-      };
-    }
-  })[graph.type]();
+  //we're at the bottom
+  if (!child) {
+    const targetExtract = {
+      FSMState: {},
+      graph: {
+        [targetNode]: {type: 'leaf', parent: graph[targetNode].parent}
+      }
+    };
+    const higherExtracts = extract(graph, graph[targetNode].parent, targetNode);
+    return mergeExtracts(targetExtract, higherExtracts);
+  }
+
 };
 
-export default (graph, targetNode) => extractRecursively(
-  graph,
-  splitNodePath(targetNode)
-);
+export default extract;
