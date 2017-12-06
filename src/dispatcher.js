@@ -44,6 +44,7 @@ const dispatch = ({
 }) => {
   const binding = bindings[node] || defaultParentBinding;
   const nodeType = graph[node].type;
+  const rosmaroNode = {id: node};
 
   if (nodeType === 'leaf') {
     const childFn = () => ({
@@ -51,7 +52,7 @@ const dispatch = ({
       ctx,
       res: undefined
     });
-    const leafRes = binding({method, ctx, params, child: childFn});
+    const leafRes = binding({method, ctx, params, child: childFn, rosmaroNode});
     return withResolved(leafRes, (leafRes) => ({
       arrows: leafRes.arrows 
         ? [[[node, leafRes.arrows[0][0][1]]]]
@@ -119,7 +120,7 @@ const dispatch = ({
 
     };
 
-    return binding({method, ctx, params, child: childFn});
+    return binding({method, ctx, params, child: childFn, rosmaroNode});
   }
 
   if (nodeType === 'graph') {
@@ -141,7 +142,7 @@ const dispatch = ({
       }));
     }
 
-    return binding({method, ctx, params, child: childFn});
+    return binding({method, ctx, params, child: childFn, rosmaroNode});
   }
 };
 

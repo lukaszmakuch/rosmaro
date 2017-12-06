@@ -4,6 +4,60 @@ import {mapArrows} from './../src/utils';
 
 describe("dispatcher", () => {
 
+  it('passes node IDs to bindings', () => {
+
+    const graph = {
+      'main': {
+        type: 'graph',
+        nodes: ['main:A'],
+      },
+      'main:A': {
+        type: 'composite',
+        nodes: ['main:A:A'],
+        parent: 'main'
+      },
+      'main:A:A': {
+        type: 'leaf',
+        parent: 'main:A'
+      }
+    };
+
+    const FSMState = {
+      'main': 'main:A'
+    };
+
+    let mainID, mainAID, mainAAID;
+
+    const bindings = {
+      'main': (opts) => {
+        mainID = opts.rosmaroNode.id;
+        return opts.child(opts);
+      },
+      'main:A': (opts) => {
+        mainAID = opts.rosmaroNode.id;
+        return opts.child(opts);
+      },
+      'main:A:A': (opts) => {
+        mainAAID = opts.rosmaroNode.id;
+        return {res: null, ctx: {}};
+      }
+    };
+
+    dispatch({
+      graph,
+      FSMState,
+      bindings,
+      ctx: {},
+      method: "",
+      params: []
+    });
+
+    assert.equal(mainID, 'main');
+    assert.equal(mainAID, 'main:A');
+    assert.equal(mainAAID, 'main:A:A');
+
+  });
+
   describe('async', () => {
     const asyncBinding = async ({ctx}) => {
       return {arrows: [[[null, 'x']]], ctx};
