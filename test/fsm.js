@@ -1,5 +1,5 @@
 import assert from 'assert';
-import fsm from './../src/fsm';
+import fsm, {initState} from './../src/fsm';
 
 const testTransition = ({graph, FSMState, arrows, expectedRes}) => () => {
   const actualRes = fsm({graph, FSMState, arrows});
@@ -12,6 +12,55 @@ const expectError = ({graph, FSMState, arrows}) => () => {
 };
 
 describe('fsm', () => {
+
+  it('has initial state', () => {
+
+    const graph = {
+      main: {
+        type: 'graph',
+        nodes: ['main:A', 'main:B'],
+        entryPoints: {
+          start: {target: 'main:A', entryPoint: 'p'},
+          another: {target: 'main:B', entryPoint: 'another'}
+        }
+      },
+      'main:A': {
+        type: 'composite',
+        nodes: ['main:A:A', 'main:A:B']
+      },
+      'main:A:A': {type: 'leaf'},
+      'main:A:B': {
+        type: 'graph',
+        nodes: ['main:A:B:A', 'main:A:B:B'],
+        entryPoints: {
+          start: {target: 'main:A:B:A', entryPoint: 'start'},
+          p: {target: 'main:A:B:B', entryPoint: 'start'}
+        }
+      },
+      'main:A:B:A': {type: 'leaf'},
+      'main:A:B:B': {type: 'leaf'},
+      'main:B': {
+        type: 'graph',
+        nodes: ['main:B:A', 'main:B:B'],
+        entryPoints: {
+          'start': {target: 'main:B:A', entryPoint: 'start'},
+          'another': {target: 'main:B:B', entryPoint: 'start'}
+        }
+      },
+      'main:B:A': {type: 'leaf'},
+      'main:B:B': {type: 'leaf'},
+
+    };
+
+    const gotInitState = initState(graph);
+    const expectedInitState = {
+      'main': 'main:A',
+      'main:A:B': 'main:A:B:B',
+      'main:B': 'main:B:A'
+    };
+    assert.deepEqual(expectedInitState, gotInitState);
+
+  });
 
   describe('one level graph', () => {
 

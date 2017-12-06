@@ -9,7 +9,7 @@ describe('graph builder', () => {
       'main': {
         type: 'graph',
         nodes: {
-          A: 'A', 
+          A: 'A',
           B: 'B'
         },
         arrows: {
