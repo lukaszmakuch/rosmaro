@@ -17,3 +17,22 @@ export const mapArrows = (map, arrows) => arrows.map(arrow => {
     : lastOne;
   return [...previousOnes, newLastOne];
 });
+
+export const withResolved = (val, cb) => val.then 
+  ? val.then(cb) 
+  : cb(val);
+
+export const extractPromises = maybePromises => maybePromises.reduce(
+  (grouped, maybePromise) => {
+    return maybePromise.then
+      ? {
+        ...grouped,
+        promises: [...grouped.promises, maybePromise],
+      }
+      : {
+        ...grouped,
+        notPromises: [...grouped.notPromises, maybePromise],
+      };
+  },
+  {promises: [], notPromises: []}
+);

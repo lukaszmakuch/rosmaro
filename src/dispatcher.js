@@ -1,4 +1,4 @@
-import {prefixNode, getSubGraph} from './utils';
+import {withResolved, extractPromises} from './utils';
 import deep from 'deep-diff';
 const diff = deep.diff
 const applyChange = deep.applyChange
@@ -22,10 +22,6 @@ const defaultParentBinding = ({method, ctx, params, child}) => {
   return child({method, ctx, params});
 };
 
-const withResolved = (val, cb) => val.then 
-  ? val.then(cb) 
-  : cb(val);
-
 // arrows like [ [['a:a:a', 'x']] [['a:a:b', 'x']] ]
 // node like 'a:a'
 // res like [ [['a:a:a', 'x'], ['a:a', 'x']] [['a:a:b', 'x'], ['a:a', 'x']] ]
@@ -35,21 +31,6 @@ const addNodeToArrows = (node, arrows) => arrows.map(arrow => node === 'main'
     ...arrow,
     [node, arrow[arrow.length - 1][1]]
   ]
-);
-
-const extractPromises = maybePromises => maybePromises.reduce(
-  (grouped, maybePromise) => {
-    return maybePromise.then
-      ? {
-        ...grouped,
-        promises: [...grouped.promises, maybePromise],
-      }
-      : {
-        ...grouped,
-        notPromises: [...grouped.notPromises, maybePromise],
-      };
-  },
-  {promises: [], notPromises: []}
 );
 
 const dispatch = ({
@@ -65,9 +46,16 @@ const dispatch = ({
   const nodeType = graph[node].type;
 
   if (nodeType === 'leaf') {
-    const leafRes = binding({method, ctx, params});
+    const childFn = () => ({
+      arrows: [[[node, undefined]]],
+      ctx,
+      res: undefined
+    });
+    const leafRes = binding({method, ctx, params, child: childFn});
     return withResolved(leafRes, (leafRes) => ({
-      arrows: [[[node, leafRes.arrow]]],
+      arrows: leafRes.arrows 
+        ? [[[node, leafRes.arrows[0][0][1]]]]
+        : [[[node, undefined]]],
       ctx: leafRes.ctx,
       res: leafRes.res
     }));

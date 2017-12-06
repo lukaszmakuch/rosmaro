@@ -6,7 +6,7 @@ describe("dispatcher", () => {
 
   describe('async', () => {
     const asyncBinding = async ({ctx}) => {
-      return {arrow: 'x', ctx};
+      return {arrows: [[[null, 'x']]], ctx};
     };
     it('leaves', async () => {
       const graph = {
@@ -187,12 +187,13 @@ describe("dispatcher", () => {
           };
         },
 
-        'main:graph_with_leaving_a:a': ({method, ctx, params}) => {
-          if (method == "a") return {arrow: 'a', ctx};
+        'main:graph_with_leaving_a:a': ({method, ctx, params, child}) => {
+          child();
+          if (method == "a") return {arrows: [[[null, 'a']]], ctx};
         },
 
         'main:graph_with_leaving_a:b': ({method, ctx, params}) => {
-          if (method == "a") return {arrow: 'a', ctx};
+          if (method == "a") return {arrows: [[[null, 'a']]], ctx};
         },
 
       };
@@ -260,10 +261,10 @@ describe("dispatcher", () => {
         const initCtx = {a: "a", b: "b"};
         const bindings = {
           'main:A:A': ({method, ctx, params}) => {
-            return {arrow: 'x', ctx: {a: "z", b: "b"}};
+            return {arrows: [[[null, 'x']]], ctx: {a: "z", b: "b"}};
           },
           'main:B:A': ({method, ctx, params}) => {
-            return {arrow: 'y', ctx: {a: "a", b: "x"}};
+            return {arrows: [[[null, 'y']]], ctx: {a: "a", b: "x"}};
           }
         };
         const {ctx} = dispatch({
@@ -281,10 +282,10 @@ describe("dispatcher", () => {
       it('merges the context in case of simultaneous transitions', () => {
         const bindings = {
           'main:A:A': ({method, ctx, params}) => {
-            return {arrow: 'x', ctx: {a: 2}};
+            return {arrows: [[[null, 'x']]], ctx: {a: 2}};
           },
           'main:B:A': ({method, ctx, params}) => {
-            return {arrow: 'y', ctx: {b: 3}};
+            return {arrows: [[[null, 'y']]], ctx: {b: 3}};
           }
         };
         const {ctx} = dispatch({
@@ -332,7 +333,7 @@ describe("dispatcher", () => {
       "main:B:B:A": ({method, ctx, params}) => {
         switch (method) {
           case 'followArrows': 
-            return {arrow: 'x', ctx, res: 'ARes'};
+            return {arrows: [[[null, 'x']]], ctx, res: 'ARes'};
             break;
         }
       },
@@ -340,7 +341,7 @@ describe("dispatcher", () => {
       "main:B:B:B": ({method, ctx, params}) => {
         switch (method) {
           case 'followArrows': 
-            return {arrow: 'y', ctx, res: 'BRes'};
+            return {arrows: [[[null, 'y']]], ctx, res: 'BRes'};
             break;
         }
       }
