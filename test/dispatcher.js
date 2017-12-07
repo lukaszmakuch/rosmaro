@@ -4,7 +4,7 @@ import {mapArrows} from './../src/utils';
 
 describe("dispatcher", () => {
 
-  it('passes node IDs to bindings', () => {
+  it('passes node IDs to handlers', () => {
 
     const instanceID = {
       'main': 'a',
@@ -35,7 +35,7 @@ describe("dispatcher", () => {
     let mainID, mainAID, mainAAID;
     let mainInstanceID, mainAInstanceID, mainAAInstanceID;
 
-    const bindings = {
+    const handlers = {
       'main': (opts) => {
         mainID = opts.node.ID;
         mainInstanceID = opts.node.instanceID
@@ -56,7 +56,7 @@ describe("dispatcher", () => {
     dispatch({
       graph,
       FSMState,
-      bindings,
+      handlers,
       instanceID,
       ctx: {},
       method: "",
@@ -73,20 +73,20 @@ describe("dispatcher", () => {
   });
 
   describe('async', () => {
-    const asyncBinding = async ({ctx}) => {
+    const asyncHandler = async ({ctx}) => {
       return {arrows: [[[null, 'x']]], ctx};
     };
     it('leaves', async () => {
       const graph = {
         main: {type: 'leaf'}
       };
-      const bindings = {
-        'main': asyncBinding
+      const handlers = {
+        'main': asyncHandler
       };
       const callRes = dispatch({
         graph,
         FSMState: {},
-        bindings,
+        handlers,
         ctx: {},
         instanceID: {},
         method: "",
@@ -108,13 +108,13 @@ describe("dispatcher", () => {
         'main:A': {type: 'leaf', parent: 'main'}
       };
       const FSMState = {'main': 'main:A'};
-      const bindings = {
-        'main:A': asyncBinding
+      const handlers = {
+        'main:A': asyncHandler
       };
       const callRes = dispatch({
         graph,
         FSMState,
-        bindings,
+        handlers,
         ctx: {},
         instanceID: {},
         method: "",
@@ -130,13 +130,13 @@ describe("dispatcher", () => {
         res: undefined
       }, finalCallRes);
     });
-    it('graph bindings', async () => {
+    it('graph handlers', async () => {
       const graph = {
         'main': {type: 'graph', nodes: ['main:A']},
         'main:A': {type: 'leaf', parent: 'main'}
       };
       const FSMState = {'main': 'main:A'};
-      const bindings = {
+      const handlers = {
         'main': async ({child}) => {
           return await child({ctx: {}});
         },
@@ -145,7 +145,7 @@ describe("dispatcher", () => {
       const callRes = dispatch({
         graph,
         FSMState,
-        bindings,
+        handlers,
         ctx: {},
         instanceID: {},
         method: "",
@@ -166,14 +166,14 @@ describe("dispatcher", () => {
         'main:A': {type: 'leaf', parent: 'main'},
         'main:B': {type: 'leaf', parent: 'main'}
       };
-      const bindings = {
+      const handlers = {
         'main:A': async () => ({res: 'ARes', ctx: {}}),
         'main:B': async () => ({res: 'BRes', ctx: {}}),
       };
       const callRes = dispatch({
         graph,
         FSMState: {},
-        bindings,
+        handlers,
         ctx: {},
         instanceID: {},
         method: "",
@@ -189,13 +189,13 @@ describe("dispatcher", () => {
         res: {A: 'ARes', B: 'BRes'}
       }, finalCallRes);
     });
-    it('composite bindings', async () => {
+    it('composite handlers', async () => {
       const graph = {
         'main': {type: 'composite', nodes: ['main:A', 'main:B']},
         'main:A': {type: 'leaf', parent: 'main'},
         'main:B': {type: 'leaf', parent: 'main'}
       };
-      const bindings = {
+      const handlers = {
         'main': async ({child, ctx}) => {
           const childRes = child({ctx});
           return {
@@ -210,7 +210,7 @@ describe("dispatcher", () => {
       const callRes = dispatch({
         graph,
         FSMState: {},
-        bindings,
+        handlers,
         ctx: {},
         instanceID: {},
         method: "",
@@ -248,7 +248,7 @@ describe("dispatcher", () => {
         'main:graph_with_leaving_a': 'main:graph_with_leaving_a:a'
       };
 
-      const bindings = {
+      const handlers = {
 
         'main:graph_with_leaving_a': ({method, ctx, params, child}) => {
           const childRes = child({method, ctx, params});
@@ -281,7 +281,7 @@ describe("dispatcher", () => {
       }, dispatch({
         graph,
         FSMState,
-        bindings,
+        handlers,
         ctx: {},
         instanceID: {},
         method: "a",
@@ -299,7 +299,7 @@ describe("dispatcher", () => {
       const graph = {
         'main': {type: 'leaf'}
       };
-      const bindings = {
+      const handlers = {
         'main': () => {
           return {ctx: {a: 2}};
         },
@@ -307,7 +307,7 @@ describe("dispatcher", () => {
       const {ctx} = dispatch({
         graph,
         FSMState: {},
-        bindings,
+        handlers,
         ctx: initCtx,
         instanceID: {},
         method: "",
@@ -334,7 +334,7 @@ describe("dispatcher", () => {
 
       it('merges only different parts', () => {
         const initCtx = {a: "a", b: "b"};
-        const bindings = {
+        const handlers = {
           'main:A:A': ({method, ctx, params}) => {
             return {arrows: [[[null, 'x']]], ctx: {a: "z", b: "b"}};
           },
@@ -345,7 +345,7 @@ describe("dispatcher", () => {
         const {ctx} = dispatch({
           graph,
           FSMState,
-          bindings,
+          handlers,
           ctx: initCtx,
           instanceID: {},
           method: "",
@@ -356,7 +356,7 @@ describe("dispatcher", () => {
       });
 
       it('merges the context in case of simultaneous transitions', () => {
-        const bindings = {
+        const handlers = {
           'main:A:A': ({method, ctx, params}) => {
             return {arrows: [[[null, 'x']]], ctx: {a: 2}};
           },
@@ -367,7 +367,7 @@ describe("dispatcher", () => {
         const {ctx} = dispatch({
           graph,
           FSMState,
-          bindings,
+          handlers,
           ctx: {},
           instanceID: {},
           method: "",
@@ -397,7 +397,7 @@ describe("dispatcher", () => {
       'main:B': 'main:B:B'
     };
 
-    const bindings = {
+    const handlers = {
 
       'main:B:B': ({method, ctx, params, child}) => {
         const childRes = child({method, ctx, params});
@@ -431,7 +431,7 @@ describe("dispatcher", () => {
     const callRes = dispatch({
       graph,
       FSMState,
-      bindings,
+      handlers,
       ctx,
       instanceID: {},
       method: "followArrows",

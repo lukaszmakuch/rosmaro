@@ -1,7 +1,7 @@
 import {withResolved, extractPromises} from './../utils';
 import {mergeCtxs} from './ctx';
 
-const defaultParentBinding = ({method, ctx, params, child}) => {
+const defaultParentHandler = ({method, ctx, params, child}) => {
   return child({method, ctx, params});
 };
 
@@ -26,20 +26,20 @@ const dispatch = ({
   graph, 
   node = 'main',
   FSMState, 
-  bindings, 
+  handlers, 
   ctx, 
   method,
   instanceID,
   params
 }) => {
-  const binding = bindings[node] || defaultParentBinding;
+  const handler = handlers[node] || defaultParentHandler;
   const nodeType = graph[node].type;
   const nodeData = {ID: node, instanceID: instanceID[node]};
   const callDispatch = ({node, ctx, method, params}) => dispatch({
     graph,
     node,
     FSMState,
-    bindings,
+    handlers,
     ctx,
     instanceID,
     method,
@@ -47,7 +47,7 @@ const dispatch = ({
   });
 
   if (nodeType === 'leaf') {
-    const leafRes = binding({method, ctx, params, child: dummyChildFn, node: nodeData});
+    const leafRes = handler({method, ctx, params, child: dummyChildFn, node: nodeData});
     return withResolved(leafRes, (leafRes) => ({
       arrows: leafRes.arrows 
         ? [[[node, leafRes.arrows[0][0][1]]]]
@@ -112,7 +112,7 @@ const dispatch = ({
 
     };
 
-    return binding({method, ctx, params, child: childFn, node: nodeData});
+    return handler({method, ctx, params, child: childFn, node: nodeData});
   }
 
   if (nodeType === 'graph') {
@@ -131,7 +131,7 @@ const dispatch = ({
       }));
     }
 
-    return binding({method, ctx, params, child: childFn, node: nodeData});
+    return handler({method, ctx, params, child: childFn, node: nodeData});
   }
 };
 

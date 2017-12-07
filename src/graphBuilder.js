@@ -12,7 +12,7 @@ const build = (
 
   const nodePlan = plan.graph[planNode];
   const type = nodePlan.type;
-  const binding = plan.bindings[planNode];
+  const handler = plan.handlers[planNode];
 
   if (type === 'leaf') {
     return {
@@ -22,8 +22,8 @@ const build = (
           parent
         }
       },
-      bindings: {
-        [builtNode]: plan.bindings[planNode]
+      handlers: {
+        [builtNode]: plan.handlers[planNode]
       }
     };
   }
@@ -40,9 +40,9 @@ const build = (
       return {
         nodes: [...soFar.nodes, builtName],
         graph: {...soFar.graph, ...built.graph},
-        bindings: {...soFar.bindings, ...built.bindings}
+        handlers: {...soFar.handlers, ...built.handlers}
       };
-    }, {nodes: [], graph: {}, bindings: {}});
+    }, {nodes: [], graph: {}, handlers: {}});
 
     return {
       graph: {
@@ -53,9 +53,9 @@ const build = (
         },
         ...childRes.graph
       },
-      bindings: {
-        [builtNode]: plan.bindings[planNode],
-        ...childRes.bindings
+      handlers: {
+        [builtNode]: plan.handlers[planNode],
+        ...childRes.handlers
       }
     };
   }
@@ -72,9 +72,9 @@ const build = (
       return {
         nodes: [...soFar.nodes, builtName],
         graph: {...soFar.graph, ...built.graph},
-        bindings: {...soFar.bindings, ...built.bindings}
+        handlers: {...soFar.handlers, ...built.handlers}
       };
-    }, {nodes: [], graph: {}, bindings: {}});
+    }, {nodes: [], graph: {}, handlers: {}});
 
     const emptyArrows = childRes.nodes.reduce((soFar, node) => ({
       ...soFar,
@@ -119,9 +119,9 @@ const build = (
         },
         ...childRes.graph
       },
-      bindings: {
-        [builtNode]: plan.bindings[planNode],
-        ...childRes.bindings
+      handlers: {
+        [builtNode]: plan.handlers[planNode],
+        ...childRes.handlers
       }
     };
   }
