@@ -3,20 +3,27 @@ const glueNodeName = (parent, child) => parent
   : child;
 
 const build = (
-  graphPlan, 
+  // graphPlan, 
+  plan,
   planNode = 'main',
   builtNode = 'main',
   parent = null
 ) => {
 
-  const nodePlan = graphPlan[planNode];
+  const nodePlan = plan.graph[planNode];
   const type = nodePlan.type;
+  const binding = plan.bindings[planNode];
 
   if (type === 'leaf') {
     return {
-      [builtNode]: {
-        type: 'leaf',
-        parent
+      graph: {
+        [builtNode]: {
+          type: 'leaf',
+          parent
+        }
+      },
+      bindings: {
+        [builtNode]: plan.bindings[planNode]
       }
     };
   }
@@ -24,42 +31,50 @@ const build = (
   if (type === 'composite') {
     const childRes = Object.keys(nodePlan.nodes).reduce((soFar, planName) => {
       const builtName = glueNodeName(builtNode, planName);
-      const builtGraph = build(
-        graphPlan, 
+      const built = build(
+        plan, 
         nodePlan.nodes[planName],
         builtName,
         builtNode
       );
       return {
         nodes: [...soFar.nodes, builtName],
-        graph: {...soFar.graph, ...builtGraph}
+        graph: {...soFar.graph, ...built.graph},
+        bindings: {...soFar.bindings, ...built.bindings}
       };
-    }, {nodes: [], graph: {}});
+    }, {nodes: [], graph: {}, bindings: {}});
 
     return {
-      [builtNode]: {
-        nodes: childRes.nodes,
-        type: 'composite',
-        parent
+      graph: {
+        [builtNode]: {
+          nodes: childRes.nodes,
+          type: 'composite',
+          parent
+        },
+        ...childRes.graph
       },
-      ...childRes.graph
-    }
+      bindings: {
+        [builtNode]: plan.bindings[planNode],
+        ...childRes.bindings
+      }
+    };
   }
 
   if (type === 'graph') {
     const childRes = Object.keys(nodePlan.nodes).reduce((soFar, planName) => {
       const builtName = glueNodeName(builtNode, planName);
-      const builtGraph = build(
-        graphPlan, 
+      const built = build(
+        plan, 
         nodePlan.nodes[planName],
         builtName,
         builtNode
       );
       return {
         nodes: [...soFar.nodes, builtName],
-        graph: {...soFar.graph, ...builtGraph}
+        graph: {...soFar.graph, ...built.graph},
+        bindings: {...soFar.bindings, ...built.bindings}
       };
-    }, {nodes: [], graph: {}});
+    }, {nodes: [], graph: {}, bindings: {}});
 
     const emptyArrows = childRes.nodes.reduce((soFar, node) => ({
       ...soFar,
@@ -94,14 +109,20 @@ const build = (
     }, {});
 
     return {
-      [builtNode]: {
-        type: 'graph',
-        parent,
-        arrows: {...emptyArrows, ...arrows},
-        entryPoints,
-        nodes: childRes.nodes
+      graph: {
+        [builtNode]: {
+          type: 'graph',
+          parent,
+          arrows: {...emptyArrows, ...arrows},
+          entryPoints,
+          nodes: childRes.nodes
+        },
+        ...childRes.graph
       },
-      ...childRes.graph
+      bindings: {
+        [builtNode]: plan.bindings[planNode],
+        ...childRes.bindings
+      }
     };
   }
 

@@ -2,7 +2,7 @@ import assert from 'assert';
 import build from './../src/graphBuilder';
 
 describe('graph builder', () => {
-  it('turns a graph plan into a graph', () => {
+  it('turns a graph plan into a graph with bindings', () => {
 
     const graphPlan = {
 
@@ -54,6 +54,15 @@ describe('graph builder', () => {
       'BSubA': {type: 'leaf'},
       'BSubB': {type: 'leaf'}
 
+    };
+
+    const bindings = {
+      'main': function () {},
+      'A': function () {},
+      'B': function () {},
+      'BSub': function () {},
+      'BSubA': function () {},
+      'BSubB': function () {}
     };
 
     const expectedGraph = {
@@ -123,9 +132,21 @@ describe('graph builder', () => {
 
     };
 
-    const builtGraph = build(graphPlan);
-    assert.deepEqual(builtGraph, expectedGraph);
+    const expectedBindings = {
+      'main': bindings['main'],
+      'main:A': bindings['A'],
+      'main:B': bindings['B'],
+      'main:B:A': bindings['BSub'],
+      'main:B:A:A': bindings['BSubA'],
+      'main:B:A:B': bindings['BSubB'],
+      'main:B:B': bindings['BSub'],
+      'main:B:B:A': bindings['BSubA'],
+      'main:B:B:B': bindings['BSubB']
+    };
 
+    const built = build({graph: graphPlan, bindings});
+    assert.deepEqual(built.graph, expectedGraph);
+    assert.deepStrictEqual(built.bindings, expectedBindings);
   });
 });
 
