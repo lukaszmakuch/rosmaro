@@ -7,8 +7,8 @@ import graphDiff from './graphDiff';
 export const mergeNewFSMStates = FSMStates => {
   const parts = flatten(FSMStates.map(state => toPairs(state)));
   return parts.reduce((merged, [parent, children]) => {
-    if (merged === 'fail') return 'fail';
-    if (merged[parent] && (merged[parent] !== children)) return 'fail';
+    if (merged[parent] && (merged[parent] !== children)) 
+      throw new Error("entering an incorrect FSM state");
 
     return {...merged, [parent]: children};
   }, {});

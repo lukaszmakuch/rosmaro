@@ -6,7 +6,7 @@ export {initState};
 // res {newFSMState: {}, target: 'a:b:c', entryPoint: 'p'}
 const followUp = ({arrow, graph}) => {
   const noArrowToFollow = arrow.length === 0;
-  if (noArrowToFollow) return "fail";
+  if (noArrowToFollow) throw new Error("unable to follow an arrow");
 
   // if arrow is [['a:b', 'x'], ['a', 'y']] then srcNode is 'a:b' and the arrowName is 'x'
   const [[srcNode, arrowName], ...higherArrows] = arrow;
@@ -21,8 +21,6 @@ const followUp = ({arrow, graph}) => {
       arrow: higherArrows,
       graph
     });
-    if (higherRes === "fail") return higherRes;
-
     return {
       newFSMState: higherRes.newFSMState,
       target: higherRes.target,
@@ -72,11 +70,8 @@ const followDown = ({FSMState, graph, target, entryPoint}) => {
   if (targetNode.type === 'composite') {
     const followedOrthogonal = targetNode.nodes
       .map(node => followDown({FSMState, graph, target: node, entryPoint}));
-    const newFSMState = mergeNewFSMStates(map(followedOrthogonal, 'newFSMState'));
-    if (newFSMState === 'fail') return newFSMState;
-
     return {
-      newFSMState
+      newFSMState: mergeNewFSMStates(map(followedOrthogonal, 'newFSMState'))
     };
   }
 
@@ -96,17 +91,13 @@ export default ({
   const followTargetDown = ({target, entryPoint}) => 
     followDown({FSMState, graph, target, entryPoint});
   const allFollowedUp = arrows.map(followArrowUp);
-  if (allFollowedUp.some(res => res === 'fail')) return 'fail';
 
   const allFollowedDown = allFollowedUp.map(followTargetDown);
   const allNewFSMStates = [
     ...map(allFollowedUp, 'newFSMState'),
     ...map(allFollowedDown, 'newFSMState')
   ];
-  const newFSMStatePart = mergeNewFSMStates(allNewFSMStates);
-  if (newFSMStatePart === 'fail') return 'fail';
-
-  const newFSMState = {...FSMState, ...newFSMStatePart};
+  const newFSMState = {...FSMState, ...mergeNewFSMStates(allNewFSMStates)};
 
   return {
     FSMState: newFSMState,

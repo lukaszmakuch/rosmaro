@@ -7,8 +7,7 @@ const testTransition = ({graph, FSMState, arrows, expectedRes}) => () => {
 };
 
 const expectError = ({graph, FSMState, arrows}) => () => {
-  const actualRes = fsm({graph, FSMState, arrows});
-  assert(actualRes === 'fail');
+  assert.throws(() => fsm({graph, FSMState, arrows}), Error);
 };
 
 describe('fsm', () => {
