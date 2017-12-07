@@ -1,4 +1,6 @@
 import {renameMain, glueNodeName} from './nodeNames';
+import {mapMain} from './handlers';
+export {mapMain};
 
 const build = (
   plan,

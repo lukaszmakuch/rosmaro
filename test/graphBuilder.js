@@ -1,28 +1,42 @@
 import assert from 'assert';
-import build from './../src/graphBuilder/api';
+import build, {mapMain} from './../src/graphBuilder/api';
 
 describe('graph builder', () => {
-  it('turns a graph plan into a graph with handlers', () => {
 
-    const external = {
-      A: {
-        graph: {
-          'main': {
-            type: 'graph',
-            nodes: {A: 'A', B: 'A'},
-            arrows: {
-              A: {x: {target: 'B', entryPoint: 'start'}}
-            },
-            entryPoints: {start: {target: 'A', entryPoint: 'start'}}
-          },
-          A: {type: 'leaf'}
-        },
-        handlers: {
-          'main': function() {},
-          'A': function() {}
-        }
-      }
+  it('provides a function to decorate the main handler of a plan', () => {
+
+    const originalMainHandler = b => b;
+    const originalAnotherHandler = a => a
+
+    const plan = {
+      graph: {},
+      handlers: {
+        'main': originalMainHandler,
+        'another': originalAnotherHandler
+      },
+      external: {}
     };
+
+    const newMain = c => c;
+
+    const decoratedPlan = mapMain(plan, main => {
+      assert.strictEqual(main, originalMainHandler);
+      return newMain;
+    });
+
+    assert.deepStrictEqual(decoratedPlan.external, plan.external);
+    assert.deepStrictEqual(decoratedPlan.graph, plan.graph);
+    assert.deepStrictEqual(
+      decoratedPlan.handlers.another, 
+      plan.handlers.another
+    );
+    assert.deepStrictEqual(
+      decoratedPlan.handlers.main, 
+      newMain
+    );
+  });
+
+  it('turns a graph plan into a graph with handlers', () => {
 
     const graphPlan = {
 
@@ -42,9 +56,7 @@ describe('graph builder', () => {
         }
       },
 
-      'A': {
-        type: 'external'
-      },
+      'A': {type: 'external'},
 
       'B': {
         type: 'composite',
@@ -82,6 +94,26 @@ describe('graph builder', () => {
       'BSub': function () {},
       'BSubA': function () {},
       'BSubB': function () {}
+    };
+
+    const external = {
+      A: {
+        graph: {
+          'main': {
+            type: 'graph',
+            nodes: {A: 'A', B: 'A'},
+            arrows: {
+              A: {x: {target: 'B', entryPoint: 'start'}}
+            },
+            entryPoints: {start: {target: 'A', entryPoint: 'start'}}
+          },
+          A: {type: 'leaf'}
+        },
+        handlers: {
+          'main': function() {},
+          'A': function() {}
+        }
+      }
     };
 
     const expectedGraph = {
