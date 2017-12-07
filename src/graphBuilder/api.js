@@ -8,7 +8,6 @@ const build = (
   builtNode = 'main',
   parent = null
 ) => {
-
   const nodePlan = plan.graph[planNode];
   const type = nodePlan.type;
   const handler = plan.handlers[planNode];
