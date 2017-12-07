@@ -1,9 +1,6 @@
-const glueNodeName = (parent, child) => parent
-  ? parent + ":" + child
-  : child;
+import {renameMain, glueNodeName} from './nodeNames';
 
 const build = (
-  // graphPlan, 
   plan,
   planNode = 'main',
   builtNode = 'main',
@@ -13,6 +10,11 @@ const build = (
   const nodePlan = plan.graph[planNode];
   const type = nodePlan.type;
   const handler = plan.handlers[planNode];
+  const externalPlan = (plan.external || {})[planNode];
+
+  if (type === 'external') {
+    return renameMain(build(externalPlan), builtNode, parent);
+  }
 
   if (type === 'leaf') {
     return {
@@ -23,7 +25,7 @@ const build = (
         }
       },
       handlers: {
-        [builtNode]: plan.handlers[planNode]
+        [builtNode]: handler
       }
     };
   }
@@ -54,7 +56,7 @@ const build = (
         ...childRes.graph
       },
       handlers: {
-        [builtNode]: plan.handlers[planNode],
+        [builtNode]: handler,
         ...childRes.handlers
       }
     };
@@ -120,7 +122,7 @@ const build = (
         ...childRes.graph
       },
       handlers: {
-        [builtNode]: plan.handlers[planNode],
+        [builtNode]: handler,
         ...childRes.handlers
       }
     };

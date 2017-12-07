@@ -1,8 +1,28 @@
 import assert from 'assert';
-import build from './../src/graphBuilder';
+import build from './../src/graphBuilder/api';
 
 describe('graph builder', () => {
   it('turns a graph plan into a graph with handlers', () => {
+
+    const external = {
+      A: {
+        graph: {
+          'main': {
+            type: 'graph',
+            nodes: {A: 'A', B: 'A'},
+            arrows: {
+              A: {x: {target: 'B', entryPoint: 'start'}}
+            },
+            entryPoints: {start: {target: 'A', entryPoint: 'start'}}
+          },
+          A: {type: 'leaf'}
+        },
+        handlers: {
+          'main': function() {},
+          'A': function() {}
+        }
+      }
+    };
 
     const graphPlan = {
 
@@ -23,7 +43,7 @@ describe('graph builder', () => {
       },
 
       'A': {
-        type: 'leaf'
+        type: 'external'
       },
 
       'B': {
@@ -58,7 +78,6 @@ describe('graph builder', () => {
 
     const handlers = {
       'main': function () {},
-      'A': function () {},
       'B': function () {},
       'BSub': function () {},
       'BSubA': function () {},
@@ -83,9 +102,18 @@ describe('graph builder', () => {
       },
 
       'main:A': {
-        type: 'leaf',
-        parent: 'main'
+        type: 'graph',
+        parent: 'main',
+        nodes: ['main:A:A', 'main:A:B'],
+        arrows: {
+          'main:A:A': {x: {target: 'main:A:B', entryPoint: 'start'}},
+          'main:A:B': {}
+        },
+        entryPoints: {start: {target: 'main:A:A', entryPoint: 'start'}}
       },
+
+      'main:A:A': {type: 'leaf', parent: 'main:A'},
+      'main:A:B': {type: 'leaf', parent: 'main:A'},
 
       'main:B': {
         type: 'composite',
@@ -134,7 +162,9 @@ describe('graph builder', () => {
 
     const expectedHandlers = {
       'main': handlers['main'],
-      'main:A': handlers['A'],
+      'main:A': external['A'].handlers['main'],
+      'main:A:A': external['A'].handlers['A'],
+      'main:A:B': external['A'].handlers['A'],
       'main:B': handlers['B'],
       'main:B:A': handlers['BSub'],
       'main:B:A:A': handlers['BSubA'],
@@ -144,7 +174,7 @@ describe('graph builder', () => {
       'main:B:B:B': handlers['BSubB']
     };
 
-    const built = build({graph: graphPlan, handlers});
+    const built = build({graph: graphPlan, handlers, external});
     assert.deepEqual(built.graph, expectedGraph);
     assert.deepStrictEqual(built.handlers, expectedHandlers);
   });
