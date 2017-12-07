@@ -1,5 +1,5 @@
 import assert from 'assert';
-import graphDiff from './../src/graphDiff';
+import graphDiff from './../src/fsm/graphDiff';
 
 it('provides the list of entered and left nodes in level order', () => {
 

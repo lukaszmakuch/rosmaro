@@ -1,5 +1,5 @@
 import assert from 'assert';
-import fsm, {initState} from './../src/fsm';
+import fsm, {initState} from './../src/fsm/api';
 
 const testTransition = ({graph, FSMState, arrows, expectedRes}) => () => {
   const actualRes = fsm({graph, FSMState, arrows});

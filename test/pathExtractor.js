@@ -1,5 +1,5 @@
 import assert from 'assert';
-import extractPath from './../src/pathExtractor';
+import extractPath from './../src/dispatcher/pathExtractor';
 
 const testExtracting = ({
   graph,

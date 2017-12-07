@@ -1,5 +1,5 @@
 import assert from 'assert';
-import dispatch from './../src/dispatcher';
+import dispatch from './../src/dispatcher/api';
 import {mapArrows} from './../src/utils';
 
 describe("dispatcher", () => {

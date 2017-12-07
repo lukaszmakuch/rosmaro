@@ -94,4 +94,4 @@ export default ({graph, oldFSMState, newFSMState}) => {
     };
   }, {leftNodes: [], enteredNodes: []})
   return diff;
-}
+};
