@@ -16,26 +16,38 @@ const addNodeToArrows = (node, arrows) => arrows.map(arrow => node === 'main'
   ]
 );
 
+const dummyChildFn = () => ({
+  arrows: [[[null, undefined]]],
+  ctx: {},
+  res: undefined
+});
+
 const dispatch = ({
   graph, 
   node = 'main',
   FSMState, 
   bindings, 
   ctx, 
-  method, 
+  method,
+  instanceID,
   params
 }) => {
   const binding = bindings[node] || defaultParentBinding;
   const nodeType = graph[node].type;
-  const rosmaroNode = {id: node};
+  const nodeData = {ID: node, instanceID: instanceID[node]};
+  const callDispatch = ({node, ctx, method, params}) => dispatch({
+    graph,
+    node,
+    FSMState,
+    bindings,
+    ctx,
+    instanceID,
+    method,
+    params
+  });
 
   if (nodeType === 'leaf') {
-    const childFn = () => ({
-      arrows: [[[node, undefined]]],
-      ctx,
-      res: undefined
-    });
-    const leafRes = binding({method, ctx, params, child: childFn, rosmaroNode});
+    const leafRes = binding({method, ctx, params, child: dummyChildFn, node: nodeData});
     return withResolved(leafRes, (leafRes) => ({
       arrows: leafRes.arrows 
         ? [[[node, leafRes.arrows[0][0][1]]]]
@@ -55,11 +67,8 @@ const dispatch = ({
           node: childNode,
           callRes: rawRes
         });
-        const rawRes = dispatch({
-          graph,
+        const rawRes = callDispatch({
           node: childNode,
-          FSMState,
-          bindings,
           ctx,
           method,
           params
@@ -103,17 +112,14 @@ const dispatch = ({
 
     };
 
-    return binding({method, ctx, params, child: childFn, rosmaroNode});
+    return binding({method, ctx, params, child: childFn, node: nodeData});
   }
 
   if (nodeType === 'graph') {
     const activeChild = FSMState[node];
     const childFn = ({method, ctx, params}) => {
-      const childRes = dispatch({
-        graph,
+      const childRes = callDispatch({
         node: activeChild,
-        FSMState,
-        bindings,
         ctx,
         method,
         params
@@ -125,7 +131,7 @@ const dispatch = ({
       }));
     }
 
-    return binding({method, ctx, params, child: childFn, rosmaroNode});
+    return binding({method, ctx, params, child: childFn, node: nodeData});
   }
 };
 

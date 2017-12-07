@@ -6,6 +6,12 @@ describe("dispatcher", () => {
 
   it('passes node IDs to bindings', () => {
 
+    const instanceID = {
+      'main': 'a',
+      'main:A': 'b',
+      'main:A:A': 'c'
+    };
+
     const graph = {
       'main': {
         type: 'graph',
@@ -27,18 +33,22 @@ describe("dispatcher", () => {
     };
 
     let mainID, mainAID, mainAAID;
+    let mainInstanceID, mainAInstanceID, mainAAInstanceID;
 
     const bindings = {
       'main': (opts) => {
-        mainID = opts.rosmaroNode.id;
+        mainID = opts.node.ID;
+        mainInstanceID = opts.node.instanceID
         return opts.child(opts);
       },
       'main:A': (opts) => {
-        mainAID = opts.rosmaroNode.id;
+        mainAID = opts.node.ID;
+        mainAInstanceID = opts.node.instanceID;
         return opts.child(opts);
       },
       'main:A:A': (opts) => {
-        mainAAID = opts.rosmaroNode.id;
+        mainAAID = opts.node.ID;
+        mainAAInstanceID = opts.node.instanceID;
         return {res: null, ctx: {}};
       }
     };
@@ -47,14 +57,18 @@ describe("dispatcher", () => {
       graph,
       FSMState,
       bindings,
+      instanceID,
       ctx: {},
       method: "",
       params: []
     });
 
     assert.equal(mainID, 'main');
+    assert.equal(mainInstanceID, 'a');
     assert.equal(mainAID, 'main:A');
+    assert.equal(mainAInstanceID, 'b');
     assert.equal(mainAAID, 'main:A:A');
+    assert.equal(mainAAInstanceID, 'c');
 
   });
 
@@ -74,6 +88,7 @@ describe("dispatcher", () => {
         FSMState: {},
         bindings,
         ctx: {},
+        instanceID: {},
         method: "",
         params: []
       });
@@ -101,6 +116,7 @@ describe("dispatcher", () => {
         FSMState,
         bindings,
         ctx: {},
+        instanceID: {},
         method: "",
         params: []
       });
@@ -131,6 +147,7 @@ describe("dispatcher", () => {
         FSMState,
         bindings,
         ctx: {},
+        instanceID: {},
         method: "",
         params: []
       });
@@ -158,6 +175,7 @@ describe("dispatcher", () => {
         FSMState: {},
         bindings,
         ctx: {},
+        instanceID: {},
         method: "",
         params: []
       });
@@ -194,6 +212,7 @@ describe("dispatcher", () => {
         FSMState: {},
         bindings,
         ctx: {},
+        instanceID: {},
         method: "",
         params: []
       });
@@ -264,6 +283,7 @@ describe("dispatcher", () => {
         FSMState,
         bindings,
         ctx: {},
+        instanceID: {},
         method: "a",
         params: []
       }));
@@ -289,6 +309,7 @@ describe("dispatcher", () => {
         FSMState: {},
         bindings,
         ctx: initCtx,
+        instanceID: {},
         method: "",
         params: []
       });
@@ -326,6 +347,7 @@ describe("dispatcher", () => {
           FSMState,
           bindings,
           ctx: initCtx,
+          instanceID: {},
           method: "",
           params: []
         });
@@ -347,6 +369,7 @@ describe("dispatcher", () => {
           FSMState,
           bindings,
           ctx: {},
+          instanceID: {},
           method: "",
           params: []
         });
@@ -410,6 +433,7 @@ describe("dispatcher", () => {
       FSMState,
       bindings,
       ctx,
+      instanceID: {},
       method: "followArrows",
       params: []
     });
