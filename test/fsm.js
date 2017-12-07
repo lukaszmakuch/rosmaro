@@ -62,6 +62,40 @@ describe('fsm', () => {
 
   });
 
+  it('does NOT need to cause a transition', testTransition({
+
+    graph: {
+
+      'main': {
+        type: 'graph',
+        nodes: ['main:A', 'main:B'],
+        parent: null,
+        arrows: {
+          'main:A': {
+            x: {target: 'main:B', entryPoint: 'start'}
+          },
+          'main:B': {}
+        },
+        entryPoints: {start: {target: 'main:A', entryPoint: 'start'}}
+      },
+
+      'main:A': {type: 'leaf', parent: 'main'},
+      'main:B': {type: 'leaf', parent: 'main'},
+
+    },
+
+    FSMState: {'main': 'main:A'},
+
+    arrows: [[['main:A', undefined]]],
+
+    expectedRes: {
+      leftNodes: [],
+      enteredNodes: [],
+      FSMState: {'main': 'main:A'}
+    }
+
+  }));
+
   describe('one level graph', () => {
 
     describe('correct transition', () => {

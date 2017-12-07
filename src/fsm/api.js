@@ -82,12 +82,16 @@ const followDown = ({FSMState, graph, target, entryPoint}) => {
 
 };
 
+// falsey for [['a', 'b'], ['c', undefined]]
+const nonEmptyArrow = arrow => arrow[arrow.length - 1][1];
+
 // res: {FSMState, leftNodes, enteredNodes}
 export default ({
   graph, 
   FSMState, 
-  arrows
+  arrows: maybeEmptyArrows
 }) => {
+  const arrows = maybeEmptyArrows.filter(nonEmptyArrow);
   const followArrowUp = arrow => followUp({arrow, graph});
   const followTargetDown = ({target, entryPoint}) => 
     followDown({FSMState, graph, target, entryPoint});
