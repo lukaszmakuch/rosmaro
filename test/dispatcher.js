@@ -73,159 +73,267 @@ describe("dispatcher", () => {
   });
 
   describe('async', () => {
+    // an async handler which always resolves
     const asyncHandler = async ({ctx}) => {
       return {arrows: [[[null, 'x']]], ctx};
     };
-    it('leaves', async () => {
-      const graph = {
-        main: {type: 'leaf'}
-      };
-      const handlers = {
-        'main': asyncHandler
-      };
-      const callRes = dispatch({
-        graph,
-        FSMState: {},
-        handlers,
-        ctx: {},
-        instanceID: {},
-        method: "",
-        params: []
-      });
-      assert(callRes.then);
-      const finalCallRes = await callRes;
-      assert.deepEqual({
-        arrows: [
-          [['main', 'x']]
-        ],
-        ctx: {},
-        res: undefined
-      }, finalCallRes);
+    // an async handler which always rejects
+    const failingAsyncHandler = () => new Promise((resolve, reject) => {
+      setTimeout(() => reject("error"), 10);
     });
-    it('graph children', async () => {
-      const graph = {
-        'main': {type: 'graph', nodes: ['main:A']},
-        'main:A': {type: 'leaf', parent: 'main'}
+    // a helper to assert that the given promise rejects with "error"
+    const expectError = async (dispatchingRes) => {
+      let caught;
+      try {
+        await dispatchingRes;
+      } catch (error) {
+        caught = error;
+      }
+      assert.equal(caught, "error");
+    }
+
+    describe('leaves', () => {
+      const dispatchWithHandlers = handlers => {
+        const graph = {
+          main: {type: 'leaf'}
+        };
+        return dispatch({
+          graph,
+          FSMState: {},
+          handlers,
+          ctx: {},
+          instanceID: {},
+          method: "",
+          params: []
+        });
       };
-      const FSMState = {'main': 'main:A'};
-      const handlers = {
-        'main:A': asyncHandler
-      };
-      const callRes = dispatch({
-        graph,
-        FSMState,
-        handlers,
-        ctx: {},
-        instanceID: {},
-        method: "",
-        params: []
+
+      it('may be async', async () => {
+        const callRes = dispatchWithHandlers({
+          'main': asyncHandler
+        });
+        assert(callRes.then);
+        const finalCallRes = await callRes;
+        assert.deepEqual({
+          arrows: [
+            [['main', 'x']]
+          ],
+          ctx: {},
+          res: undefined
+        }, finalCallRes);
       });
-      assert(callRes.then);
-      const finalCallRes = await callRes;
-      assert.deepEqual({
-        arrows: [
-          [['main:A', 'x']]
-        ],
-        ctx: {},
-        res: undefined
-      }, finalCallRes);
-    });
-    it('graph handlers', async () => {
-      const graph = {
-        'main': {type: 'graph', nodes: ['main:A']},
-        'main:A': {type: 'leaf', parent: 'main'}
-      };
-      const FSMState = {'main': 'main:A'};
-      const handlers = {
-        'main': async ({child}) => {
-          return await child({ctx: {}});
-        },
-        'main:A': async () => ({res: "leaf res", ctx: {}})
-      };
-      const callRes = dispatch({
-        graph,
-        FSMState,
-        handlers,
-        ctx: {},
-        instanceID: {},
-        method: "",
-        params: []
+
+      it('handles errors as rejected promises', async () => {
+        await expectError(dispatchWithHandlers({
+          main: failingAsyncHandler
+        }));
       });
-      const finalCallRes = await callRes;
-      assert.deepEqual({
-        arrows: [
-          [['main:A', undefined]]
-        ],
-        ctx: {},
-        res: "leaf res"
-      }, finalCallRes);
+
     });
-    it('composite children', async () => {
-      const graph = {
-        'main': {type: 'composite', nodes: ['main:A', 'main:B']},
-        'main:A': {type: 'leaf', parent: 'main'},
-        'main:B': {type: 'leaf', parent: 'main'}
+
+    describe('graph children', async () => {
+      const dispatchWithHandlers = handlers => {
+        const graph = {
+          'main': {type: 'graph', nodes: ['main:A']},
+          'main:A': {type: 'leaf', parent: 'main'}
+        };
+        const FSMState = {'main': 'main:A'};
+        return dispatch({
+          graph,
+          FSMState,
+          handlers,
+          ctx: {},
+          instanceID: {},
+          method: "",
+          params: []
+        });
       };
-      const handlers = {
-        'main:A': async () => ({res: 'ARes', ctx: {}}),
-        'main:B': async () => ({res: 'BRes', ctx: {}}),
-      };
-      const callRes = dispatch({
-        graph,
-        FSMState: {},
-        handlers,
-        ctx: {},
-        instanceID: {},
-        method: "",
-        params: []
+
+      it('may be async', async () => {
+        const callRes = dispatchWithHandlers({
+          'main:A': asyncHandler
+        })
+        assert(callRes.then);
+        const finalCallRes = await callRes;
+        assert.deepEqual({
+          arrows: [
+            [['main:A', 'x']]
+          ],
+          ctx: {},
+          res: undefined
+        }, finalCallRes);
       });
-      const finalCallRes = await callRes;
-      assert.deepEqual({
-        arrows: [
-          [['main:A', undefined]],
-          [['main:B', undefined]]
-        ],
-        ctx: {},
-        res: {A: 'ARes', B: 'BRes'}
-      }, finalCallRes);
-    });
-    it('composite handlers', async () => {
-      const graph = {
-        'main': {type: 'composite', nodes: ['main:A', 'main:B']},
-        'main:A': {type: 'leaf', parent: 'main'},
-        'main:B': {type: 'leaf', parent: 'main'}
-      };
-      const handlers = {
-        'main': async ({child, ctx}) => {
-          const childRes = child({ctx});
-          return {
-            res: childRes.res.A + "_" + childRes.res.B,
-            ctx: {},
-            arrows: childRes.arrows
-          };
-        },
-        'main:A': () => ({res: 'ARes', ctx: {}}),
-        'main:B': () => ({res: 'BRes', ctx: {}}),
-      };
-      const callRes = dispatch({
-        graph,
-        FSMState: {},
-        handlers,
-        ctx: {},
-        instanceID: {},
-        method: "",
-        params: []
+      
+      it('handles errors as rejected promises', async () => {
+        await expectError(dispatchWithHandlers({
+          'main:A': failingAsyncHandler
+        }));
       });
-      const finalCallRes = await callRes;
-      assert.deepEqual({
-        arrows: [
-          [['main:A', undefined]],
-          [['main:B', undefined]]
-        ],
-        ctx: {},
-        res: "ARes_BRes",
-      }, finalCallRes);
+      
     });
+
+    describe('graph handlers', () => {
+      const dispatchWithHandlers = handlers => {
+        const graph = {
+          'main': {type: 'graph', nodes: ['main:A']},
+          'main:A': {type: 'leaf', parent: 'main'}
+        };
+        const FSMState = {'main': 'main:A'};
+        return dispatch({
+          graph,
+          FSMState,
+          handlers,
+          ctx: {},
+          instanceID: {},
+          method: "",
+          params: []
+        });
+      };
+
+      it('may be async', async () => {
+        const callRes = dispatchWithHandlers({
+          'main': async ({child}) => {
+            return await child({ctx: {}});
+          },
+          'main:A': async () => ({res: "leaf res", ctx: {}})
+        })
+        const finalCallRes = await callRes;
+        assert.deepEqual({
+          arrows: [
+            [['main:A', undefined]]
+          ],
+          ctx: {},
+          res: "leaf res"
+        }, finalCallRes);
+      });
+
+      it('handles errors as rejected promises', async () => {
+        await expectError(dispatchWithHandlers({
+          'main': failingAsyncHandler,
+          'main:A': async () => ({res: "leaf res", ctx: {}})
+        }));
+      });
+
+    });
+
+    describe('composite children', async () => {
+      const dispatchWithHandlers = handlers => {
+        const graph = {
+          'main': {type: 'composite', nodes: ['main:A', 'main:B']},
+          'main:A': {type: 'leaf', parent: 'main'},
+          'main:B': {type: 'leaf', parent: 'main'}
+        };
+        return dispatch({
+          graph,
+          FSMState: {},
+          handlers,
+          ctx: {},
+          instanceID: {},
+          method: "",
+          params: []
+        });
+      };
+
+      it('may be async', async () => {
+        const graph = {
+          'main': {type: 'composite', nodes: ['main:A', 'main:B']},
+          'main:A': {type: 'leaf', parent: 'main'},
+          'main:B': {type: 'leaf', parent: 'main'}
+        };
+        const handlers = {
+          'main:A': async () => ({res: 'ARes', ctx: {}}),
+          'main:B': async () => ({res: 'BRes', ctx: {}}),
+        };
+        const callRes = dispatch({
+          graph,
+          FSMState: {},
+          handlers,
+          ctx: {},
+          instanceID: {},
+          method: "",
+          params: []
+        });
+        const finalCallRes = await callRes;
+        assert.deepEqual({
+          arrows: [
+            [['main:A', undefined]],
+            [['main:B', undefined]]
+          ],
+          ctx: {},
+          res: {A: 'ARes', B: 'BRes'}
+        }, finalCallRes);
+      });
+
+      it('handles errors as rejected promises', async () => {
+        await expectError(dispatchWithHandlers({
+          'main:A': failingAsyncHandler,
+          'main:B': async () => ({res: 'BRes', ctx: {}}),
+        }));
+        await expectError(dispatchWithHandlers({
+          'main:A': async () => ({res: 'BRes', ctx: {}}),
+          'main:B': failingAsyncHandler,
+        }));
+      });
+
+    });
+
+    describe('composite handlers', () => {
+      const dispatchWithHandlers = handlers => {
+        const graph = {
+          'main': {type: 'composite', nodes: ['main:A', 'main:B']},
+          'main:A': {type: 'leaf', parent: 'main'},
+          'main:B': {type: 'leaf', parent: 'main'}
+        };
+        return dispatch({
+          graph,
+          FSMState: {},
+          handlers,
+          ctx: {},
+          instanceID: {},
+          method: "",
+          params: []
+        });
+      };
+
+      it('may be async', async () => {
+        const callRes = dispatchWithHandlers({
+          'main': async ({child, ctx}) => {
+            const childRes = child({ctx});
+            return {
+              res: childRes.res.A + "_" + childRes.res.B,
+              ctx: {},
+              arrows: childRes.arrows
+            };
+          },
+          'main:A': () => ({res: 'ARes', ctx: {}}),
+          'main:B': () => ({res: 'BRes', ctx: {}}),
+        });
+        const finalCallRes = await callRes;
+        assert.deepEqual({
+          arrows: [
+            [['main:A', undefined]],
+            [['main:B', undefined]]
+          ],
+          ctx: {},
+          res: "ARes_BRes",
+        }, finalCallRes);
+      });
+
+      it('handles errors as rejected promises', async () => {
+        await expectError(dispatchWithHandlers({
+          'main': failingAsyncHandler,
+          'main:A': () => ({res: 'ARes', ctx: {}}),
+          'main:B': () => ({res: 'BRes', ctx: {}}),
+        }));
+        await expectError(dispatchWithHandlers({
+          'main': ({child, ctx}) => child({ctx}),
+          'main:A': failingAsyncHandler,
+          'main:B': () => ({res: 'BRes', ctx: {}}),
+        }));
+      });
+
+    });
+
   });
 
   describe('adapting', () => {
