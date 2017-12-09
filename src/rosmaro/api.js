@@ -23,7 +23,7 @@ export default ({
     handlers: handlersPlan
   });
 
-  return new Proxy({}, {
+  const model = new Proxy({}, {
     get(target, method) {
       return function () {
 
@@ -38,7 +38,8 @@ export default ({
               handleRemoveCall({
                 graph,
                 handlers, 
-                modelData
+                modelData,
+                model,
               }),
             () => 
               storage.set(undefined)
@@ -54,6 +55,7 @@ export default ({
                 handlers, 
                 modelData,
                 method,
+                model,
                 params: [...arguments]
               }),
             (modelData, handleRes) => 
@@ -87,4 +89,5 @@ export default ({
     }
   });
 
+  return model;
 };

@@ -15,7 +15,8 @@ const callNodeAction = ({
   node,
   handlers,
   modelData,
-  method
+  method,
+  model
 }) => {
   // it may be a Promise
   return dispatch({
@@ -25,6 +26,7 @@ const callNodeAction = ({
     ctx: modelData.ctx,
     instanceID: modelData.instanceID,
     method,
+    model,
     params: [node]
   });
 }
@@ -35,7 +37,8 @@ const callNodeActions = ({
   newModelData,
   oldModelData,
   leftNodes,
-  enteredNodes
+  enteredNodes,
+  model
 }) => {
   // res like [{node, modelData, method}]
   const requests = changedNodesToCall({
@@ -44,18 +47,19 @@ const callNodeActions = ({
     newModelData,
     oldModelData
   });
-  const actions = requests.map(req => () => callNodeAction({graph, handlers, ...req}));
+  const actions = requests.map(req => () => callNodeAction({graph, model, handlers, ...req}));
   return chain(actions);
 };
 
 export const handleRemoveCall = ({
   graph,
   handlers,
-  modelData
+  modelData,
+  model
 }) => {
   const actions = graphDiff({graph, oldFSMState: modelData.FSMState})
     .leftNodes
-    .map(node => () => callNodeAction({graph, handlers, node, modelData, method: 'afterLeft'}));
+    .map(node => () => callNodeAction({graph, handlers, node, model, modelData, method: 'afterLeft'}));
   return chain(actions);
 };
 
@@ -66,7 +70,8 @@ export const handleCall = ({
   params,
   graph,
   handlers,
-  modelData
+  modelData,
+  model
 }) => {
 
   const chained = chain([
@@ -79,7 +84,8 @@ export const handleCall = ({
       ctx: modelData.ctx,
       instanceID: modelData.instanceID,
       method,
-      params
+      params,
+      model
     }),
 
     // {leftNodes, enteredNodes, FSMState}
@@ -103,7 +109,8 @@ export const handleCall = ({
       newModelData,
       oldModelData: modelData,
       leftNodes: transitionRes.leftNodes,
-      enteredNodes: transitionRes.enteredNodes
+      enteredNodes: transitionRes.enteredNodes,
+      model
     }),
 
     (dispatchRes, transitionRes, newModelData) => ({

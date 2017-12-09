@@ -4,13 +4,16 @@ import {mapArrows} from './../src/utils';
 
 describe("dispatcher", () => {
 
-  it('passes node IDs to handlers', () => {
+
+  it('passes node IDs and a model reference to handlers', () => {
 
     const instanceID = {
       'main': 'a',
       'main:A': 'b',
       'main:A:A': 'c'
     };
+
+    const model = {};
 
     const graph = {
       'main': {
@@ -34,21 +37,25 @@ describe("dispatcher", () => {
 
     let mainID, mainAID, mainAAID;
     let mainInstanceID, mainAInstanceID, mainAAInstanceID;
+    let mainModel, mainAModel, mainAAModel;
 
     const handlers = {
       'main': (opts) => {
         mainID = opts.node.ID;
         mainInstanceID = opts.node.instanceID
+        mainModel = opts.model;
         return opts.child(opts);
       },
       'main:A': (opts) => {
         mainAID = opts.node.ID;
         mainAInstanceID = opts.node.instanceID;
+        mainAModel = opts.model;
         return opts.child(opts);
       },
       'main:A:A': (opts) => {
         mainAAID = opts.node.ID;
         mainAAInstanceID = opts.node.instanceID;
+        mainAAModel = opts.model;
         return {res: null, ctx: {}};
       }
     };
@@ -60,7 +67,8 @@ describe("dispatcher", () => {
       instanceID,
       ctx: {},
       method: "",
-      params: []
+      params: [],
+      model
     });
 
     assert.equal(mainID, 'main');
@@ -69,6 +77,10 @@ describe("dispatcher", () => {
     assert.equal(mainAInstanceID, 'b');
     assert.equal(mainAAID, 'main:A:A');
     assert.equal(mainAAInstanceID, 'c');
+
+    assert(model === mainModel);
+    assert(model === mainAModel);
+    assert(model === mainAAModel);
 
   });
 

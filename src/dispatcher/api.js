@@ -1,8 +1,8 @@
 import {callbackize, extractPromises} from './../utils';
 import {mergeCtxs} from './ctx';
 
-const defaultParentHandler = ({method, ctx, params, child}) => {
-  return child({method, ctx, params});
+const defaultParentHandler = ({method, ctx, params, model, child}) => {
+  return child({method, ctx, params, model});
 };
 
 // arrows like [ [['a:a:a', 'x']] [['a:a:b', 'x']] ]
@@ -30,7 +30,8 @@ const dispatch = ({
   ctx, 
   method,
   instanceID,
-  params
+  params,
+  model
 }) => {
   const handler = handlers[node] || defaultParentHandler;
   const nodeType = graph[node].type;
@@ -43,13 +44,21 @@ const dispatch = ({
     ctx,
     instanceID,
     method,
-    params
+    params,
+    model
   });
 
   if (nodeType === 'leaf') {
-    const leafRes = () => handler({method, ctx, params, child: dummyChildFn, node: nodeData});
+    const leafRes = () => handler({
+      method, 
+      ctx, 
+      params, 
+      model: model, 
+      child: dummyChildFn, 
+      node: nodeData
+    });
     return callbackize(leafRes, (leafRes) => ({
-      arrows: leafRes.arrows 
+      arrows: leafRes.arrows
         ? [[[node, leafRes.arrows[0][0][1]]]]
         : [[[node, undefined]]],
       ctx: leafRes.ctx,
@@ -112,7 +121,7 @@ const dispatch = ({
 
     };
 
-    return handler({method, ctx, params, child: childFn, node: nodeData});
+    return handler({method, ctx, params, model, child: childFn, node: nodeData});
   }
 
   if (nodeType === 'graph') {
@@ -131,7 +140,7 @@ const dispatch = ({
       }));
     }
 
-    return handler({method, ctx, params, child: childFn, node: nodeData});
+    return handler({method, ctx, model, params, child: childFn, node: nodeData});
   }
 };
 

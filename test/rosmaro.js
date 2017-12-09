@@ -190,6 +190,32 @@ describe('rosmaro', () => {
     'GraphTarget': GraphTargetHandler
   };
 
+  it('passes a reference to the whole model to handlers', () => {
+
+    const graph = {
+      'main': {type: 'leaf'}
+    };
+
+    let receivedReference;
+    const handlers = {
+      'main': ({model}) => {
+        receivedReference = model;
+        return {ctx: {}, arrows: [[[null, null]]]};
+      }
+    };
+
+    const model = rosmaro({
+      graph,
+      handlers,
+      storage: storage,
+      lock: lock.fn
+    });
+
+    model.action();
+
+    assert(receivedReference === model);
+  });
+
   it('may be removed', () => {
 
     const graph = {
