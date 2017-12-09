@@ -18,7 +18,30 @@ export const mapArrows = (map, arrows) => arrows.map(arrow => {
   return [...previousOnes, newLastOne];
 });
 
-export const withResolved = (val, cb) => val.then 
+// falsey for [['a', 'b'], ['c', undefined]]
+export const nonEmptyArrow = arrow => arrow[arrow.length - 1][1];
+
+export const callbackize = (block, resCb, errCb = err => {throw err}) => {
+  let res;
+  try {
+    res = block();
+  } catch (err) {
+    return errCb(err);
+  }
+
+  if (res && res.then) {
+    return res.then(resCb).catch(errCb);
+  }
+
+  return resCb(res);
+};
+
+export const mergeErrors = (recent, previous) => {
+  recent.previous = previous;
+  return recent;
+};
+
+export const withResolved = (val, cb) => val && val.then 
   ? val.then(cb) 
   : cb(val);
 

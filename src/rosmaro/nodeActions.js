@@ -10,7 +10,7 @@ export const changedNodesToCall = ({
     ...enteredNodes.map(node => ({
       node,
       modelData: newModelData,
-      method: 'onEnter'
+      method: 'onEntry'
     })),
     ...leftNodes.map(node => {
       const alsoEntered = enteredNodes.includes(node);

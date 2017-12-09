@@ -1,26 +1,21 @@
 import buildGraph from './../graphBuilder/api';
-import {withResolved} from './../utils';
+import chain from './operationChain';
+import {callbackize, mergeErrors} from './../utils';
 import newModelData, {generateInstanceID} from './newModelData';
 import handleCall from './callHandler';
 
-const readModelData = (storage, graph) => {
-  const stored = storage.get();
-  if (stored) return stored;
-
-  const generated = newModelData(graph);
-  storage.set(generated);
-  return generated;
-};
+const readModelData = (storage, graph) => callbackize(
+  () => storage.get(),
+  stored => stored || newModelData(graph)
+);
 
 export default ({
   graph: graphPlan,
   handlers: handlersPlan,
   external = {},
-  storage: rawStorage,
-  lock: rawLock
+  storage,
+  lock
 }) => {
-
-  const storage = rawStorage;
 
   const {graph, handlers} = buildGraph({
     graph: graphPlan,
@@ -32,19 +27,42 @@ export default ({
     get(target, method) {
       return function () {
 
-        const modelData = readModelData(storage, graph);
+        const handlingBody = () => chain([
+          () => 
+            readModelData(storage, graph),
+          (modelData) => 
+            handleCall({
+              graph,
+              handlers, 
+              modelData,
+              method,
+              params: [...arguments]
+            }),
+          (modelData, handleRes) => 
+            storage.set(handleRes.newModelData),
+          (modelData, handleRes) => 
+            handleRes.res
+        ]);
 
-        const {res, newModelData} = handleCall({
-          graph, 
-          handlers, 
-          modelData,
-          method,
-          params: arguments
-        });
+        const emergencyUnlock = (unlock, bodyErr) => callbackize(
+          unlock,
+          () => {throw bodyErr;},
+          lockErr => {throw mergeErrors(lockErr, bodyErr)}
+        );
 
-        storage.set(newModelData);
+        const regularUnlock = (unlock, bodyRes) => callbackize(
+          unlock, 
+          () => bodyRes
+        );
 
-        return res;
+        return callbackize(
+          lock,
+          unlock => callbackize(
+            handlingBody,
+            bodyRes => regularUnlock(unlock, bodyRes),
+            bodyErr => emergencyUnlock(unlock, bodyErr)
+          )
+        );
 
       };
     }

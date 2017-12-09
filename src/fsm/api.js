@@ -1,6 +1,7 @@
 import map from 'lodash/map';
 import graphDiff from './graphDiff';
 import {initState, mergeNewFSMStates} from './state';
+import {nonEmptyArrow} from './../utils';
 export {initState};
 
 // res {newFSMState: {}, target: 'a:b:c', entryPoint: 'p'}
@@ -76,9 +77,6 @@ const followDown = ({FSMState, graph, target, entryPoint}) => {
   }
 
 };
-
-// falsey for [['a', 'b'], ['c', undefined]]
-const nonEmptyArrow = arrow => arrow[arrow.length - 1][1];
 
 // res: {FSMState, leftNodes, enteredNodes}
 export default ({
