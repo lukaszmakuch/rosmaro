@@ -190,6 +190,66 @@ describe('rosmaro', () => {
     'GraphTarget': GraphTargetHandler
   };
 
+  it('may be removed', () => {
+
+    const graph = {
+      'main': {
+        type: 'graph',
+        nodes: {A: 'A', B: 'B'},
+        arrows: {
+          'A': {x: {target: 'B', entryPoint: 'start'}},
+          'B': {x: {target: 'A', entryPoint: 'start'}}
+        },
+        entryPoints: {start: {target: 'A', entryPoint: 'start'}}
+      },
+      'A': {type: 'leaf'},
+      'B': {type: 'leaf'}
+    };
+
+    const handlers = {
+      'main': loggingHandler('main'),
+      'A': loggingHandler('A', {ctx: {x: 'x'}, arrow: 'x', res: 'x'}),
+      'B': loggingHandler('B', {ctx: {x: 'x'}, arrow: 'x', res: 'x'})
+    };
+
+    const model = rosmaro({
+      graph,
+      handlers,
+      storage: storage,
+      lock: lock.fn
+    });
+
+    //this puts the machine in the B state
+    model.follow();
+
+    //the new machine state should be stored
+    assert(undefined !== storage.get());
+
+    //clearing the log
+    logEntries = [];
+    
+    // removing
+    model.remove();
+
+    assert.deepEqual(logEntries, [
+      'locking',
+      'locked',
+      'getting data',
+      'got data',
+
+      {node: 'main', method: 'afterLeft', params: ['main:B'], ctx: {x: 'x'}},
+      {node: 'B', method: 'afterLeft', params: ['main:B'], ctx: {x: 'x'}},
+      {node: 'main', method: 'afterLeft', params: ['main'], ctx: {x: 'x'}},
+
+      'setting data',
+      'set data',
+      'unlocking',
+      'unlocked'
+    ]);
+
+    assert(undefined === storage.get());
+  });
+
   it('changes node instance ID only in case of a transition', () => {
 
     const graph = {

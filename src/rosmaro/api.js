@@ -2,7 +2,7 @@ import buildGraph from './../graphBuilder/api';
 import chain from './operationChain';
 import {callbackize, mergeErrors} from './../utils';
 import newModelData, {generateInstanceID} from './newModelData';
-import handleCall from './callHandler';
+import {handleCall, handleRemoveCall} from './callHandler';
 
 const readModelData = (storage, graph) => callbackize(
   () => storage.get(),
@@ -27,22 +27,41 @@ export default ({
     get(target, method) {
       return function () {
 
-        const handlingBody = () => chain([
-          () => 
-            readModelData(storage, graph),
-          (modelData) => 
-            handleCall({
-              graph,
-              handlers, 
-              modelData,
-              method,
-              params: [...arguments]
-            }),
-          (modelData, handleRes) => 
-            storage.set(handleRes.newModelData),
-          (modelData, handleRes) => 
-            handleRes.res
-        ]);
+        const handlingBody = () => chain(
+          method === 'remove'
+
+          // removing the model
+          ? [
+            () => 
+              readModelData(storage, graph),
+            (modelData) => 
+              handleRemoveCall({
+                graph,
+                handlers, 
+                modelData
+              }),
+            () => 
+              storage.set(undefined)
+          ]
+
+          //handling a call
+          : [
+            () => 
+              readModelData(storage, graph),
+            (modelData) => 
+              handleCall({
+                graph,
+                handlers, 
+                modelData,
+                method,
+                params: [...arguments]
+              }),
+            (modelData, handleRes) => 
+              storage.set(handleRes.newModelData),
+            (modelData, handleRes) => 
+              handleRes.res
+          ]
+        );
 
         const emergencyUnlock = (unlock, bodyErr) => callbackize(
           unlock,

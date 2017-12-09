@@ -2,6 +2,7 @@ import {instanceID} from './newModelData';
 import fsm from './../fsm/api';
 import {nonEmptyArrow} from './../utils';
 import extractPath from './../dispatcher/pathExtractor';
+import graphDiff from './../fsm/graphDiff';
 import dispatch from './../dispatcher/api';
 import chain from './operationChain';
 import {generateInstanceID} from './newModelData';
@@ -47,9 +48,20 @@ const callNodeActions = ({
   return chain(actions);
 };
 
+export const handleRemoveCall = ({
+  graph,
+  handlers,
+  modelData
+}) => {
+  const actions = graphDiff({graph, oldFSMState: modelData.FSMState})
+    .leftNodes
+    .map(node => () => callNodeAction({graph, handlers, node, modelData, method: 'afterLeft'}));
+  return chain(actions);
+};
+
 // in: {graph, handlers, modelData: {ctx, FSMState, instanceID}, method, params}
 // out: {res, newModelData} (may be a Promise, possibly rejected)
-export default ({
+export const handleCall = ({
   method,
   params,
   graph,
