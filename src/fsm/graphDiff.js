@@ -19,12 +19,12 @@ const nodesBottomTopLeftRight = ({graph, startNodes = ['main']}) => {
 const nodeStatuses = ({
   graph, 
   oldFSMState, 
-  newFSMState, 
+  newFSMState = {}, 
   node = 'main',
   oldActive = true,
-  newActive = true,
+  newActive,
   oldActiveToRoot = true,
-  newActiveToRoot = true
+  newActiveToRoot
 }) => {
   const nodeStatus = {
     [node]: {oldActive, newActive, oldActiveToRoot, newActiveToRoot}
@@ -84,7 +84,14 @@ const isLeft = s => (
 
 export default ({graph, oldFSMState, newFSMState}) => {
   const orderedNodes = nodesBottomTopLeftRight({graph});
-  const statuses = nodeStatuses({graph, oldFSMState, newFSMState});
+  const newMainActive = newFSMState != undefined;
+  const statuses = nodeStatuses({
+    graph, 
+    oldFSMState, 
+    newFSMState: newFSMState || {},
+    newActive: newMainActive,
+    newActiveToRoot: newMainActive
+  });
   const diff = orderedNodes.reduce((diff, node) => {
     const entered = isEntered(statuses[node]);
     const left = isLeft(statuses[node]);
