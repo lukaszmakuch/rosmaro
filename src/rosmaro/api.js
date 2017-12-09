@@ -1,4 +1,5 @@
 import buildGraph from './../graphBuilder/api';
+import nodeActionHandler from './../handlers/nodeActions';
 import chain from './operationChain';
 import {callbackize, mergeErrors} from './../utils';
 import newModelData, {generateInstanceID} from './newModelData';
@@ -17,11 +18,15 @@ export default ({
   lock
 }) => {
 
-  const {graph, handlers} = buildGraph({
+  const {graph, handlers: rawHandlers} = buildGraph({
     graph: graphPlan,
     external,
     handlers: handlersPlan
   });
+  const handlers = Object.keys(rawHandlers).reduce((handlers, node) => ({
+    ...handlers,
+    [node]: nodeActionHandler(rawHandlers[node])
+  }), {});
 
   const model = new Proxy({}, {
     get(target, method) {

@@ -1,9 +1,6 @@
 import {callbackize, extractPromises} from './../utils';
+import defaultParentHandler from './../handlers/transparent';
 import {mergeCtxs} from './ctx';
-
-const defaultParentHandler = ({method, ctx, params, model, child}) => {
-  return child({method, ctx, params, model});
-};
 
 // arrows like [ [['a:a:a', 'x']] [['a:a:b', 'x']] ]
 // node like 'a:a'

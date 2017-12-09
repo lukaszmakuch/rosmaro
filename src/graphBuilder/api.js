@@ -1,5 +1,6 @@
 import {renameMain, glueNodeName} from './nodeNames';
 import {mapMain} from './handlers';
+import transparentHandler from './../handlers/transparent';
 export {mapMain};
 
 const build = (
@@ -10,7 +11,7 @@ const build = (
 ) => {
   const nodePlan = plan.graph[planNode];
   const type = nodePlan.type;
-  const handler = plan.handlers[planNode];
+  const handler = plan.handlers[planNode] || transparentHandler;
   const externalPlan = (plan.external || {})[planNode];
 
   if (type === 'external') {

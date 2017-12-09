@@ -66,34 +66,18 @@ const expectedLog = [
   {node: 'OrthogonalB', method: 'a', params: [1, 2], ctx: {}},
 
   // onEntry actions
-  {node: 'main', method: 'onEntry', params: ['main:B'], ctx: {fromA: 123, fromB: 456}},
-  {node: 'GraphTarget', method: 'onEntry', params: ['main:B'], ctx: {fromA: 123, fromB: 456}},
-
-  {node: 'main', method: 'onEntry', params: ['main:A:B'], ctx: {fromA: 123, fromB: 456}},
-  {node: 'Graph', method: 'onEntry', params: ['main:A:B'], ctx: {fromA: 123, fromB: 456}},
-  {node: 'CompositeTarget', method: 'onEntry', params: ['main:A:B'], ctx: {fromA: 123, fromB: 456}},
+  {node: 'GraphTarget', method: 'onEntry', params: [], ctx: {fromA: 123, fromB: 456}},
+  {node: 'CompositeTarget', method: 'onEntry', params: [], ctx: {fromA: 123, fromB: 456}},
 
   // afterLeft actions
-  {node: 'main', method: 'afterLeft', params: ['main:A:A:A'], ctx: {}},
-  {node: 'Graph', method: 'afterLeft', params: ['main:A:A:A'], ctx: {}},
-  {node: 'Composite', method: 'afterLeft', params: ['main:A:A:A'], ctx: {}},
-  {node: 'OrthogonalA', method: 'afterLeft', params: ['main:A:A:A'], ctx: {}},
-
-  {node: 'main', method: 'afterLeft', params: ['main:A:A:B'], ctx: {}},
-  {node: 'Graph', method: 'afterLeft', params: ['main:A:A:B'], ctx: {}},
-  {node: 'Composite', method: 'afterLeft', params: ['main:A:A:B'], ctx: {}},
-  {node: 'OrthogonalB', method: 'afterLeft', params: ['main:A:A:B'], ctx: {}},
-
-  {node: 'main', method: 'afterLeft', params: ['main:A:A'], ctx: {}},
-  {node: 'Graph', method: 'afterLeft', params: ['main:A:A'], ctx: {}},
-  {node: 'Composite', method: 'afterLeft', params: ['main:A:A'], ctx: {}},
-
-  {node: 'main', method: 'afterLeft', params: ['main:A:B'], ctx: {fromA: 123, fromB: 456}},
-  {node: 'Graph', method: 'afterLeft', params: ['main:A:B'], ctx: {fromA: 123, fromB: 456}},
-  {node: 'CompositeTarget', method: 'afterLeft', params: ['main:A:B'], ctx: {fromA: 123, fromB: 456}},
-
-  {node: 'main', method: 'afterLeft', params: ['main:A'], ctx: {}},
-  {node: 'Graph', method: 'afterLeft', params: ['main:A'], ctx: {}},
+  // {node: 'main', method: 'afterLeft', params: ['main:A:A:A'], ctx: {}},
+  // {node: 'Graph', method: 'afterLeft', params: ['main:A:A:A'], ctx: {}},
+  // {node: 'Composite', method: 'afterLeft', params: ['main:A:A:A'], ctx: {}},
+  {node: 'OrthogonalA', method: 'afterLeft', params: [], ctx: {}},
+  {node: 'OrthogonalB', method: 'afterLeft', params: [], ctx: {}},
+  {node: 'Composite', method: 'afterLeft', params: [], ctx: {}},
+  {node: 'CompositeTarget', method: 'afterLeft', params: [], ctx: {fromA: 123, fromB: 456}},
+  {node: 'Graph', method: 'afterLeft', params: [], ctx: {}},
 
   // writing to the storage
   'setting data',
@@ -263,9 +247,8 @@ describe('rosmaro', () => {
       'getting data',
       'got data',
 
-      {node: 'main', method: 'afterLeft', params: ['main:B'], ctx: {x: 'x'}},
-      {node: 'B', method: 'afterLeft', params: ['main:B'], ctx: {x: 'x'}},
-      {node: 'main', method: 'afterLeft', params: ['main'], ctx: {x: 'x'}},
+      {node: 'B', method: 'afterLeft', params: [], ctx: {x: 'x'}},
+      {node: 'main', method: 'afterLeft', params: [], ctx: {x: 'x'}},
 
       'setting data',
       'set data',

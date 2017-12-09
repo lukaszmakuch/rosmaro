@@ -1,0 +1,1 @@
+export default (opts) => opts.child(opts);
