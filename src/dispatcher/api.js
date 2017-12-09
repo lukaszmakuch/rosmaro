@@ -1,4 +1,4 @@
-import {withResolved, extractPromises} from './../utils';
+import {callbackize, extractPromises} from './../utils';
 import {mergeCtxs} from './ctx';
 
 const defaultParentHandler = ({method, ctx, params, child}) => {
@@ -47,8 +47,8 @@ const dispatch = ({
   });
 
   if (nodeType === 'leaf') {
-    const leafRes = handler({method, ctx, params, child: dummyChildFn, node: nodeData});
-    return withResolved(leafRes, (leafRes) => ({
+    const leafRes = () => handler({method, ctx, params, child: dummyChildFn, node: nodeData});
+    return callbackize(leafRes, (leafRes) => ({
       arrows: leafRes.arrows 
         ? [[[node, leafRes.arrows[0][0][1]]]]
         : [[[node, undefined]]],
@@ -67,13 +67,13 @@ const dispatch = ({
           node: childNode,
           callRes: rawRes
         });
-        const rawRes = callDispatch({
+        const rawRes = () => callDispatch({
           node: childNode,
           ctx,
           method,
           params
         });
-        const callRes = withResolved(rawRes, addNode);
+        const callRes = callbackize(rawRes, addNode);
         return [...allRes, callRes];
       }, []));
 
@@ -118,14 +118,14 @@ const dispatch = ({
   if (nodeType === 'graph') {
     const activeChild = FSMState[node];
     const childFn = ({method, ctx, params}) => {
-      const childRes = callDispatch({
+      const childRes = () => callDispatch({
         node: activeChild,
         ctx,
         method,
         params
       });
 
-      return withResolved(childRes, childRes => ({
+      return callbackize(childRes, childRes => ({
         ...childRes,
         arrows: addNodeToArrows(node, childRes.arrows)
       }));

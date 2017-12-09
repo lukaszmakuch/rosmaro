@@ -26,10 +26,10 @@ export default log => {
       if (asyncUnlock) {
         return unlockPromise
           .then(() => log('unlocked'))
-          .catch(() => log('failed to unlock'))
+          .catch(() => log('failed to unlock'));
       } else {
         if (unlockError) {
-          log('failed to unlock')
+          log('failed to unlock');
           throw unlockError;
         }
 
@@ -45,14 +45,14 @@ export default log => {
             log('locked');
             return unlockFn;
           })
-          .catch(() => log('failed to lock'))
+          .catch(() => log('failed to lock'));
       } else {
         if (lockError) {
-          log('failed to lock')
+          log('failed to lock');
           throw lockError;
         }
 
-        log('locked')
+        log('locked');
         return unlockFn;
       }
     }

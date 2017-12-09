@@ -1,4 +1,4 @@
-import {withResolved} from './../utils';
+import {callbackize} from './../utils';
 
 const chain = ([operation, ...remainingOperations], results = []) => {
   if(!operation) return;
@@ -7,8 +7,8 @@ const chain = ([operation, ...remainingOperations], results = []) => {
     return operation(...results);
   }
 
-  return withResolved(
-    operation(...results), 
+  return callbackize(
+    () => operation(...results), 
     result => chain(remainingOperations, [...results, result])
   );
 };

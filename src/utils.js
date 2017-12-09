@@ -41,10 +41,6 @@ export const mergeErrors = (recent, previous) => {
   return recent;
 };
 
-export const withResolved = (val, cb) => val && val.then 
-  ? val.then(cb) 
-  : cb(val);
-
 export const extractPromises = maybePromises => maybePromises.reduce(
   (grouped, maybePromise) => {
     return maybePromise.then
