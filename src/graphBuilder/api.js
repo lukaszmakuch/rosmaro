@@ -1,22 +1,16 @@
-import {renameMain, glueNodeName} from './nodeNames';
-import {mapMain} from './handlers';
+import {glueNodeName} from './nodeNames';
 import transparentHandler from './../handlers/transparent';
-export {mapMain};
 
-const build = (
-  plan,
+const build = ({
+  plan, 
+  buildHandler,
   planNode = 'main',
   builtNode = 'main',
   parent = null
-) => {
+}) => {
   const nodePlan = plan.graph[planNode];
   const type = nodePlan.type;
-  const handler = plan.handlers[planNode] || transparentHandler;
-  const externalPlan = (plan.external || {})[planNode];
-
-  if (type === 'external') {
-    return renameMain(build(externalPlan), builtNode, parent);
-  }
+  const handler = buildHandler(plan.handlers[planNode]);
 
   if (type === 'leaf') {
     return {
@@ -35,12 +29,13 @@ const build = (
   if (type === 'composite') {
     const childRes = Object.keys(nodePlan.nodes).reduce((soFar, planName) => {
       const builtName = glueNodeName(builtNode, planName);
-      const built = build(
+      const built = build({
         plan, 
-        nodePlan.nodes[planName],
-        builtName,
-        builtNode
-      );
+        buildHandler,
+        planNode: nodePlan.nodes[planName],
+        builtNode: builtName,
+        parent: builtNode
+      });
       return {
         nodes: [...soFar.nodes, builtName],
         graph: {...soFar.graph, ...built.graph},
@@ -67,12 +62,13 @@ const build = (
   if (type === 'graph') {
     const childRes = Object.keys(nodePlan.nodes).reduce((soFar, planName) => {
       const builtName = glueNodeName(builtNode, planName);
-      const built = build(
+      const built = build({
         plan, 
-        nodePlan.nodes[planName],
-        builtName,
-        builtNode
-      );
+        buildHandler,
+        planNode: nodePlan.nodes[planName],
+        builtNode: builtName,
+        parent: builtNode
+      });
       return {
         nodes: [...soFar.nodes, builtName],
         graph: {...soFar.graph, ...built.graph},

@@ -14,22 +14,23 @@ const extendRes = (res, ctx) => {
       res,
       arrow: null,
       ctx
-    }
+    };
   }
 };
-export default methods => {
-  return ({method, ctx, params, model, child, node}) => {
-    if (!methods[method]) return {res: undefined, ctx, arrows: [[[null, null]]]};
-    
-    const callRes = extendRes(methods[method]({
+
+export default plan => ({
+  remainingPlan: {},
+  make: (next) => ({method, ctx, params, model, child, node}) => {
+    if (!plan[method]) return next({method, ctx, params, model, child, node});
+    const callRes = extendRes(plan[method]({
       ctx,
-      ...(params[0]|| {}),
+      ...params[0],
       thisModel: model
     }), ctx);
     return {
       res: callRes.res,
       ctx: callRes.ctx,
       arrows: [[[null, callRes.arrow]]]
-    }
-  };
-};
+    };
+  }
+});

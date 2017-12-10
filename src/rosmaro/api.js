@@ -1,5 +1,5 @@
 import buildGraph from './../graphBuilder/api';
-import nodeActionHandler from './../handlers/nodeActions';
+import buildHandler from './../handlers/api';
 import chain from './operationChain';
 import {callbackize, mergeErrors} from './../utils';
 import newModelData, {generateInstanceID} from './newModelData';
@@ -13,20 +13,17 @@ const readModelData = (storage, graph) => callbackize(
 export default ({
   graph: graphPlan,
   handlers: handlersPlan,
-  external = {},
   storage,
   lock
 }) => {
 
-  const {graph, handlers: rawHandlers} = buildGraph({
-    graph: graphPlan,
-    external,
-    handlers: handlersPlan
+  const {graph, handlers} = buildGraph({
+    plan: {
+      graph: graphPlan,
+      handlers: handlersPlan
+    },
+    buildHandler
   });
-  const handlers = Object.keys(rawHandlers).reduce((handlers, node) => ({
-    ...handlers,
-    [node]: nodeActionHandler(rawHandlers[node])
-  }), {});
 
   const model = new Proxy({}, {
     get(target, method) {

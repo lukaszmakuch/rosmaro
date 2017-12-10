@@ -1,16 +1,25 @@
 export default plan => ({
   remainingPlan: plan,
   make: (next) => ({method, ctx, params, model, child, node}) => {
-    if (['onEntry', 'afterLeft'].includes(method)) {
-      // that's a node action call
-      if ((params[1] || {})['targetID'] === node.ID) {
+    if (method === 'forParticularInstance') {
+      // that's a call meant to be received by a particular instance
+      const {targetInstance, originalMethod} = params[1] || {};
+      if (targetInstance === node.instanceID) {
         // it's meant to be received by this handler
-        return next({method, ctx, params: [{}, params[1]], model, child, node});
+        return next({
+          method: originalMethod, 
+          ctx, 
+          params,
+          model, 
+          child, 
+          node
+        });
       } else {
         // it's meant to be received by a different handler, 
         // so make this one transparent
         return child({method, ctx, params, model, child, node});
       }
+
     } else {
       // that's a regular call, let the handler handle it
       return next({method, ctx, params, model, child, node});

@@ -174,7 +174,7 @@ describe('rosmaro', () => {
     'GraphTarget': GraphTargetHandler
   };
 
-  it('passes a reference to the whole model to handlers', () => {
+  xit('passes a reference to the whole model to handlers', () => {
 
     const graph = {
       'main': {type: 'leaf'}
@@ -200,7 +200,7 @@ describe('rosmaro', () => {
     assert(receivedReference === model);
   });
 
-  it('may be removed', () => {
+  xit('may be removed', () => {
 
     const graph = {
       'main': {
@@ -259,7 +259,7 @@ describe('rosmaro', () => {
     assert(undefined === storage.get());
   });
 
-  it('changes node instance ID only in case of a transition', () => {
+  xit('changes node instance ID only in case of a transition', () => {
 
     const graph = {
       'main': {
@@ -305,7 +305,7 @@ describe('rosmaro', () => {
 
   });
 
-  describe('unlocking', () => {
+  xdescribe('unlocking', () => {
     const graph = {
       'main': {type: 'leaf'}
     };
@@ -367,7 +367,7 @@ describe('rosmaro', () => {
     
   });
 
-  describe('with async handlers', () => {
+  xdescribe('with async handlers', () => {
 
     let asyncHandlers, asyncMainHandler, asyncOrthogonalAHandler,
       asyncOrthogonalBHandler, asyncCompositeHandler, asyncGraphHandler,
@@ -468,7 +468,7 @@ describe('rosmaro', () => {
   describe('with synchronous handlers', () => {
 
 
-    it('is fully synchronous if everything is synchronous', () => {
+    xit('is fully synchronous if everything is synchronous', () => {
       const model = rosmaro({
         graph,
         handlers: syncHandlers,
@@ -483,7 +483,7 @@ describe('rosmaro', () => {
       assert.deepEqual(logEntries, expectedLog);
     });
 
-    it('is async if something is async', async () => {
+    xit('is async if something is async', async () => {
       lock.config({asyncLock: true, asyncUnlock: false, lockError: null, unlockError: null});
       const model = rosmaro({
         graph,
@@ -504,6 +504,42 @@ describe('rosmaro', () => {
       assert.deepEqual(logEntries, expectedLog);
     });
 
+  });
+
+  it('supports a transition from A to B', () => {
+
+    const graph = {
+      'main': {
+        type: 'graph',
+        nodes: {A: 'A', B: 'B'},
+        entryPoints: {start: {target: 'A', entryPoint: 'start'}},
+        arrows: {
+          'A': {x: {target: 'B', entryPoint: 'start'}}
+        }
+      },
+      'A': {type: 'leaf'},
+      'B': {type: 'leaf'},
+    };
+
+    const handlers = {
+      'A': {
+        followArrow: () => ({arrow: 'x'})
+      },
+      'B': {
+        readNode: () => 'B'
+      }
+    };
+
+    const model = rosmaro({
+      graph,
+      handlers,
+      storage: storage,
+      lock: lock.fn
+    });
+
+    model.followArrow();
+    assert.equal('B', model.readNode());
+    assert.equal(undefined, model.nonExistentMethod());
   });
 
 
