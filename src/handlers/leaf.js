@@ -1,3 +1,5 @@
+import {callbackize} from './../utils';
+
 const extendRes = (res, ctx) => {
   if (!res) return {res: undefined, arrow: null, ctx};
 
@@ -22,15 +24,21 @@ export default plan => ({
   remainingPlan: {},
   make: (next) => ({method, ctx, params, model, child, node}) => {
     if (!plan[method]) return next({method, ctx, params, model, child, node});
-    const callRes = extendRes(plan[method]({
-      ctx,
-      ...params[0],
-      thisModel: model
-    }), ctx);
-    return {
-      res: callRes.res,
-      ctx: callRes.ctx,
-      arrows: [[[null, callRes.arrow]]]
-    };
+    return callbackize(
+      () => plan[method]({
+        ctx,
+        ...params[0],
+        thisModel: model,
+        thisNode: node
+      }),
+      rawRes => {
+        const callRes = extendRes(rawRes, ctx);
+        return {
+          res: callRes.res,
+          ctx: callRes.ctx,
+          arrows: [[[null, callRes.arrow]]]
+        };
+      }
+    );
   }
 });

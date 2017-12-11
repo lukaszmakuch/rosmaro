@@ -113,16 +113,15 @@ const expectedLog = [
 
 const expectedRes = {A: 'OrthogonalARes', B: 'OrthogonalBRes'};
 
-const loggingHandler = (node, ownRes) => ({method, params, ctx, child}) => {
-  log({node, method, params, ctx});
-  if (ownRes) return {
-    arrows: [[[null, ownRes.arrow]]],
-    res: ownRes.res,
-    ctx: ownRes.ctx
-  };
-
-  return child({method, params, ctx});
-};
+const loggingHandler = (nodeName, res) => ({
+  afterMethod(res) {
+    log(nodeName);
+    return res;
+  },
+  ...(res ? {method: () => {
+    return res;
+  }} : {})
+});
 
 const postpone = originalFn => {
   let resolveFn, rejectFn;
@@ -174,7 +173,7 @@ describe('rosmaro', () => {
     'GraphTarget': GraphTargetHandler
   };
 
-  xit('passes a reference to the whole model to handlers', () => {
+  it('passes a reference to the whole model to handlers', () => {
 
     const graph = {
       'main': {type: 'leaf'}
@@ -182,10 +181,9 @@ describe('rosmaro', () => {
 
     let receivedReference;
     const handlers = {
-      'main': ({model}) => {
-        receivedReference = model;
-        return {ctx: {}, arrows: [[[null, null]]]};
-      }
+      'main': {method: ({thisModel}) => {
+        receivedReference = thisModel;
+      }}
     };
 
     const model = rosmaro({
@@ -195,12 +193,12 @@ describe('rosmaro', () => {
       lock: lock.fn
     });
 
-    model.action();
+    model.method();
 
     assert(receivedReference === model);
   });
 
-  xit('may be removed', () => {
+  it('may be removed', () => {
 
     const graph = {
       'main': {
@@ -217,9 +215,20 @@ describe('rosmaro', () => {
     };
 
     const handlers = {
-      'main': loggingHandler('main'),
-      'A': loggingHandler('A', {ctx: {x: 'x'}, arrow: 'x', res: 'x'}),
-      'B': loggingHandler('B', {ctx: {x: 'x'}, arrow: 'x', res: 'x'})
+      'main': {
+        afterLeft: () => log('left main'),
+      },
+
+      'B': {
+        afterLeft: () => log('left B'),
+      },
+
+      'A': {
+        method: () => {
+          return {ctx: {x: 'x'}, arrow: 'x', res: 'x'}
+        },
+        afterLeft: () => log('left A'),
+      },
     };
 
     const model = rosmaro({
@@ -230,7 +239,7 @@ describe('rosmaro', () => {
     });
 
     //this puts the machine in the B state
-    model.follow();
+    model.method();
 
     //the new machine state should be stored
     assert(undefined !== storage.get());
@@ -247,8 +256,8 @@ describe('rosmaro', () => {
       'getting data',
       'got data',
 
-      {node: 'B', method: 'afterLeft', params: [], ctx: {x: 'x'}},
-      {node: 'main', method: 'afterLeft', params: [], ctx: {x: 'x'}},
+      'left B',
+      'left main',
 
       'setting data',
       'set data',
@@ -259,7 +268,7 @@ describe('rosmaro', () => {
     assert(undefined === storage.get());
   });
 
-  xit('changes node instance ID only in case of a transition', () => {
+  it('changes node instance ID only in case of a transition', () => {
 
     const graph = {
       'main': {
@@ -274,17 +283,9 @@ describe('rosmaro', () => {
     };
 
     const handlers = {
-      'node': ({method, node: {instanceID}}) => {
-        if (method === 'getID') return {
-          res: instanceID,
-          arrows: [[[null, null]]],
-          ctx: {}
-        };
-
-        return {
-          arrows: [[[null, 'x']]],
-          ctx: {}
-        };
+      'node': {
+        getID: ({thisNode: {ID}}) => ID,
+        transition: () => ({arrow: 'x'})
       }
     };
 
@@ -305,7 +306,7 @@ describe('rosmaro', () => {
 
   });
 
-  xdescribe('unlocking', () => {
+  describe('unlocking', () => {
     const graph = {
       'main': {type: 'leaf'}
     };
@@ -321,9 +322,11 @@ describe('rosmaro', () => {
     it('calls unlock when a promise is rejected', async () => {
       let rejectHandler;
       const handlers = {
-        'main': () => new Promise((resolve, reject) => {
-          rejectHandler = reject
-        }),
+        'main': {
+          method: () => new Promise((resolve, reject) => {
+            rejectHandler = reject
+          }),
+        }
       };
 
       const model = rosmaro({
@@ -349,8 +352,10 @@ describe('rosmaro', () => {
 
     it('calls unlock if an error is thrown', () => {
       const handlers = {
-        'main': () => {
-          throw new Error("thrown")
+        'main': {
+          'method': () => {
+            throw new Error("thrown")
+          }
         }
       };
 
@@ -367,100 +372,86 @@ describe('rosmaro', () => {
     
   });
 
-  xdescribe('with async handlers', () => {
-
-    let asyncHandlers, asyncMainHandler, asyncOrthogonalAHandler,
-      asyncOrthogonalBHandler, asyncCompositeHandler, asyncGraphHandler,
-      asyncCompositeTargetHandler, asyncGraphTargetHandler;
-    beforeEach(() => {
-      asyncMainHandler = postpone(mainHandler);
-      asyncOrthogonalAHandler = postpone(OrthogonalAHandler);
-      asyncOrthogonalBHandler = postpone(OrthogonalBHandler);
-      asyncCompositeHandler = postpone(CompositeHandler);
-      asyncGraphHandler = postpone(GraphHandler);
-      asyncCompositeTargetHandler = postpone(CompositeTargetHandler);
-      asyncGraphTargetHandler = postpone(GraphTargetHandler);
-      asyncHandlers = {
-        'main': asyncMainHandler.fn,
-        'OrthogonalA': asyncOrthogonalAHandler.fn,
-        'OrthogonalB': asyncOrthogonalBHandler.fn,
-        'Composite': asyncCompositeHandler.fn,
-        'Graph': asyncGraphHandler.fn,
-        'CompositeTarget': asyncCompositeTargetHandler.fn,
-        'GraphTarget': asyncGraphTargetHandler.fn
-      };
-    });
+  describe('with async handlers', () => {
+    const graph = {
+      'main': {
+        type: 'graph',
+        nodes: {'A': 'A'},
+        arrows: {},
+        entryPoints: {start: {target: 'A', entryPoint: 'start'}}
+      },
+      'A': {type: 'leaf'}
+    };
 
     it('rejects if an async handler rejects', async () => {
-      lock.config({asyncLock: false, asyncUnlock: true, lockError: null, unlockError: null});
-      storage.config({asyncGet: false, asyncSet: true, getError: null, setError: null});
+      storage.config({asyncSet: true});
+      lock.config({asyncLock: true});
+      let reject;
+      const error = new Error();
+
+      const promise = new Promise((resolve, rejectFn) => {
+        reject = rejectFn;
+      });
+
+      const handlers = {
+        'A': {
+          method: () => promise
+        }
+      };
 
       const model = rosmaro({
         graph,
-        handlers: asyncHandlers,
+        handlers,
         storage: storage,
         lock: lock.fn
       });
 
-      const theError = new Error("an error from the inside");
+      const resPromise = model.method();
+      assert(resPromise.then);
 
-      const aRes = model.a(1, 2);
       lock.doLock();
-      storage.doGet();
-      asyncMainHandler.resolve();
-      asyncGraphTargetHandler.resolve();
-      asyncOrthogonalAHandler.resolve();
-      asyncCompositeHandler.reject(theError);
-      asyncGraphHandler.resolve();
-      asyncCompositeTargetHandler.resolve();
-      asyncOrthogonalBHandler.resolve();
+      reject(error);
       storage.doSet();
-      lock.doUnlock();
 
       let caught;
       try {
-        await aRes;
-      } catch (error) {
-        caught = error;
+        await resPromise;
+      } catch (thrown) {
+        caught = thrown;
       }
 
-      assert.strictEqual(caught, theError);
-
+      assert(error === caught);
     });
 
     it('synchronizes calls', async () => {
-      lock.config({asyncLock: true, asyncUnlock: true, lockError: null, unlockError: null});
-      storage.config({asyncGet: true, asyncSet: true, getError: null, setError: null});
+      storage.config({asyncGet: true});
+      lock.config({asyncUnlock: true});
+      let resolve;
+
+      const promise = new Promise((resolveFn, reject) => {
+        resolve = resolveFn;
+      });
+
+      const handlers = {
+        'A': {
+          method: () => promise
+        }
+      };
 
       const model = rosmaro({
         graph,
-        handlers: asyncHandlers,
+        handlers,
         storage: storage,
         lock: lock.fn
       });
 
-      const aRes = model.a(1, 2);
-      lock.doLock();
+      const resPromise = model.method();
+      assert(resPromise.then);
+      resolve('resolved result');
       storage.doGet();
-      asyncMainHandler.resolve();
-      asyncGraphTargetHandler.resolve();
-      asyncOrthogonalAHandler.resolve();
-      asyncCompositeHandler.resolve();
-      asyncGraphHandler.resolve();
-      asyncCompositeTargetHandler.resolve();
-      asyncOrthogonalBHandler.resolve();
-      storage.doSet();
       lock.doUnlock();
-      await aRes;
-
-      const bRes = model.b(3, 4);
-      lock.doLock();
-      storage.doGet();
-      storage.doSet();
-      lock.doUnlock();
-      await bRes;
-
-      assert.deepEqual(logEntries, expectedLog);
+      const res = await resPromise;
+      assert.equal('resolved result', res);
     });
 
   });
@@ -468,7 +459,7 @@ describe('rosmaro', () => {
   describe('with synchronous handlers', () => {
 
 
-    xit('is fully synchronous if everything is synchronous', () => {
+    it('is fully synchronous if everything is synchronous', () => {
       const model = rosmaro({
         graph,
         handlers: syncHandlers,
@@ -476,14 +467,13 @@ describe('rosmaro', () => {
         lock: lock.fn
       });
 
-      const aRes = model.a(1, 2);
-      const bRes = model.b(3, 4);
+      const aRes = model.method(1, 2);
+      const bRes = model.method(3, 4);
 
       assert.deepEqual(expectedRes, aRes);
-      assert.deepEqual(logEntries, expectedLog);
     });
 
-    xit('is async if something is async', async () => {
+    it('is async if something is async', async () => {
       lock.config({asyncLock: true, asyncUnlock: false, lockError: null, unlockError: null});
       const model = rosmaro({
         graph,
@@ -492,16 +482,15 @@ describe('rosmaro', () => {
         lock: lock.fn
       });
 
-      const aRes = model.a(1, 2);
+      const aRes = model.method(1, 2);
       assert(aRes.then);
       lock.doLock();
       const resolvedARes = await aRes;
-      const bRes = model.b(3, 4);
+      const bRes = model.method(3, 4);
       lock.doLock();
       await bRes;
 
       assert.deepEqual(expectedRes, resolvedARes);
-      assert.deepEqual(logEntries, expectedLog);
     });
 
   });

@@ -1,3 +1,4 @@
+import alterRes from './alterRes';
 import defaultParams from './defaultParams';
 import forParticularInstance from './forParticularInstance';
 import nodeActions from './nodeActions';
@@ -6,8 +7,10 @@ import transparent from './transparent';
 
 const stages = [
   defaultParams,
-  forParticularInstance,
+
+  alterRes,
   nodeActions,
+  forParticularInstance,
   leaf
 ];
 

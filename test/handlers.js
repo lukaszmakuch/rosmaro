@@ -9,6 +9,28 @@ describe('handlers', () => {
 
   });
 
+  describe('alter result', () => {
+    it('allows to alter the result of a method call', () => {
+
+      const handler = makeHandler({
+        method: () => 'result',
+        afterMethod: res => 'altered ' + res
+      });
+
+      assert.deepEqual(handler({
+        method: 'method',
+        node: {},
+        params: [],
+        ctx: {},
+      }), {
+        res: 'altered result',
+        arrows: [[[null, null]]],
+        ctx: {}
+      });
+
+    });
+  });
+
   describe('for particular instance', () => {
     it('calls a method only if the current node is a particular instance', () => {
       const model = {};
@@ -51,7 +73,13 @@ describe('handlers', () => {
         arrows: [[[null, 'instanceArrow']]],
         ctx: {instance: 'ctx'}
       });
-      assert.deepEqual(passed, {ctx: {whole: 'ctx'}, a: 2, b: 3, thisModel: model});
+      assert.deepEqual(passed, {
+        ctx: {whole: 'ctx'}, 
+        a: 2, 
+        b: 3, 
+        thisModel: model, 
+        thisNode: {instanceID: 'abc', ID: 'main:A:B'}
+      });
       passed = undefined;
       childCalled = undefined;
 
@@ -91,7 +119,7 @@ describe('handlers', () => {
         assert.deepEqual(handler({
           method, 
           ctx: {init: 123}, 
-          params: [undefined, {targetID: 'x'}], 
+          params: [{}, {targetID: 'x'}], 
           child: finalChild,
           node: {ID: 'x'}
         }), {

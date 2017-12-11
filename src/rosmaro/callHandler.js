@@ -27,7 +27,7 @@ const callNodeAction = ({
     instanceID: modelData.instanceID,
     method,
     model,
-    params: [node]
+    params: [{}, {targetID: node}]
   });
 }
 
