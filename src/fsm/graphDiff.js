@@ -82,6 +82,7 @@ const isLeft = s => (
   || (!s.oldActive && !s.oldActiveToRoot && s.newActive && !s.newActiveToRoot)
 );
 
+// res like {leftNodes: ['main:A:A'], enteredNodes: ['main:A:B']}
 export default ({graph, oldFSMState, newFSMState}) => {
   const orderedNodes = nodesBottomTopLeftRight({graph});
   const newMainActive = newFSMState != undefined;

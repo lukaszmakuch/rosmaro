@@ -198,6 +198,77 @@ describe('rosmaro', () => {
     assert(receivedReference === model);
   });
 
+  describe('onTransition', () => {
+    // one graph node which does a loop
+    const graph = {
+      'main': {
+        type: 'graph',
+        nodes: {A: 'A'},
+        arrows: {
+          'A': {self: {target: 'A', entryPoint: 'start'}}
+        },
+        entryPoints: {start: {target: 'A', entryPoint: 'start'}}
+      },
+      A: {type: 'leaf'}
+    };
+
+    // just the leaf which does a loop
+    const handlers = {
+      'A': {
+        loop: () => ({arrow: 'self'})
+      }
+    };
+
+    let model;
+
+    beforeEach(() => {
+      model = rosmaro({
+          graph,
+          handlers,
+          storage: storage,
+          lock: lock.fn,
+          onTransition: () => log('a transition occurred')
+        });
+    });
+
+    it('is triggered every time a transition occurs', () => {
+      model.loop();
+
+      assert.deepEqual(logEntries, [
+        'locking',
+        'locked',
+        'getting data',
+        'got data',
+
+        // the transition occurred here
+
+        'setting data',
+        'set data',
+        'unlocking',
+        'unlocked',
+
+        'a transition occurred'
+      ]);
+    });
+
+    it('is not called when a transition does not occur', () => {
+      model.methodWhichDoesNotCauseATransition();
+
+      assert.deepEqual(logEntries, [
+        'locking',
+        'locked',
+        'getting data',
+        'got data',
+
+        'setting data',
+        'set data',
+        'unlocking',
+        'unlocked'
+      ]);
+    });
+  
+  });
+
   it('may be removed', () => {
 
     const graph = {

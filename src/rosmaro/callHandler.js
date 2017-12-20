@@ -76,7 +76,7 @@ export const handleCall = ({
 
   const chained = chain([
 
-    // {arrows, ctx, res}, may be a Promise
+    // res like {arrows, ctx, res}, may be a Promise
     () => dispatch({
       graph,
       FSMState: modelData.FSMState,
@@ -88,16 +88,19 @@ export const handleCall = ({
       model
     }),
 
-    // {leftNodes, enteredNodes, FSMState}
-    (dispatchRes) => fsm({
-      graph, 
-      FSMState: modelData.FSMState, 
-      arrows: dispatchRes.arrows
+    // res like {leftNodes, enteredNodes, FSMState, anyArrowFollowed}
+    (dispatchRes) => ({
+      ...fsm({
+        graph, 
+        FSMState: modelData.FSMState, 
+        arrows: dispatchRes.arrows,
+      }),
+      anyArrowFollowed: anyNonEmptyArrow(dispatchRes.arrows)
     }),
 
     (dispatchRes, transitionRes) => ({
       ctx: dispatchRes.ctx,
-      instanceID: anyNonEmptyArrow(dispatchRes.arrows) 
+      instanceID: transitionRes.anyArrowFollowed
         ? generateInstanceID(graph)
         : modelData.instanceID,
       FSMState: transitionRes.FSMState
@@ -116,6 +119,7 @@ export const handleCall = ({
     (dispatchRes, transitionRes, newModelData) => ({
       leftNodes: transitionRes.leftNodes,
       enteredNodes: transitionRes.enteredNodes,
+      anyArrowFollowed: transitionRes.anyArrowFollowed,
       res: dispatchRes.res,
       newModelData
     })

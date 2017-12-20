@@ -14,7 +14,8 @@ export default ({
   graph: graphPlan,
   handlers: handlersPlan,
   storage,
-  lock
+  lock,
+  onTransition = () => {}
 }) => {
 
   const {graph, handlers} = buildGraph({
@@ -43,8 +44,10 @@ export default ({
                 modelData,
                 model,
               }),
-            () => 
-              storage.set(undefined)
+            () => {
+              storage.set(undefined);
+              return {res: undefined, anyArrowFollowed: false}
+            }
           ]
 
           //handling a call
@@ -62,8 +65,10 @@ export default ({
               }),
             (modelData, handleRes) => 
               storage.set(handleRes.newModelData),
-            (modelData, handleRes) => 
-              handleRes.res
+            (modelData, handleRes) => ({
+              res: handleRes.res,
+              anyArrowFollowed: handleRes.anyArrowFollowed
+            })
           ]
         );
 
@@ -73,16 +78,22 @@ export default ({
           lockErr => {throw mergeErrors(lockErr, bodyErr)}
         );
 
-        const regularUnlock = (unlock, bodyRes) => callbackize(
+        // 1. releases the lock
+        // 2. if any arrow has been followed, triggers the *onTransition* listener
+        // 3. returns the result of the call
+        const regularUnlock = (unlock, res, anyArrowFollowed) => callbackize(
           unlock, 
-          () => bodyRes
+          () => {
+            if (anyArrowFollowed) onTransition();
+            return res;
+          }
         );
 
         return callbackize(
           lock,
           unlock => callbackize(
             handlingBody,
-            bodyRes => regularUnlock(unlock, bodyRes),
+            ({res, anyArrowFollowed}) => regularUnlock(unlock, res, anyArrowFollowed),
             bodyErr => emergencyUnlock(unlock, bodyErr)
           )
         );
