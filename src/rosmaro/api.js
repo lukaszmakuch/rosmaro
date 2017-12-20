@@ -15,7 +15,7 @@ export default ({
   handlers: handlersPlan,
   storage,
   lock,
-  onTransition = () => {}
+  afterTransition = () => {}
 }) => {
 
   const {graph, handlers} = buildGraph({
@@ -79,12 +79,12 @@ export default ({
         );
 
         // 1. releases the lock
-        // 2. if any arrow has been followed, triggers the *onTransition* listener
+        // 2. if any arrow has been followed, triggers the *afterTransition* listener
         // 3. returns the result of the call
         const regularUnlock = (unlock, res, anyArrowFollowed) => callbackize(
           unlock, 
           () => {
-            if (anyArrowFollowed) onTransition();
+            if (anyArrowFollowed) afterTransition();
             return res;
           }
         );

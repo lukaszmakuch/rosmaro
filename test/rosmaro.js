@@ -198,7 +198,7 @@ describe('rosmaro', () => {
     assert(receivedReference === model);
   });
 
-  describe('onTransition', () => {
+  describe('afterTransition', () => {
     // one graph node which does a loop
     const graph = {
       'main': {
@@ -227,7 +227,7 @@ describe('rosmaro', () => {
           handlers,
           storage: storage,
           lock: lock.fn,
-          onTransition: () => log('a transition occurred')
+          afterTransition: () => log('a transition occurred')
         });
     });
 
