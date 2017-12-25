@@ -13,9 +13,9 @@ const addNodeToArrows = (node, arrows) => arrows.map(arrow => node === 'main'
   ]
 );
 
-const dummyChildFn = () => ({
+const dummyChildFn = ({ctx}) => ({
   arrows: [[[null, undefined]]],
-  ctx: {},
+  ctx: ctx,
   res: undefined
 });
 

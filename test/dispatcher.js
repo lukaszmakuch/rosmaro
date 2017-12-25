@@ -380,7 +380,7 @@ describe("dispatcher", () => {
         },
 
         'main:graph_with_leaving_a:a': ({method, ctx, params, child}) => {
-          child();
+          child({});
           if (method == "a") return {arrows: [[[null, 'a']]], ctx};
         },
 
@@ -450,6 +450,29 @@ describe("dispatcher", () => {
         'main:A': 'main:A:A',
         'main:B': 'main:B:A',
       };
+
+      it('allows parts to be added', () => {
+        const initCtx = {a: "a", b: "b"};
+        const handlers = {
+          'main:A:A': ({method, ctx, params}) => {
+            return {arrows: [[[null, 'x']]], ctx: {a: "a", b: "b"}};
+          },
+          'main:B:A': ({method, ctx, params}) => {
+            return {arrows: [[[null, 'y']]], ctx: {a: "a", b: "b", c: "c"}};
+          }
+        };
+        const {ctx} = dispatch({
+          graph,
+          FSMState,
+          handlers,
+          ctx: initCtx,
+          instanceID: {},
+          method: "",
+          params: []
+        });
+        const expectedCtx = {a: "a", b: "b", c: "c"};
+        assert.deepEqual(expectedCtx, ctx);
+      });
 
       it('is possible to remove parts of the context by a node', () => {
         const initCtx = {a: "a", b: "b"};
