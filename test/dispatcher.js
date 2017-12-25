@@ -4,7 +4,6 @@ import {mapArrows} from './../src/utils';
 
 describe("dispatcher", () => {
 
-
   it('passes node IDs and a model reference to handlers', () => {
 
     const instanceID = {
@@ -451,6 +450,29 @@ describe("dispatcher", () => {
         'main:A': 'main:A:A',
         'main:B': 'main:B:A',
       };
+
+      it('is possible to remove parts of the context by a node', () => {
+        const initCtx = {a: "a", b: "b"};
+        const handlers = {
+          'main:A:A': ({method, ctx, params}) => {
+            return {arrows: [[[null, 'x']]], ctx: {a: "a", b: "b"}};
+          },
+          'main:B:A': ({method, ctx, params}) => {
+            return {arrows: [[[null, 'y']]], ctx: {a: "a"}};
+          }
+        };
+        const {ctx} = dispatch({
+          graph,
+          FSMState,
+          handlers,
+          ctx: initCtx,
+          instanceID: {},
+          method: "",
+          params: []
+        });
+        const expectedCtx = {a: "a"};
+        assert.deepEqual(expectedCtx, ctx);
+      });
 
       it('merges only different parts', () => {
         const initCtx = {a: "a", b: "b"};

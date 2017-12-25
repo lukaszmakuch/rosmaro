@@ -6,7 +6,7 @@
     "fsm",
     "dispatch"
   ],
-  "version": "0.1.2-beta",
+  "version": "0.1.3-beta",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
   "dependencies": {
     "deep-diff": "^0.3.8",

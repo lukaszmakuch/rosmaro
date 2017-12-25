@@ -9,9 +9,9 @@ export const mergeCtxs = (original, newOnes) => {
     .map(c => diff(original, c))
     .reduce((flat, arr) => [].concat(flat, arr), [])
   let res = {...original};
+
   diffs
     .filter(a => a)
-    .filter(d => d.kind != "D")
     .forEach(d => applyChange(res, true, d))
 
   return res
