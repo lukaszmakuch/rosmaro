@@ -475,13 +475,13 @@ describe("dispatcher", () => {
       });
 
       it('is possible to remove parts of the context by a node', () => {
-        const initCtx = {a: "a", b: "b"};
+        const initCtx = {arr: [{elem: "a"}, {elem: "b"}]};
         const handlers = {
           'main:A:A': ({method, ctx, params}) => {
-            return {arrows: [[[null, 'x']]], ctx: {a: "a", b: "b"}};
+            return {arrows: [[[null, 'y']]], ctx: {arr: [{elem: "b"}]}};
           },
           'main:B:A': ({method, ctx, params}) => {
-            return {arrows: [[[null, 'y']]], ctx: {a: "a"}};
+            return {arrows: [[[null, 'x']]], ctx: {arr: [{elem: "a"}, {elem: "b"}]}};
           }
         };
         const {ctx} = dispatch({
@@ -493,7 +493,7 @@ describe("dispatcher", () => {
           method: "",
           params: []
         });
-        const expectedCtx = {a: "a"};
+        const expectedCtx = {arr: [{elem: "b"}]};
         assert.deepEqual(expectedCtx, ctx);
       });
 

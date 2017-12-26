@@ -448,6 +448,67 @@ describe('fsm', () => {
 
       }));
 
+      it('makes composites transparent for entry points', testTransition({
+
+        graph: {
+
+          'main': {
+            type: 'graph',
+            parent: null,
+            nodes: ['composite'],
+            arrows: {
+              "composite": {
+                self: {target: "composite", entryPoint: 'recent'}
+              }
+            },
+            entryPoints: {
+              start: {target: 'composite', entryPoint: 'recent'}
+            }
+          },
+
+          'composite': {
+            type: 'composite',
+            parent: 'main',
+            nodes: ["subgraph"]
+          },
+
+          'subgraph': {
+            type: 'graph',
+            parent: 'composite',
+            nodes: ['leaf'],
+            arrows: {
+            },
+            entryPoints: {
+              start: {target: 'leaf', entryPoint: 'start'},
+              recent: {target: 'recent', entryPoint: 'start'}
+            }
+          },
+
+          'leaf': {
+            type: 'leaf',
+            parent: 'subgraph',
+          }
+        
+        },
+
+        FSMState: {
+          'main': 'composite',
+          'subgraph': 'leaf'
+        },
+
+        arrows: [[['leaf', 'self'], ['subgraph', 'self'], ['composite', 'self']]],
+
+        expectedRes: {
+          FSMState: {
+            'main': 'composite',
+            'subgraph': 'leaf'
+          },
+          leftNodes: [],
+          enteredNodes: []
+        }
+
+      }));
+
       it('may have a custom entry point', testTransition({
 
         graph: {

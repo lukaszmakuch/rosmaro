@@ -14,7 +14,7 @@ const followUp = ({arrow, graph}) => {
   const parent = graph[srcNode].parent;
   const parentIsGraph = graph[parent].type === "graph";
   // only a graph may have arrows
-  const arrowTarget = parentIsGraph && graph[parent].arrows[srcNode][arrowName];
+  const arrowTarget = parentIsGraph && (graph[parent].arrows[srcNode] || {})[arrowName];
 
   // this arrow doesn't point at anything at this level, need to go up
   if (!arrowTarget) {
