@@ -420,7 +420,7 @@ describe('fsm', () => {
               'main:A:B': {}
             },
             entryPoints: {
-              history: {target: 'recent', entryPoint: 'start'},
+              history: {target: 'main:A:recent', entryPoint: 'start'},
               start: {target: 'main:A:A', entryPoint: 'start'}
             }
           },
@@ -480,7 +480,7 @@ describe('fsm', () => {
             },
             entryPoints: {
               start: {target: 'leaf', entryPoint: 'start'},
-              recent: {target: 'recent', entryPoint: 'start'}
+              recent: {target: 'subgraph:recent', entryPoint: 'start'}
             }
           },
 
