@@ -2,18 +2,14 @@
   display: block;
   margin: 0 auto;
   max-width: 400px;
-  margin-bottom: 2rem;
 }
 
-.header {
-  padding-bottom: 1rem;
-}
-
-.examples-heading {
-  margin-bottom: 5rem;
+.examples-heading, 
+.main-heading {
+  margin-top: 4rem;
+  font-size: 4rem;
   text-align: center;
-  font-size: 2.25rem;
-  /*font-weight: lighter;*/
+  font-weight: normal;
 }
 
 .example {
@@ -21,18 +17,12 @@
 }
 
 .example-step-heading {
-  font-size: 1.75em;
-}
-
-.header h1 {
-  font-weight: normal;
-  font-size: 4rem;
-  /*margin-top: 100px;*/
-  text-align: center;
+  color: #aa7a61;
+  font-size: 4em;
 }
 
 .header h2 {
-  /*font-weight: normal;*/
+  font-weight: bold;
   text-align: center;
   font-size: 1em;
   text-transform: uppercase;
@@ -50,34 +40,42 @@ a:hover {
   color: #000;
 }
 
-.header .nav a {
+.footer {
+  text-align: center;
+}
 
+.footer p {
+  margin-top: 4em;
+  color: #999;
+  font-size: 1em;
+}
+
+.header .nav a {
   text-transform: uppercase;
-  font-size: 12px;
+  font-size: 1em;
 }
 
 .example-step-divider {
-  width: 80%;
-  margin: 5rem auto;
-}
-
-.characteristics-bg {
-  padding: 2rem 0;
-  /*background-color: #705f53;*/
+  margin: 6rem auto;
+  border: 0;
 }
 
 .characteristics {
-  /*color: #f4e7de;*/
+  margin-top: 2em;
+}
+
+.characteristics * {
+  font-size: 1em;
 }
 
 .characteristics h4 {
-  font-size: 20px;
+  margin-top: 2em;
+  font-weight: bold;
+  text-transform: uppercase;
 }
 
-@media (min-width: 58em) {
-  .container {
-    max-width: 56rem;
-  }
+.container {
+  max-width: 56rem;
 }
 
 /* Space out content a bit */
@@ -86,44 +84,16 @@ body {
   padding-bottom: 1.5rem;
 }
 
-/* Custom page header */
-
-
-/* Make the masthead heading the same height as the navigation */
-.header h3 {
-  margin-top: 0;
-  margin-bottom: 0;
-  line-height: 3rem;
+.btn-primary, 
+.btn-primary.disabled, 
+.btn-primary:disabled, 
+.btn-primary:not([disabled]):not(.disabled).active, 
+.btn-primary:not([disabled]):not(.disabled):active,
+.show > .btn-primary.dropdown-toggle {
+  background-color: #aa7a61;
+  border: none;
 }
 
-/* Custom page footer */
-.footer {
-  padding-top: 1.5rem;
-  color: #777;
-  border-top: .05rem solid #e5e5e5;
+.btn-primary:hover {
+  background-color: #644839;
 }
-
-.container-narrow > hr {
-  margin: 2rem 0;
-}
-
-
-
-
-/* Responsive: Portrait tablets and up */
-@media screen and (min-width: 48em) {
-  /* Remove the padding we set earlier */
-  .header,
-  .footer {
-    padding-right: 0;
-    padding-left: 0;
-  }
-
-  /* Space out the masthead */
-  .header {
-    margin-bottom: 2rem;
-  }
-
-
-}
-

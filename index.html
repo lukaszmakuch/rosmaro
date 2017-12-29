@@ -39,10 +39,10 @@
 
 
               <img src="img/logo.png" id="rosmaro-logo"/>
-              <h1>Rosmaro</h1>
+              <h1 class="main-heading">Rosmaro</h1>
               <h2>visual automata-based programming</h2>
 
-<!--           <div class="row">
+  <!--         <div class="row">
             <div class="col-md-6">
               <img src="img/logo.png" id="rosmaro-logo"/>
             </div>
@@ -50,8 +50,8 @@
               <h1>Rosmaro</h1>
               <h2>visual automata-based programming</h2>
             </div>
-          </div>
- -->
+          </div> -->
+
 
       </header>
 
@@ -61,64 +61,68 @@
           <div class="container">
             <div class="row characteristics">
               <div class="col-lg-4">
-                <h4>Visual editing</h4>
-                <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+                <div class="single-characteristic">
+                  <h4>Visual editing</h4>
+                  <p>Changes of behavior are drawn using the <a href="https://rosmaro.js.org/editor">Rosmaro Visual Editor</a>. It produces a human-readable JSON file.</p>
+                </div>
 
-                <h4>Subheading</h4>
-                <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
-
-                <h4>Subheading</h4>
-                <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+                <div class="single-characteristic">
+                  <h4>Custom storage</h4>
+                  <p>The state may be stored in plenty of ways - from plain old JavaScript objects to NoSQL databases.</p>
+                </div>
               </div>
 
               <div class="col-lg-4">
-                <h4>Behavior-related state and data-related state</h4>
-                <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+                <div class="single-characteristic">
+                  <h4>The right model for the job</h4>
+                  <p>The behavior-related state is expressed by a state machine, while the data-related state lives in a dictionary.</p>
+                </div>
 
-                <h4>Subheading</h4>
-                <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
-
-                <h4>Subheading</h4>
-                <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+                <div class="single-characteristic">
+                  <h4>Async / await just works</h4>
+                  <p>The whole model may be fully synchronous, but if anything needs to be asynchronous, it just works.</p>
+                </div>
               </div>
               <div class="col-lg-4">
-                <h4>Graph-based dispatch</h4>
-                <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+                <div class="single-characteristic">
+                  <h4>Graph-based dispatch</h4>
+                  <p>Method calls are dispatched based on the current node of the state machine. There's no need to check the current state.</p>
+                </div>
 
-                <h4>Subheading</h4>
-                <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
+                <div class="single-characteristic">
+                  <h4>Optional locking</h4>
+                  <p>A locking mechanism may be used, so the model never goes into an inconsistent state.</p>
+                </div>
 
-                <h4>Subheading</h4>
-                <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
               </div>
             </div>
           </div>
         </div>
 
-        <hr class="example-step-divider">
+        <!-- <hr class="example-step-divider"> -->
         <div class="container">
-          <h3 class="examples-heading">A simple example - The Cursed Prince</h3>
+          <h3 class="examples-heading">Rosmaro 101</h3>
         </div>
 
-<!--         <hr class="example-step-divider">
- -->        <div class="example container">
+        <hr class="example-step-divider">
+        <div class="example container">
           <div class="row example-step">
             <div class="col-md-5">
               <img class="img-fluid mx-auto"  style="max-height:250px" src="img/example-graph.png" >
             </div>
             <div class="col-md-7">
-              <h2 class="example-step-heading">Draw changes of behavior. </h2>
-              <p class="lead">Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper. Praesent commodo cursus magna, vel scelerisque nisl consectetur. Fusce dapibus, tellus ac cursus commodo.</p>
+              <h2 class="example-step-heading">Draw changes of behavior.</h2>
+              <p class="lead">Nodes represent different behaviors which never change. Arrows symbolize events.</p>
             </div>
           </div>
         </div>
 
-<!--         <hr class="example-step-divider">
- -->        <div class="example container">
+        <hr class="example-step-divider">
+        <div class="example container">
           <div class="row example-step">
             <div class="col-md-5">
               <h2 class="example-step-heading">Code different behaviors. </h2>
-              <p class="lead">Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper. Praesent commodo cursus magna, vel scelerisque nisl consectetur. Fusce dapibus, tellus ac cursus commodo.</p>
+              <p class="lead">Associate drawn nodes with code handling method calls. </p>
             </div>
             <div class="col-md-7">
               <pre><code class="javascript">
@@ -130,46 +134,53 @@ const Prince = {
 };
 
 const Frog = {
-  introduceYourself: () => "Ribbit! Ribbit!",
+  introduceYourself: () => "Ribbit! Ribbit!"
 };
               </code></pre>
             </div>
           </div>
         </div>
 
-<!--         <hr class="example-step-divider">
- -->        <div class="example container">
+        <hr class="example-step-divider">
+        <div class="example container">
           <div class="row example-step">
             <div class="col-md-5">
               <pre><code class="javascript">
 > model.introduceYourself();
 'I am The Prince of Rosmaro!'
+
 > model.eat({dish: 'yakisoba'});
 undefined
+
 > model.introduceYourself();
 'I am The Prince of Rosmaro!'
+
 > model.eat({dish: 'pizza'});
 undefined
+
 > model.introduceYourself();
 'Ribbit! Ribbit!'
               </code></pre>
             </div>
             <div class="col-md-7">
               <h2 class="example-step-heading">Have fun! </h2>
-              <p class="lead">Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper. Praesent commodo cursus magna, vel scelerisque nisl consectetur. Fusce dapibus, tellus ac cursus commodo.</p>
+              <p class="lead">
+                The model is stateful.<br>
+                Method calls are dispatched upon the graph.
+              </p>
             </div>
           </div>
         </div>
 
-        <div class="container">
-          <a class="btn btn-lg btn-primary" href="#" role="button">Documentation</a>
-        </div>
+        <!-- <hr class="example-step-divider"> -->
+
 
       </main>
 
       <footer class="footer">
         <div class="container">
-          <p>2016-2017</p>
+          <a class="btn btn-lg btn-primary" href="#" role="button">Documentation</a>
+          <p>The Rosmaro project was started by Łukasz Makuch in 2016.</p>
         </div>
       </footer>
 
