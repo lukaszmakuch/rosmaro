@@ -1,0 +1,129 @@
+#rosmaro-logo {
+  display: block;
+  margin: 0 auto;
+  max-width: 400px;
+  margin-bottom: 2rem;
+}
+
+.header {
+  padding-bottom: 1rem;
+}
+
+.examples-heading {
+  margin-bottom: 5rem;
+  text-align: center;
+  font-size: 2.25rem;
+  /*font-weight: lighter;*/
+}
+
+.example {
+  margin-top: 2em;
+}
+
+.example-step-heading {
+  font-size: 1.75em;
+}
+
+.header h1 {
+  font-weight: normal;
+  font-size: 4rem;
+  /*margin-top: 100px;*/
+  text-align: center;
+}
+
+.header h2 {
+  /*font-weight: normal;*/
+  text-align: center;
+  font-size: 1em;
+  text-transform: uppercase;
+}
+
+.header nav {
+  display: block;
+}
+
+a {
+  color: #aa7a61;
+}
+
+a:hover {
+  color: #000;
+}
+
+.header .nav a {
+
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.example-step-divider {
+  width: 80%;
+  margin: 5rem auto;
+}
+
+.characteristics-bg {
+  padding: 2rem 0;
+  /*background-color: #705f53;*/
+}
+
+.characteristics {
+  /*color: #f4e7de;*/
+}
+
+.characteristics h4 {
+  font-size: 20px;
+}
+
+@media (min-width: 58em) {
+  .container {
+    max-width: 56rem;
+  }
+}
+
+/* Space out content a bit */
+body {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+/* Custom page header */
+
+
+/* Make the masthead heading the same height as the navigation */
+.header h3 {
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 3rem;
+}
+
+/* Custom page footer */
+.footer {
+  padding-top: 1.5rem;
+  color: #777;
+  border-top: .05rem solid #e5e5e5;
+}
+
+.container-narrow > hr {
+  margin: 2rem 0;
+}
+
+
+
+
+/* Responsive: Portrait tablets and up */
+@media screen and (min-width: 48em) {
+  /* Remove the padding we set earlier */
+  .header,
+  .footer {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  /* Space out the masthead */
+  .header {
+    margin-bottom: 2rem;
+  }
+
+
+}
+
