@@ -1,0 +1,236 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width">
+
+  <title>Rosmaro - visual automata-based programming</title>
+
+  <!-- Flatdoc -->
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script src='https://cdn.rawgit.com/rstacruz/flatdoc/v0.9.0/legacy.js'></script>
+  <script src='https://cdn.rawgit.com/rstacruz/flatdoc/v0.9.0/flatdoc.js'></script>
+
+  <!-- Flatdoc theme -->
+  <link  href='https://cdn.rawgit.com/rstacruz/flatdoc/v0.9.0/theme-white/style.css' rel='stylesheet'>
+  <script src='https://cdn.rawgit.com/rstacruz/flatdoc/v0.9.0/theme-white/script.js'></script>
+
+  <!-- custom css -->
+  <link  href='style.css' rel='stylesheet'>
+
+  <!-- Meta -->
+  <meta content="Rosmaro" property="og:title">
+  <meta content="A visual automata-based programming library for JavaScript." name="description">
+
+  <!-- Initializer -->
+  <script>
+    Flatdoc.run({
+      fetcher: function (callback) {
+        callback(null, document.getElementById('doc').innerHTML)
+      }
+    });
+  </script>
+
+  <script id="doc" type="text/markdown" src="index.html">
+# Rosmaro 101
+
+## What is Rosmaro
+
+Rosmaro is a visual automata-based programming library for JavaScript. 
+
+It allows to build stateful objects - _Rosmaro models_. They keep data-related state in a dictionary structure and express behavior-related state using a state machine.
+
+If you wish, you can think of Rosmaro using one of the following metaphors:
+
+- An event-based routing for methods
+- An object where _this_ is a state machine 
+- A flavor of state diagrams brought to life
+
+## Building a model
+
+Building a _Rosmaro model_ consist of two steps: 
+
+1. Drawing a state machine graph 
+1. Coding behavior
+
+Let's build a model of a cursed prince, who turns into a frog after eating a pizza.
+
+Although we could write a JSON file describing the graph by hand, it's a lot more fun to use the [Rosmaro Editor](https://rosmaro.js.org/editor).
+
+![model graph](img/example-graph.png "A cursed prince")
+
+After drawing the graph visible above, __the following JSON is generated automatically__.
+```json
+{
+  "main": {
+    "type": "graph",
+    "nodes": {
+      "Prince": "Prince",
+      "Frog": "Frog"
+    },
+    "arrows": {
+      "Prince": {
+        "ate pizza": {
+          "target": "Frog",
+          "entryPoint": "start"
+        }
+      }
+    },
+    "entryPoints": {
+      "start": {
+        "target": "Prince",
+        "entryPoint": "start"
+      }
+    }
+  },
+  "Prince": {
+    "type": "leaf"
+  },
+  "Frog": {
+    "type": "leaf"
+  }
+}
+```
+
+The graph tells the story of how does the model change over time and what makes it change. At the beginning it behaves like a _Prince_. That's what the arrow from the _start_ entry point pointing at the _Prince_ node is telling us. Then, as soon as the _Prince_ eats a pizza, he follows the arrow called _ate pizza_. The model is not anymore in the _Prince_ state, but in the _Frog_ state.
+
+Now it's the time to code different behaviors.
+
+This is the behavior of the _Frog_:
+```javascript
+const Frog = {
+  introduceYourself: () => "Ribbit! Ribbit!"
+};
+```
+
+It answers to only one method call - _introduceYourself_. Every single time when it's asked to introduce itself, it makes the _Ribbit!_ sound.
+
+This is the behavior of the _Prince_:
+```javascript
+const Prince = {
+  introduceYourself: () => "I am The Prince of Rosmaro!",
+  eat: ({dish}) => {
+    if (dish === 'pizza') return {arrow: 'ate pizza'};
+  }
+};
+```
+
+Every time he introduce himself, he says _I am The Prince of Rosmaro!_. When he eats a pizza, he follows the _ate pizza_ arrow.
+
+Let's put it all together.
+```javascript
+import makeStorage from 'rosmaro-in-memory-storage';
+import makeLock from 'rosmaro-process-wide-lock';
+import rosmaro from 'rosmaro';
+import graph from './graph.json'; // The generated graph
+
+const Frog = {
+  introduceYourself: () => "Ribbit! Ribbit!"
+};
+
+const Prince = {
+  introduceYourself: () => "I am The Prince of Rosmaro!",
+  eat: ({dish}) => {
+    if (dish === 'pizza') return {arrow: 'ate pizza'};
+  }
+};
+
+const model = rosmaro({
+  graph,
+  handlers: {Prince, Frog},
+  storage: makeStorage(),
+  lock: makeLock()
+});
+```
+
+In order to obtain a working model, we need to provide at least 4 parts:
+
+- the state machine graph (generated based on the drawn graph)
+- handlers (code representing different behaviors)
+- a storage (for example, from the _rosmaro-in-memory-storage_ package)
+- a lock (for example, from the _rosmaro-process-wide-lock_ package)
+
+The model works like expected:
+```javascript
+> model.introduceYourself();
+'I am The Prince of Rosmaro!'
+
+> model.eat({dish: 'yakisoba'});
+undefined
+
+> model.introduceYourself();
+'I am The Prince of Rosmaro!'
+
+> model.eat({dish: 'pizza'});
+undefined
+
+> model.introduceYourself();
+'Ribbit! Ribbit!'
+```
+
+## License
+Rosmaro is licensed under the MIT license.
+
+# TODO
+- after transition listener (when exactly)
+- onEntry when and when not, in what order
+- afterLeft when and when not, in what order
+- afterMethod
+- entry points
+- special "recent" node
+- arrows
+- recommended locking mechanisms
+- what are locking mechanisms
+- why locking may be desired
+- recommended storage mechanisms
+- what are storage mechanisms
+- leaves
+- leaves and entry points
+- composites
+- composites and entry points
+- thisModel
+- node.ID
+- node.instanceID
+- context
+- context and composites
+- loops are possible
+- examples of correct transitions
+- examples of incorrect transitions
+- local child names and global names of nodes, linking to other nodes
+- handlers for non-leaves, like composites and whole graphs
+- composite results
+- what if a method call crashes? automatic unlock
+- what if unlock crashes?
+- what if both method call and unlock crash?
+- storage specification
+- lock specification
+- rosmaro elsewhere
+
+  </script>
+</head>
+<body role='flatdoc' class='big-h3 no-literate'>
+
+  <div class='header'>
+    <div class='left'>
+      <h1>Rosmaro</h1>
+      <ul>
+        <li><a href='https://github.com/lukaszmakuch/rosmaro'>View on GitHub</a></li>
+      </ul>
+    </div>
+    <div class='right'>
+      <!-- GitHub buttons: see http://ghbtns.com -->
+      <iframe src="http://ghbtns.com/github-btn.html?user=lukaszmakuch&amp;repo=rosmaro&amp;type=watch&amp;count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+    </div>
+  </div>
+
+  <div class='content-root'>
+    <div class='menubar'>
+      <img src="img/logo.png" class="logo"/>
+      <div class='menu section' role='flatdoc-menu'></div>
+    </div>
+    <div role='flatdoc-content' class='content'></div>
+  </div>
+
+</body>
+</html>
