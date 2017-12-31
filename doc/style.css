@@ -6,3 +6,7 @@ body {
   margin-left: 30px;
   margin-top: 30px;
 }
+
+body.no-literate .content pre > code {
+  background-color: #fff;
+}
