@@ -1,5 +1,5 @@
 
-![Rosmaro logo](./logo.png)
+![Rosmaro logo](https://rosmaro.js.org/doc/img/logo.png)
 
 # Rosmaro
 
@@ -34,7 +34,7 @@ Let's build a model of a cursed prince, who turns into a frog after eating a piz
 
 Although we could write a JSON file describing the graph by hand, it's a lot more fun to use the [Rosmaro Editor](https://rosmaro.js.org/editor).
 
-![model graph](./example-graph.png)
+![model graph](https://rosmaro.js.org/doc/img/example-graph.png)
 
 After drawing the graph visible above, __the following JSON is generated automatically__.
 ```json
