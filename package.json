@@ -1,12 +1,14 @@
 {
   "name": "rosmaro",
   "license": "MIT",
-  "description": "Changes of behavior described as a graph.",
+  "description": "Visual automata-based programming",
   "keywords": [
     "fsm",
-    "dispatch"
+    "dispatch",
+    "visual programming",
+    "state machine"
   ],
-  "version": "0.1.7-beta",
+  "version": "0.1.8",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
   "dependencies": {
     "deep-diff": "^0.3.8",
