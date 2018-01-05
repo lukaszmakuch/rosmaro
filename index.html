@@ -90,13 +90,13 @@
 
         <hr class="example-step-divider">
         <div class="example container">
-          <div class="row example-step">
-            <div class="col-md-5">
-              <img class="img-fluid mx-auto"  style="max-height:250px" src="img/example-graph.png" >
-            </div>
+          <div class="row example-step d-flex flex-row-reverse">
             <div class="col-md-7">
               <h2 class="example-step-heading">Draw changes of behavior.</h2>
               <p class="lead">Nodes represent different behaviors which never change. Arrows symbolize events.</p>
+            </div>
+            <div class="col-md-5">
+              <img class="img-fluid mx-auto"  style="max-height:250px" src="img/example-graph.png" >
             </div>
           </div>
         </div>
@@ -127,7 +127,14 @@ const Frog = {
 
         <hr class="example-step-divider">
         <div class="example container">
-          <div class="row example-step">
+          <div class="row example-step d-flex flex-row-reverse">
+            <div class="col-md-7">
+              <h2 class="example-step-heading">Have fun! </h2>
+              <p class="lead">
+                The model is stateful.<br>
+                Method calls are dispatched upon the graph.
+              </p>
+            </div>
             <div class="col-md-5">
               <pre><code class="javascript">
 > model.introduceYourself();
@@ -145,13 +152,6 @@ undefined
 > model.introduceYourself();
 'Ribbit! Ribbit!'
               </code></pre>
-            </div>
-            <div class="col-md-7">
-              <h2 class="example-step-heading">Have fun! </h2>
-              <p class="lead">
-                The model is stateful.<br>
-                Method calls are dispatched upon the graph.
-              </p>
             </div>
           </div>
         </div>

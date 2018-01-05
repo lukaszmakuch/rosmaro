@@ -97,3 +97,27 @@ body {
 .btn-primary:hover {
   background-color: #644839;
 }
+
+@media (max-width: 56em) {
+
+/*  #rosmaro-logo {
+    max-height: 100px;
+  }*/
+
+  .examples-heading, 
+  .main-heading,
+  .example-step-heading {
+    font-size: 1.5em;
+  }
+
+  .nav {
+    margin-bottom: -100px;
+  }
+
+  .nav-item {
+    text-align: right;
+    width: 100%;
+    display: block;
+  }
+
+}
