@@ -101,7 +101,7 @@ body {
 @media (max-width: 56em) {
 
   #rosmaro-logo {
-    max-width: 100%;
+    max-width: 90%;
   }
 
   .examples-heading, 
