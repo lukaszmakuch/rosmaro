@@ -565,6 +565,61 @@ This technique turns out to be helpful everywhere where the result is build from
 }
 ```
 
+## Initial context
+
+The context of a freshly created _Rosmaro model_ is an empty object. 
+
+Let's imagine, that a [method handler](#handlers-method-handlers) is supposed to return the name of somebody. The name is, most of the time, stored within the context. And that's the tricky part - it's there just most of the times. At the beginning, when the context is empty, it's not there.
+
+The handler may be implemented like this.
+```javascript
+const SomeHandler = {
+  readName: ({ctx}) => ctx.name || 'Unknown person'
+};
+```
+
+However, it is an unnecessary conditional statement (_||_), which in the worst scenario may be repeated over and over again. A better way to tackle this is to specify the _initial context_. It is used every time __when the context is empty and only then__.
+
+The same result, without an explicit conditional statement.
+```
+const SomeHandler = {
+  initCtx: {name: 'Unknown person'},
+  readName: ({ctx}) => ctx.name
+};
+```
+
+If you find this helpful, you may also be interested in [context slices](#handlers-context-slices).
+
+## Context slices
+
+The context, by default, is shared among all method handlers. It is a good way to start, because some models may be simple enough to not need any extra separation. However, when the number of nodes grows, and especially when we introduce composites or sub-graphs, it becomes easier to make a mistake and modify some part of the context which wasn't supposed to be modified.
+
+Context slices help to solve this problem by making handlers of some nodes (and handlers of their children) operate on narrow slices of the whole context.
+
+Let's assume the whole, model-wide context looks like this.
+```javascript
+{
+  personName: 'John',
+  pet: {
+    name: 'Tom'
+  }
+}
+```
+
+If there's some node that specializes in handling actions related to the pet and doesn't need to access the name of the owner, we can narrow the context down. Now the handler of the _Pet_ node, and handlers of its children (if it's a graph or a composite) will see just a part of the context.
+```javascript
+const PetNodeHandler = {
+  ctxSlice: 'pet',
+  method: ({ctx}) {
+    // ctx is {name: 'Tom'} 
+  }
+};
+```
+
+Any new context returned by a handler which operates on a slice of the whole context will modify just this slice and leave the rest untouched.
+
+If you find this helpful, you may also be interested in [the initial context](#handlers-initial-context).
+
 ## Lifecycle hooks
 When it's necessary to cause some side-effects, for example when a _Rosmaro model_ is used to control some imperative API, lifecycle hooks may turn out to be helpful.
 
