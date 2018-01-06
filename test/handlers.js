@@ -9,6 +9,40 @@ describe('handlers', () => {
 
   });
 
+  describe('initCtx', () => {
+    const handler = makeHandler({
+      initCtx: {a: 123, b: 456},
+      method: ({ctx}) => ctx
+    });
+
+    it('allows to set an initial context if the context is empty', () => {
+      assert.deepEqual(handler({
+        method: 'method',
+        node: {},
+        params: [],
+        ctx: {},
+      }), {
+        res: {a: 123, b: 456},
+        arrows: [[[null, null]]],
+        ctx: {a: 123, b: 456}
+      });
+    });
+
+    it('does NOT use the initial context if there is already some context', () => {
+      assert.deepEqual(handler({
+        method: 'method',
+        node: {},
+        params: [],
+        ctx: {c: 987},
+      }), {
+        res: {c: 987},
+        arrows: [[[null, null]]],
+        ctx: {c: 987}
+      });
+    });
+
+  });
+
   describe('alter result', () => {
     it('allows to alter the result of a method call', () => {
 

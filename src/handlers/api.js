@@ -4,10 +4,12 @@ import forParticularInstance from './forParticularInstance';
 import nodeActions from './nodeActions';
 import leaf from './leaf';
 import transparent from './transparent';
+import initCtx from './initCtx';
 
 const stages = [
   defaultParams,
 
+  initCtx,
   alterRes,
   nodeActions,
   forParticularInstance,
