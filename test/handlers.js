@@ -9,6 +9,90 @@ describe('handlers', () => {
 
   });
 
+  describe('ctxSlice', () => {
+
+    it('allows to use a narrow slice of the whole context', () => {
+      const handler = makeHandler({
+        ctxSlice: 'for the handler',
+        method: ({ctx}) => ({
+          res: {receivedCtx: ctx},
+          ctx: {val: 456}
+        })
+      });
+
+      assert.deepEqual(handler({
+        method: 'method',
+        node: {},
+        params: [],
+        ctx: {
+          higher: 987, 
+          'for the handler': {val: 123}
+        },
+      }), {
+        res: {receivedCtx: {val: 123}},
+        arrows: [[[null, null]]],
+        ctx: {
+          higher: 987, 
+          'for the handler': {val: 456}
+        }
+      });
+    });
+
+    it('creates the slice if it does not exist', () => {
+      const handler = makeHandler({
+        ctxSlice: 'for the handler',
+        method: ({ctx}) => ({
+          res: {receivedCtx: ctx},
+          ctx: {val: 456}
+        })
+      });
+
+      assert.deepEqual(handler({
+        method: 'method',
+        node: {},
+        params: [],
+        ctx: {
+          higher: 987
+        },
+      }), {
+        res: {receivedCtx: {}},
+        arrows: [[[null, null]]],
+        ctx: {
+          higher: 987, 
+          'for the handler': {val: 456}
+        }
+      });
+    });
+
+    it('may be used with initCtx', () => {
+      const handler = makeHandler({
+        ctxSlice: 'for the handler',
+        initCtx: {val: 123},
+        method: ({ctx}) => ({
+          res: {receivedCtx: ctx},
+          ctx: {val: 456}
+        })
+      });
+
+      assert.deepEqual(handler({
+        method: 'method',
+        node: {},
+        params: [],
+        ctx: {
+          higher: 987
+        },
+      }), {
+        res: {receivedCtx: {val: 123}},
+        arrows: [[[null, null]]],
+        ctx: {
+          higher: 987, 
+          'for the handler': {val: 456}
+        }
+      });
+    });
+
+  });
+
   describe('initCtx', () => {
     const handler = makeHandler({
       initCtx: {a: 123, b: 456},

@@ -5,11 +5,17 @@ import nodeActions from './nodeActions';
 import leaf from './leaf';
 import transparent from './transparent';
 import initCtx from './initCtx';
+import ctxSlice from './ctxSlice';
 
 const stages = [
   defaultParams,
 
+  // It is very important that ctxSlice is applied before initCtx.
+  // Otherwise it wouldn't be possible to specify the initial value of
+  // the sliced context.
+  ctxSlice,
   initCtx,
+
   alterRes,
   nodeActions,
   forParticularInstance,
