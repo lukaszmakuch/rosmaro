@@ -534,7 +534,7 @@ In the example above the result we got was a map between values actually returne
 In order to achieve this, we will associate a handler with the composite itself. It will alter the result call. The composite is our _main_ node, so let's write a result altering handler.
 ```javascript
 const main = {
-  afterSaySomething: res => 
+  afterSaySomething: ({res}) => 
     res['First composed node'] + ' ' + res['Second composed node'] + '!'
 }
 ```
@@ -554,7 +554,7 @@ This technique turns out to be helpful everywhere where the result is build from
 
 ```javascript
 {
-  afterRender: res => 
+  afterRender: ({res}) => 
     h('div.editor', {}, [
       h('div.main-screen', {}, [
         h('div.node-list', {}, res.nodeList),
