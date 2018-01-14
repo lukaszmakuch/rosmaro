@@ -114,7 +114,7 @@ const expectedLog = [
 const expectedRes = {A: 'OrthogonalARes', B: 'OrthogonalBRes'};
 
 const loggingHandler = (nodeName, res) => ({
-  afterMethod(res) {
+  afterMethod({res}) {
     log(nodeName);
     return res;
   },

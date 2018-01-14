@@ -20,11 +20,11 @@ export default plan => {
     make: (next) => (opts) => {
       return callbackize(() => next(opts), callRes => {
         const alterFnName = 'after' + opts.method[0].toUpperCase() + opts.method.slice(1);
-        const alterFn = alterFns[alterFnName] || (a => a);
-        const alteredRes = alterFn(callRes.res);
+        const alterFn = alterFns[alterFnName] || (({res}) => res);
+        const alteredRes = alterFn({res: callRes.res});
         return {
           ...callRes,
-          res: alterFn(callRes.res)
+          res: alteredRes
         };
       });
     }

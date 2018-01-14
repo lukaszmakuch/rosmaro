@@ -132,7 +132,7 @@ describe('handlers', () => {
 
       const handler = makeHandler({
         method: () => 'result',
-        afterMethod: res => 'altered ' + res
+        afterMethod: ({res}) => 'altered ' + res
       });
 
       assert.deepEqual(handler({
