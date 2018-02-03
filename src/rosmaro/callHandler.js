@@ -1,9 +1,8 @@
 import {instanceID} from './newModelData';
 import fsm from './../fsm/api';
 import {nonEmptyArrow} from './../utils';
-import extractPath from './../dispatcher/pathExtractor';
 import graphDiff from './../fsm/graphDiff';
-import dispatch from './../dispatcher/api';
+import dispatch, {extractPath} from './../dispatcher/api';
 import chain from './operationChain';
 import {generateInstanceID} from './newModelData';
 import {changedNodesToCall} from './nodeActions';

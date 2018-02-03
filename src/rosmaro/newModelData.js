@@ -1,3 +1,10 @@
+/*
+When no model data is stored (we're working with a new model),
+the function exported from this file returns all the initial data:
+- FSM state
+- context
+- IDs of nodes
+*/
 import {initState} from './../fsm/api';
 import newID from 'uuid/v1';
 

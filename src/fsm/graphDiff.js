@@ -1,3 +1,6 @@
+/*
+For a detailed example please check test/graphDiff.js.
+*/
 import reverse from 'lodash/reverse';
 
 // children returned from the bottom to the top, from the left to the right
