@@ -7,7 +7,15 @@ describe('graph builder', () => {
 
   it('builds a graph with handlers', () => {
 
+    const ctx = {
+      elems: ['elemA', 'elemB']
+    };
+
     const AHandler = {
+      dynamicParentMethod: () => {}
+    };
+
+    const ASubAHandler = {
       aMethod: () => {}
     };
 
@@ -34,7 +42,23 @@ describe('graph builder', () => {
           }
         },
 
-        'A': {type: 'leaf'},
+        'A': {
+          type: 'dynamicComposite',
+          nodeTemplate: 'AGraph'
+        },
+
+        'AGraph': {
+          type: 'graph',
+          nodes: {A: 'ASubA'},
+          arrows: {
+            A: {x: {target: 'A', entryPoint: 'start'}},
+          },
+          entryPoints: {
+            start: {target: 'A', entryPoint: 'start'}
+          }
+        },
+
+        'ASubA': {type: 'leaf'},
 
         'B': {
           type: 'composite',
@@ -66,7 +90,11 @@ describe('graph builder', () => {
       },
 
       handlers: {
-        'A': AHandler,
+        'A': {
+          ...AHandler,
+          nodes: ({ctx}) => ctx.elems
+        },
+        'ASubA': ASubAHandler,
         'B': bHandler,
         'BSubA': bSubChildHandler,
         'BSubB': bSubChildHandler
@@ -94,9 +122,42 @@ describe('graph builder', () => {
         },
 
         'main:A': {
-          type: 'leaf',
+          type: 'composite',
+          nodes: ['main:A:elemA', 'main:A:elemB'],
           parent: 'main',
         },
+
+        'main:A:elemA': {
+          type: 'graph',
+          nodes: ['main:A:elemA:A'],
+          parent: 'main:A',
+          arrows: {
+            'main:A:elemA:A': {
+              x: {target: 'main:A:elemA:A', entryPoint: 'start'}
+            }
+          },
+          entryPoints: {
+            start: {target: 'main:A:elemA:A', entryPoint: 'start'}
+          },
+        },
+
+        'main:A:elemA:A': {type: 'leaf', parent: 'main:A:elemA'},
+
+        'main:A:elemB': {
+          type: 'graph',
+          nodes: ['main:A:elemB:A'],
+          parent: 'main:A',
+          arrows: {
+            'main:A:elemB:A': {
+              x: {target: 'main:A:elemB:A', entryPoint: 'start'}
+            }
+          },
+          entryPoints: {
+            start: {target: 'main:A:elemB:A', entryPoint: 'start'}
+          },
+        },
+
+        'main:A:elemB:A': {type: 'leaf', parent: 'main:A:elemB'},
 
         'main:B': {
           type: 'composite',
@@ -146,6 +207,10 @@ describe('graph builder', () => {
       handlers: {
         'main': {built: undefined},
         'main:A': {built: AHandler},
+        'main:A:elemA': {built: undefined},
+        'main:A:elemA:A': {built: ASubAHandler},
+        'main:A:elemB': {built: undefined},
+        'main:A:elemB:A': {built: ASubAHandler},
         'main:B': {built: bHandler},
         'main:B:A': {built: undefined},
         'main:B:B': {built: undefined},
@@ -157,7 +222,7 @@ describe('graph builder', () => {
 
     };
 
-    const built = build({plan, buildHandler});
+    const built = build({plan, ctx, buildHandler});
     assert.deepEqual(built, expected);
   });
 

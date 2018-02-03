@@ -1,8 +1,10 @@
 import {glueNodeName} from './nodeNames';
+import omit from 'lodash/omit';
 import transparentHandler from './../handlers/transparent';
 
 const build = ({
   plan, 
+  ctx,
   buildHandler,
   planNode = 'main',
   builtNode = 'main',
@@ -10,7 +12,58 @@ const build = ({
 }) => {
   const nodePlan = plan.graph[planNode];
   const type = nodePlan.type;
-  const handler = buildHandler(plan.handlers[planNode]);
+  const handlerPlan = plan.handlers[planNode];
+
+  if (type === 'dynamicComposite') {
+    /*
+    This part comes first, because it doesn't need to build anything 
+    (like the handler function built below).
+    It actually modifies the plan (handlers, graph) based on the context.
+    Then it calls itself again, but with a plan containing a regular composite
+    and not a dynamicComposite.
+
+    So it transforms the plan from 
+      'A': {
+        type: 'dynamicComposite',
+        nodeTemplate: 'AGraph'
+      },
+    to
+      'A': {
+        type: 'composite',
+        nodes: {
+          'dynamic element A': 'AGraph',
+          'dynamic element B': 'AGraph'
+        }
+      },
+    */
+    const dynamicNodes = handlerPlan.nodes({ctx});
+    const expandedPlan = {
+      graph: {
+        ...plan.graph,
+        [planNode]: {
+          type: 'composite',
+          nodes: dynamicNodes.reduce((soFar, node) => ({
+            ...soFar,
+            [node]: nodePlan.nodeTemplate
+          }), {})
+        }
+      },
+      handlers: {
+        ...plan.handlers,
+        [planNode]: omit(handlerPlan, ['nodes'])
+      }
+    };
+    return build({
+      plan: expandedPlan, 
+      ctx,
+      buildHandler,
+      planNode,
+      builtNode,
+      parent
+    });
+  }
+
+  const handler = buildHandler(handlerPlan);
 
   if (type === 'leaf') {
     return {
@@ -31,6 +84,7 @@ const build = ({
       const builtName = glueNodeName(builtNode, planName);
       const built = build({
         plan, 
+        ctx,
         buildHandler,
         planNode: nodePlan.nodes[planName],
         builtNode: builtName,
@@ -64,6 +118,7 @@ const build = ({
       const builtName = glueNodeName(builtNode, planName);
       const built = build({
         plan, 
+        ctx,
         buildHandler,
         planNode: nodePlan.nodes[planName],
         builtNode: builtName,
