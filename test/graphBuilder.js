@@ -13,105 +13,110 @@ describe('graph builder', () => {
       }
     };
 
-    // const localNodeSliceFns = {
-    //   in: ({src, localNodeName}) => src[localNodeName],
-    //   out: ({src, localNodeName, returned}) => ({...src, [localNodeName]: returned})
-    // };
+    const localNodeSliceFns = {
+      in: ({src, localNodeName}) => src[localNodeName],
+      out: ({src, localNodeName, returned}) => ({...src, [localNodeName]: returned})
+    };
+    const transparentSliceFns = {
+      in: ({src}) => src,
+      out: ({returned}) => returned
+    };
 
     const ctxMapFns = {
       'main': localNodeSliceFns,
-      'main:A': localNodeSliceFns,
+      'A': localNodeSliceFns,
+      'AGraph': transparentSliceFns,
+      'ASubA': transparentSliceFns,
+      'B': transparentSliceFns,
+      'BSub': transparentSliceFns,
+      'BSubA': transparentSliceFns,
+      'BSubB': transparentSliceFns,
     };
 
-    const AHandler = {
-      dynamicParentMethod: () => {}
+    const emptyNodes = () => [];
+    const nodesFromElems = ({ctx}) => ctx.elems;
+
+    const nodes = {
+      'main': emptyNodes,
+      'A': nodesFromElems,
+      'AGraph': emptyNodes,
+      'ASubA': emptyNodes,
+      'B': emptyNodes,
+      'BSub': emptyNodes,
+      'BSubA': emptyNodes,
+      'BSubB': emptyNodes,
     };
 
-    const ASubAHandler = {
-      aMethod: () => {}
+    const handlers = {
+      'main': () => {},
+      'A': () => {},
+      'AGraph': () => {},
+      'ASubA': () => {},
+      'B': () => {},
+      'BSub': () => {},
+      'BSubA': () => {},
+      'BSubB': () => {},
     };
 
-    const bHandler = {
-      afterAMethod: () => {}
-    };
-
-    const bSubChildHandler = {
-      anotherLeafMethod: () => {}
-    };
-
-    const plan = {
-      graph: {
-        'main': {
-          type: 'graph',
-          nodes: {'A': 'A', 'B': 'B'},
-          arrows: {
-            'A': {
-              x: {target: 'B', entryPoint: 'p'}
-            }
-          },
-          entryPoints: {
-            start: {target: 'A', entryPoint: 'start'}
+    const graphPlan = {
+      'main': {
+        type: 'graph',
+        nodes: {'A': 'A', 'B': 'B'},
+        arrows: {
+          'A': {
+            x: {target: 'B', entryPoint: 'p'}
           }
         },
-
-        'A': {
-          type: 'dynamicComposite',
-          nodeTemplate: 'AGraph'
-        },
-
-        'AGraph': {
-          type: 'graph',
-          nodes: {A: 'ASubA'},
-          arrows: {
-            A: {x: {target: 'A', entryPoint: 'start'}},
-          },
-          entryPoints: {
-            start: {target: 'A', entryPoint: 'start'}
-          }
-        },
-
-        'ASubA': {type: 'leaf'},
-
-        'B': {
-          type: 'composite',
-          nodes: {
-            'A': 'BSub',
-            'B': 'BSub'
-          }
-        },
-
-        'BSub': {
-          type: 'graph',
-          nodes: {
-            A: 'BSubA',
-            B: 'BSubB'
-          },
-          arrows: {
-            A: {
-              x: {target: 'B', entryPoint: 'start'}
-            }
-          }, 
-          entryPoints: {
-            start: {target: 'A', entryPoint: 'start'},
-            p: {target: 'B', entryPoint: 'start'}
-          }
-        },
-
-        'BSubA': {type: 'leaf'},
-        'BSubB': {type: 'leaf'}
+        entryPoints: {
+          start: {target: 'A', entryPoint: 'start'}
+        }
       },
 
-      handlers: {
-        'A': {
-          ...AHandler,
-          nodes: ({ctx}) => ctx.elems
-        },
-        'ASubA': ASubAHandler,
-        'B': bHandler,
-        'BSubA': bSubChildHandler,
-        'BSubB': bSubChildHandler
+      'A': {
+        type: 'dynamicComposite',
+        nodeTemplate: 'AGraph'
       },
 
+      'AGraph': {
+        type: 'graph',
+        nodes: {A: 'ASubA'},
+        arrows: {
+          A: {x: {target: 'A', entryPoint: 'start'}},
+        },
+        entryPoints: {
+          start: {target: 'A', entryPoint: 'start'}
+        }
+      },
+
+      'ASubA': {type: 'leaf'},
+
+      'B': {
+        type: 'composite',
+        nodes: {
+          'A': 'BSub',
+          'B': 'BSub'
+        }
+      },
+
+      'BSub': {
+        type: 'graph',
+        nodes: {
+          A: 'BSubA',
+          B: 'BSubB'
+        },
+        arrows: {
+          A: {
+            x: {target: 'B', entryPoint: 'start'}
+          }
+        }, 
+        entryPoints: {
+          start: {target: 'A', entryPoint: 'start'},
+          p: {target: 'B', entryPoint: 'start'}
+        }
+      },
+
+      'BSubA': {type: 'leaf'},
+      'BSubB': {type: 'leaf'}
     };
 
     const expected = {
@@ -217,24 +222,31 @@ describe('graph builder', () => {
       },
 
       handlers: {
-        'main': {built: undefined},
-        'main:A': {built: AHandler},
-        'main:A:elemA': {built: undefined},
-        'main:A:elemA:A': {built: ASubAHandler},
-        'main:A:elemB': {built: undefined},
-        'main:A:elemB:A': {built: ASubAHandler},
-        'main:B': {built: bHandler},
-        'main:B:A': {built: undefined},
-        'main:B:B': {built: undefined},
-        'main:B:B:A': {built: bSubChildHandler},
-        'main:B:B:B': {built: bSubChildHandler},
-        'main:B:A:A': {built: bSubChildHandler},
-        'main:B:A:B': {built: bSubChildHandler}
+        'main': handlers.main,
+        'main:A': handlers.A,
+        'main:A:elemA': handlers.AGraph,
+        'main:A:elemA:A': handlers.ASubA,
+        'main:A:elemB': handlers.AGraph,
+        'main:A:elemB:A': handlers.ASubA,
+        'main:B': handlers.B,
+        'main:B:A': handlers.BSub,
+        'main:B:B': handlers.BSub,
+        'main:B:B:A': handlers.BSubA,
+        'main:B:B:B': handlers.BSubB,
+        'main:B:A:A': handlers.BSubA,
+        'main:B:A:B': handlers.BSubB,
       }
 
     };
 
-    const built = build({plan, ctx, buildHandler});
+    const built = build({
+      plan: graphPlan,
+      ctxMapFns,
+      nodes,
+      handlers,
+      ctx,
+    });
+
     assert.deepEqual(built, expected);
   });
 

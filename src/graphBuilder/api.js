@@ -2,68 +2,28 @@ import {glueNodeName} from './nodeNames';
 import omit from 'lodash/omit';
 import transparentHandler from './../handlers/transparent';
 
+/*
+plan: graphPlan,
+ctxMapFns,
+nodes,
+handlers,
+ctx,
+*/
+
 const build = ({
   plan, 
-  ctx,
-  buildHandler,
+  ctxMapFns,
+  nodes,
+  handlers,
+  ctx: rawCtx,
   planNode = 'main',
   builtNode = 'main',
   parent = null
 }) => {
-  const nodePlan = plan.graph[planNode];
+  const ctx = ctxMapFns[planNode].in({src: rawCtx, localNodeName: planNode});
+  const nodePlan = plan[planNode];
   const type = nodePlan.type;
-  const handlerPlan = plan.handlers[planNode];
-
-  if (type === 'dynamicComposite') {
-    /*
-    This part comes first, because it doesn't need to build anything 
-    (like the handler function built below).
-    It actually modifies the plan (handlers, graph) based on the context.
-    Then it calls itself again, but with a plan containing a regular composite
-    and not a dynamicComposite.
-
-    So it transforms the plan from 
-      'A': {
-        type: 'dynamicComposite',
-        nodeTemplate: 'AGraph'
-      },
-    to
-      'A': {
-        type: 'composite',
-        nodes: {
-          'dynamic element A': 'AGraph',
-          'dynamic element B': 'AGraph'
-        }
-      },
-    */
-    const dynamicNodes = handlerPlan.nodes({ctx});
-    const expandedPlan = {
-      graph: {
-        ...plan.graph,
-        [planNode]: {
-          type: 'composite',
-          nodes: dynamicNodes.reduce((soFar, node) => ({
-            ...soFar,
-            [node]: nodePlan.nodeTemplate
-          }), {})
-        }
-      },
-      handlers: {
-        ...plan.handlers,
-        [planNode]: omit(handlerPlan, ['nodes'])
-      }
-    };
-    return build({
-      plan: expandedPlan, 
-      ctx,
-      buildHandler,
-      planNode,
-      builtNode,
-      parent
-    });
-  }
-
-  const handler = buildHandler(handlerPlan);
+  const handler = handlers[planNode];
 
   if (type === 'leaf') {
     return {
@@ -79,14 +39,20 @@ const build = ({
     };
   }
 
-  if (type === 'composite') {
-    const childRes = Object.keys(nodePlan.nodes).reduce((soFar, planName) => {
+  //TODO: this is ugly. It should be replaced with a function without IFs.
+  if (['composite', 'dynamicComposite'].includes(type)) {
+    const regularComposite = type === 'composite';
+    const childNames = regularComposite ? Object.keys(nodePlan.nodes) : nodes[planNode]({ctx})
+    const childRes = childNames.reduce((soFar, planName) => {
       const builtName = glueNodeName(builtNode, planName);
+      const childPlanNode = regularComposite  ? nodePlan.nodes[planName] : nodePlan.nodeTemplate;
       const built = build({
         plan, 
+        ctxMapFns,
+        nodes,
+        handlers,
         ctx,
-        buildHandler,
-        planNode: nodePlan.nodes[planName],
+        planNode:  childPlanNode,
         builtNode: builtName,
         parent: builtNode
       });
@@ -118,8 +84,10 @@ const build = ({
       const builtName = glueNodeName(builtNode, planName);
       const built = build({
         plan, 
+        ctxMapFns,
+        nodes,
+        handlers,
         ctx,
-        buildHandler,
         planNode: nodePlan.nodes[planName],
         builtNode: builtName,
         parent: builtNode
