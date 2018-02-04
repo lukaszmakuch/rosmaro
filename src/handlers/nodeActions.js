@@ -1,5 +1,3 @@
-import {transparentCtxMapFns} from './utils';
-
 const actionNames = ['onEntry', 'afterLeft'];
 
 export default plan => ({
@@ -23,7 +21,7 @@ export default plan => ({
       }
     },
 
-    ctxMapFn: transparentCtxMapFns
+    ctxMapFn: next.ctxMapFn
 
   })
 });

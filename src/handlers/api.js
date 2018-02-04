@@ -9,7 +9,7 @@ import ctxSlice from './ctxSlice';
 import reduce from "lodash/reduce";
 
 const stages = [
-  // defaultParams,
+  defaultParams,
 
   // It is very important that ctxSlice is applied before initCtx.
   // Otherwise it wouldn't be possible to specify the initial value of
@@ -25,7 +25,7 @@ const stages = [
 
 const transparent = {
   handler: transparentHandler,
-  ctxMapFns: {
+  ctxMapFn: {
     in: ({src}) => src,
     out: ({returned}) => returned
   }

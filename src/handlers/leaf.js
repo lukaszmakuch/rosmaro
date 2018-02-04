@@ -46,7 +46,7 @@ export default plan => ({
       );
     },
 
-    ctxMapFn: transparentCtxMapFns
+    ctxMapFn: next.ctxMapFn
 
   })
 });

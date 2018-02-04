@@ -1,5 +1,3 @@
-import {transparentCtxMapFns} from './utils';
-
 export default plan => ({
   remainingPlan: plan,
   make: (next) => ({
@@ -30,7 +28,7 @@ export default plan => ({
       }
     },
 
-    ctxMapFn: transparentCtxMapFns,
+    ctxMapFn: next.ctxMapFn
 
   })
 });
