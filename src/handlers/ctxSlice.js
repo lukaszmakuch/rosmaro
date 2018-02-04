@@ -1,5 +1,5 @@
 import omit from 'lodash/omit';
-import {callbackize} from './../utils';
+import {combineCtxMapFns} from './utils';
 
 export default plan => {
   const ctxSlicePath = plan.ctxSlice;
@@ -9,7 +9,10 @@ export default plan => {
     // There's no need of doing anything. This stage should be transparent.
     return {
       remainingPlan: plan,
-      make: (next) => (opts) => next(opts)
+      make: (next) => ({
+        handler: (opts) => next.handler(opts),
+        ctxMapFn: next.ctxMapFn
+      })
     };
   }
 
@@ -19,20 +22,26 @@ export default plan => {
 
   return {
     remainingPlan,
-    make: (next) => (opts) => {
-      const initialCtxSlice = opts.ctx[ctxSlicePath] || {};
-      const optsWithSlice = {...opts, ctx: initialCtxSlice};
+    make: (next) => ({
 
-      return callbackize(() => next(optsWithSlice), callRes => {
-        const extendedCtx = {
-          ...opts.ctx,
-          [ctxSlicePath]: callRes.ctx
-        };
-        return {
-          ...callRes,
-          ctx: extendedCtx
-        };
-      });
-    }
+      handler: (opts) => next.handler(opts),
+
+      ctxMapFn: combineCtxMapFns({
+        first: {
+          in: ({src, localNodeName}) => {
+            const ctxSlice = src[ctxSlicePath] || {};
+            return ctxSlice;
+          },
+          out: ({src, returned, localNodeName}) => {
+            return {
+              ...src,
+              [ctxSlicePath]: returned
+            }
+          }
+        }, 
+        then: next.ctxMapFn
+      })
+
+    })
   };
 };

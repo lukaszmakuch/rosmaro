@@ -17,17 +17,23 @@ export default plan => {
 
   return {
     remainingPlan: remainingPlan,
-    make: (next) => (opts) => {
-      return callbackize(() => next(opts), callRes => {
-        const alterFnName = 'after' + opts.method[0].toUpperCase() + opts.method.slice(1);
-        const alterFn = alterFns[alterFnName] || (({res}) => res);
-        const alteredRes = alterFn({res: callRes.res});
-        return {
-          ...callRes,
-          res: alteredRes
-        };
-      });
-    }
+    make: (next) => ({
+
+      handler: (opts) => {
+        return callbackize(() => next.handler(opts), callRes => {
+          const alterFnName = 'after' + opts.method[0].toUpperCase() + opts.method.slice(1);
+          const alterFn = alterFns[alterFnName] || (({res}) => res);
+          const alteredRes = alterFn({res: callRes.res});
+          return {
+            ...callRes,
+            res: alteredRes
+          };
+        });
+      },
+
+      ctxMapFn: next.ctxMapFn
+
+    })
   };
 
 };

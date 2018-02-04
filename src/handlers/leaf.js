@@ -1,4 +1,5 @@
 import {callbackize} from './../utils';
+import {transparentCtxMapFns} from './utils';
 
 const extendRes = (res, ctx) => {
   if (!res) return {res: undefined, arrow: null, ctx};
@@ -22,23 +23,30 @@ const extendRes = (res, ctx) => {
 
 export default plan => ({
   remainingPlan: {},
-  make: (next) => ({method, ctx, params, model, child, node}) => {
-    if (!plan[method]) return next({method, ctx, params, model, child, node});
-    return callbackize(
-      () => plan[method]({
-        ctx,
-        ...params[0],
-        thisModel: model,
-        thisNode: node
-      }),
-      rawRes => {
-        const callRes = extendRes(rawRes, ctx);
-        return {
-          res: callRes.res,
-          ctx: callRes.ctx,
-          arrows: [[[null, callRes.arrow]]]
-        };
-      }
-    );
-  }
+  make: (next) => ({
+
+    handler: ({method, ctx, params, model, child, node}) => {
+      if (!plan[method]) return next.handler({method, ctx, params, model, child, node});
+
+      return callbackize(
+        () => plan[method]({
+          ctx,
+          ...params[0],
+          thisModel: model,
+          thisNode: node
+        }),
+        rawRes => {
+          const callRes = extendRes(rawRes, ctx);
+          return {
+            res: callRes.res,
+            ctx: callRes.ctx,
+            arrows: [[[null, callRes.arrow]]]
+          };
+        }
+      );
+    },
+
+    ctxMapFn: transparentCtxMapFns
+
+  })
 });

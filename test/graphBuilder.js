@@ -8,7 +8,19 @@ describe('graph builder', () => {
   it('builds a graph with handlers', () => {
 
     const ctx = {
-      elems: ['elemA', 'elemB']
+      'main': {
+        'A': {elems: ['elemA', 'elemB']}
+      }
+    };
+
+    const localNodeSliceFns = {
+      in: ({src, localNodeName}) => src[localNodeName],
+      out: ({src, localNodeName, returned}) => ({...src, [localNodeName]: returned})
+    };
+
+    const ctxMapFns = {
+      'main': localNodeSliceFns,
+      'main:A': localNodeSliceFns,
     };
 
     const AHandler = {
