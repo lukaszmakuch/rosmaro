@@ -25,6 +25,8 @@ export default plan => ({
   remainingPlan: {},
   make: (next) => ({
 
+    ...next,
+
     handler: ({method, ctx, params, model, child, node}) => {
       if (!plan[method]) return next.handler({method, ctx, params, model, child, node});
 
@@ -45,8 +47,6 @@ export default plan => ({
         }
       );
     },
-
-    ctxMapFn: next.ctxMapFn
 
   })
 });

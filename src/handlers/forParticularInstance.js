@@ -2,6 +2,8 @@ export default plan => ({
   remainingPlan: plan,
   make: (next) => ({
 
+    ...next,
+
     handler: ({method, ctx, params, model, child, node}) => {
       if (method === 'forParticularInstance') {
         // that's a call meant to be received by a particular instance
@@ -27,8 +29,6 @@ export default plan => ({
         return next.handler({method, ctx, params, model, child, node});
       }
     },
-
-    ctxMapFn: next.ctxMapFn
 
   })
 });

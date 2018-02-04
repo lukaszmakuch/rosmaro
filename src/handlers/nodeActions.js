@@ -4,6 +4,8 @@ export default plan => ({
   remainingPlan: plan,
   make: (next) => ({
 
+    ...next,
+
     handler: ({method, ctx, params, model, child, node}) => {
       if (actionNames.includes(method)) {
         // that's a node action call
@@ -20,8 +22,6 @@ export default plan => ({
         return next.handler({method, ctx, params, model, child, node});
       }
     },
-
-    ctxMapFn: next.ctxMapFn
 
   })
 });

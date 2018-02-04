@@ -4,6 +4,8 @@ export default plan => ({
   remainingPlan: plan,
   make: (next) => ({
 
+    ...next,
+
     handler: (opts) => {
       const p = opts.params || [];
       const paramsWithDefaults = [
@@ -15,8 +17,6 @@ export default plan => ({
         params: paramsWithDefaults
       })
     },
-
-    ctxMapFn: next.ctxMapFn
 
   })
 });

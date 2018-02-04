@@ -24,6 +24,34 @@ const assertTransparentCtxMapFn = (mapFn) => {
 
 describe('handlers', () => {
 
+  describe('dynamic nodes', () => {
+
+    it('returns an empty list by default', () => {
+      const {nodes} = makeHandlers({
+        dynamic: {
+        }
+      });
+
+      assert.deepEqual([], nodes.dynamic());
+    });
+
+    it('returns the provided function if any', () => {
+      const nodesFn = ({ctx}) => ctx.elems;
+
+      const {nodes} = makeHandlers({
+        dynamic: {
+          nodes: nodesFn
+        }
+      });
+
+      const elems = ['a', 'b', 'c'];
+      const ctx = {elems};
+
+      assert.deepEqual(elems, nodes.dynamic({ctx}));
+    });
+
+  });
+
   describe('ctxSlice', () => {
 
     it('allows to use a narrow slice of the whole context', () => {

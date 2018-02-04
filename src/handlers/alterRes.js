@@ -19,6 +19,8 @@ export default plan => {
     remainingPlan: remainingPlan,
     make: (next) => ({
 
+      ...next,
+
       handler: (opts) => {
         return callbackize(() => next.handler(opts), callRes => {
           const alterFnName = 'after' + opts.method[0].toUpperCase() + opts.method.slice(1);
@@ -30,8 +32,6 @@ export default plan => {
           };
         });
       },
-
-      ctxMapFn: next.ctxMapFn
 
     })
   };

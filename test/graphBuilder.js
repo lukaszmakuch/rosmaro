@@ -13,10 +13,10 @@ describe('graph builder', () => {
       }
     };
 
-    const localNodeSliceFns = {
-      in: ({src, localNodeName}) => src[localNodeName],
-      out: ({src, localNodeName, returned}) => ({...src, [localNodeName]: returned})
-    };
+    // const localNodeSliceFns = {
+    //   in: ({src, localNodeName}) => src[localNodeName],
+    //   out: ({src, localNodeName, returned}) => ({...src, [localNodeName]: returned})
+    // };
 
     const ctxMapFns = {
       'main': localNodeSliceFns,

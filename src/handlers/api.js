@@ -5,11 +5,13 @@ import nodeActions from './nodeActions';
 import leaf from './leaf';
 import transparentHandler from './transparent';
 import initCtx from './initCtx';
+import dynamicNodes from './dynamicNodes';
 import ctxSlice from './ctxSlice';
 import reduce from "lodash/reduce";
 
 const stages = [
   defaultParams,
+  dynamicNodes,
 
   // It is very important that ctxSlice is applied before initCtx.
   // Otherwise it wouldn't be possible to specify the initial value of
@@ -28,13 +30,15 @@ const transparent = {
   ctxMapFn: {
     in: ({src}) => src,
     out: ({returned}) => returned
-  }
+  },
+  nodes: ({ctx}) => ([])
 };
 
 /*
 res like {
   handler: fn,
   ctxMapFn: in: fn, out: fn},
+  nodes: fn
 }
 */
 const buildHandler = (handlerPlan = {}, stageIndex = 0) => {
@@ -56,11 +60,15 @@ res like {
   ctxMapFns: {
     node: {in: fn, out: fn},
     anotherNode: {in: fn, out: fn},
+  },
+  nodes: {
+    node: fn,
+    anotherNode: fn
   }
 }
 */
-const buildAllHandlers = handlersPlan => reduce(handlersPlan, ({handlers, ctxMapFns}, handlerPlan, node) => {
-  const {handler, ctxMapFn} = buildHandler(handlerPlan);
+const buildAllHandlers = handlersPlan => reduce(handlersPlan, ({handlers, ctxMapFns, nodes}, handlerPlan, node) => {
+  const {handler, ctxMapFn, nodes: newNodes} = buildHandler(handlerPlan);
   return {
     handlers: {
       ...handlers,
@@ -69,8 +77,12 @@ const buildAllHandlers = handlersPlan => reduce(handlersPlan, ({handlers, ctxMap
     ctxMapFns: {
       ...ctxMapFns,
       [node]: ctxMapFn
+    },
+    nodes: {
+      ...nodes,
+      [node]: newNodes
     }
   };
-}, {handlers: {}, ctxMapFns: {}});
+}, {handlers: {}, ctxMapFns: {}, nodes: {}});
 
 export default buildAllHandlers;

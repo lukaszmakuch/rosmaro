@@ -24,7 +24,7 @@ export default plan => {
     remainingPlan,
     make: (next) => ({
 
-      handler: (opts) => next.handler(opts),
+      ...next,
 
       ctxMapFn: combineCtxMapFns({
         first: {
