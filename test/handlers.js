@@ -369,6 +369,8 @@ describe('handlers', () => {
         }
       });
 
+      assertTransparentCtxMapFn(ctxMapFns.node);
+
       const matchingCallRes = handlers.node({
         method: 'forParticularInstance',
         node: {instanceID: 'abc', ID: 'main:A:B'},
