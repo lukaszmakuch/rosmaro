@@ -724,20 +724,20 @@ describe("dispatcher", () => {
         in: ({src}) => ({forMain: src.raw}),
         out: ({src, returned}) => ({raw: returned.forMain})
       },
-      // slice {forMain: part: x} => {transformed: x}
+      // slice {forMain: part: x} => {'level2': x}
       'main:level1': {
-        in: ({src}) => ({transformed: src.forMain.part}),
+        in: ({src}) => ({'level2': src.forMain.part}),
         out: ({src, returned}) => ({
           ...src, 
           forMain: {
             ...src.forMain,
-            part: returned.transformed
+            part: returned['level2']
           }
         })},
-      // slice {transformed: x} => x
+      // slice {'level2': x} => x
       'main:level1:level2': {
-        in: ({src}) => src.transformed,
-        out: ({src, returned}) => ({...src, transformed: returned})
+        in: ({src, localNodeName}) => src[localNodeName],
+        out: ({src, localNodeName, returned}) => ({...src, [localNodeName]: returned})
       }
     };
     const callRes = dispatch({

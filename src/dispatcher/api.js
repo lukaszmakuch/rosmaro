@@ -21,6 +21,12 @@ const dummyChildFn = ({ctx}) => ({
   res: undefined
 });
 
+const extractLocalNodeName = fullNodeName => {
+  const lastSeparator = fullNodeName.lastIndexOf(':');
+  if (lastSeparator === -1) return fullNodeName;
+  return fullNodeName.substr(lastSeparator + 1);
+};
+
 const dispatch = ({
   graph, 
   node = 'main',
@@ -33,11 +39,19 @@ const dispatch = ({
   model,
   ctxMapFns
 }) => {
+  const localNodeName = extractLocalNodeName(node);
   const nodeCtxMapFns = ctxMapFns[node];
-  const ctx = nodeCtxMapFns.in({src: rawCtx});
+  const ctx = nodeCtxMapFns.in({
+    src: rawCtx,
+    localNodeName
+  });
   const mapReturnedCtx = callRes => ({
     ...callRes,
-    ctx: nodeCtxMapFns.out({src: rawCtx, returned: callRes.ctx})
+    ctx: nodeCtxMapFns.out({
+      src: rawCtx, 
+      returned: callRes.ctx,
+      localNodeName
+    })
   });
   const handler = opts => callbackize(
     () => (handlers[node] || defaultParentHandler)(opts),
