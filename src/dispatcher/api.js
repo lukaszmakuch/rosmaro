@@ -26,13 +26,23 @@ const dispatch = ({
   node = 'main',
   FSMState, 
   handlers, 
-  ctx, 
+  ctx: rawCtx, 
   method,
   instanceID,
   params,
-  model
+  model,
+  ctxMapFns
 }) => {
-  const handler = handlers[node] || defaultParentHandler;
+  const nodeCtxMapFns = ctxMapFns[node];
+  const ctx = nodeCtxMapFns.in({src: rawCtx});
+  const mapReturnedCtx = callRes => ({
+    ...callRes,
+    ctx: nodeCtxMapFns.out({src: rawCtx, returned: callRes.ctx})
+  });
+  const handler = opts => callbackize(
+    () => (handlers[node] || defaultParentHandler)(opts),
+    mapReturnedCtx
+  );
   const nodeType = graph[node].type;
   const nodeData = {ID: node, instanceID: instanceID[node]};
   const callDispatch = ({node, ctx, method, params}) => dispatch({
@@ -44,7 +54,8 @@ const dispatch = ({
     instanceID,
     method,
     params,
-    model
+    model,
+    ctxMapFns
   });
 
   if (nodeType === 'leaf') {

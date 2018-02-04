@@ -602,5 +602,53 @@ describe('rosmaro', () => {
     assert.equal(undefined, model.nonExistentMethod());
   });
 
+  it('supports dynamic composites', () => {
+
+    const graph = {
+      "main": {
+        "type": "graph",
+        "nodes": {
+          "Dynamic": "Dynamic"
+        },
+        "arrows": {
+          "Dynamic": {
+            "self": {
+              "target": "Dynamic",
+              "entryPoint": "start"
+            }
+          }
+        },
+        "entryPoints": {
+          "start": {
+            "target": "Dynamic",
+            "entryPoint": "start"
+          }
+        }
+      },
+      "Dynamic": {
+        "type": "dynamicComposite",
+        "nodeTemplate": "Template"
+      },
+      "Template": {
+        "type": "graph",
+        "nodes": {
+          "Leaf": "Leaf"
+        },
+        "arrows": {},
+        "entryPoints": {}
+      },
+      "Leaf": {
+        "type": "leaf"
+      }
+    };
+
+    const handler = {
+      'Dynamic': {
+        nodes: 
+      }
+    }
+
+  });
+
 
 });

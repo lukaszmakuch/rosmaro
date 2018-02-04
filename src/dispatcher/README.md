@@ -1,7 +1,7 @@
 # Dispatcher
 
 Actually calls method handlers. It may cause side effects and be asynchronous. 
-The returned arrows are consumed by the FSM module to calculate the next FSM state.
+The returned arrows are consumed by the FSM module in order to obtain the next FSM state.
 
 ```
 dispatch({

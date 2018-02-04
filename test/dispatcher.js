@@ -2,6 +2,11 @@ import assert from 'assert';
 import dispatch from './../src/dispatcher/api';
 import {mapArrows} from './../src/utils';
 
+const transparentCtxMapFns = {
+  in: ({src}) => src, 
+  out: ({returned}) => returned
+}; 
+
 describe("dispatcher", () => {
 
   it('passes node IDs and a model reference to handlers', () => {
@@ -67,7 +72,12 @@ describe("dispatcher", () => {
       ctx: {},
       method: "",
       params: [],
-      model
+      model,
+      ctxMapFns: {
+        'main': transparentCtxMapFns,
+        'main:A': transparentCtxMapFns,
+        'main:A:A': transparentCtxMapFns,
+      }
     });
 
     assert.equal(mainID, 'main');
@@ -115,7 +125,10 @@ describe("dispatcher", () => {
           ctx: {},
           instanceID: {},
           method: "",
-          params: []
+          params: [],
+          ctxMapFns: {
+            'main': transparentCtxMapFns,
+          }
         });
       };
 
@@ -156,7 +169,11 @@ describe("dispatcher", () => {
           ctx: {},
           instanceID: {},
           method: "",
-          params: []
+          params: [],
+          ctxMapFns: {
+            'main': transparentCtxMapFns,
+            'main:A': transparentCtxMapFns,
+          }
         });
       };
 
@@ -197,7 +214,11 @@ describe("dispatcher", () => {
           ctx: {},
           instanceID: {},
           method: "",
-          params: []
+          params: [],
+          ctxMapFns: {
+            'main': transparentCtxMapFns,
+            'main:A': transparentCtxMapFns,
+          }
         });
       };
 
@@ -241,7 +262,12 @@ describe("dispatcher", () => {
           ctx: {},
           instanceID: {},
           method: "",
-          params: []
+          params: [],
+          ctxMapFns: {
+            'main': transparentCtxMapFns,
+            'main:A': transparentCtxMapFns,
+            'main:B': transparentCtxMapFns,
+          }
         });
       };
 
@@ -262,7 +288,12 @@ describe("dispatcher", () => {
           ctx: {},
           instanceID: {},
           method: "",
-          params: []
+          params: [],
+          ctxMapFns: {
+            'main': transparentCtxMapFns,
+            'main:A': transparentCtxMapFns,
+            'main:B': transparentCtxMapFns,
+          }
         });
         const finalCallRes = await callRes;
         assert.deepEqual({
@@ -302,7 +333,12 @@ describe("dispatcher", () => {
           ctx: {},
           instanceID: {},
           method: "",
-          params: []
+          params: [],
+          ctxMapFns: {
+            'main': transparentCtxMapFns,
+            'main:A': transparentCtxMapFns,
+            'main:B': transparentCtxMapFns,
+          }
         });
       };
 
@@ -404,7 +440,14 @@ describe("dispatcher", () => {
         ctx: {},
         instanceID: {},
         method: "a",
-        params: []
+        params: [],
+        ctxMapFns: {
+          'main': transparentCtxMapFns,
+          'main:target': transparentCtxMapFns,
+          'main:graph_with_leaving_a': transparentCtxMapFns,
+          'main:graph_with_leaving_a:a': transparentCtxMapFns,
+          'main:graph_with_leaving_a:b': transparentCtxMapFns,
+        }
       }));
 
     });
@@ -430,7 +473,10 @@ describe("dispatcher", () => {
         ctx: initCtx,
         instanceID: {},
         method: "",
-        params: []
+        params: [],
+        ctxMapFns: {
+          'main': transparentCtxMapFns,
+        },
       });
       const expectedCtx = {a: 2};
       assert.deepEqual(expectedCtx, ctx);
@@ -450,6 +496,15 @@ describe("dispatcher", () => {
         'main:A': 'main:A:A',
         'main:B': 'main:B:A',
       };
+      const ctxMapFns = {
+        'main': transparentCtxMapFns,
+        'main:A': transparentCtxMapFns,
+        'main:B': transparentCtxMapFns,
+        'main:A:A': transparentCtxMapFns,
+        'main:A:B': transparentCtxMapFns,
+        'main:B:A': transparentCtxMapFns,
+        'main:B:B': transparentCtxMapFns,
+      };
 
       it('allows parts to be added', () => {
         const initCtx = {a: "a", b: "b"};
@@ -468,7 +523,8 @@ describe("dispatcher", () => {
           ctx: initCtx,
           instanceID: {},
           method: "",
-          params: []
+          params: [],
+          ctxMapFns,
         });
         const expectedCtx = {a: "a", b: "b", c: "c"};
         assert.deepEqual(expectedCtx, ctx);
@@ -491,7 +547,8 @@ describe("dispatcher", () => {
           ctx: initCtx,
           instanceID: {},
           method: "",
-          params: []
+          params: [],
+          ctxMapFns,
         });
         const expectedCtx = {arr: [{elem: "b"}]};
         assert.deepEqual(expectedCtx, ctx);
@@ -514,7 +571,8 @@ describe("dispatcher", () => {
           ctx: initCtx,
           instanceID: {},
           method: "",
-          params: []
+          params: [],
+          ctxMapFns,
         });
         const expectedCtx = {a: "z", b: "x"};
         assert.deepEqual(expectedCtx, ctx);
@@ -536,7 +594,8 @@ describe("dispatcher", () => {
           ctx: {},
           instanceID: {},
           method: "",
-          params: []
+          params: [],
+          ctxMapFns,
         });
         const expectedCtx = {a: 2, b: 3};
         assert.deepEqual(expectedCtx, ctx);
@@ -560,6 +619,16 @@ describe("dispatcher", () => {
     const FSMState = {
       'main': 'main:B',
       'main:B': 'main:B:B'
+    };
+
+    const ctxMapFns = {
+      'main': transparentCtxMapFns,
+      'main:A': transparentCtxMapFns,
+      'main:B': transparentCtxMapFns,
+      'main:B:A': transparentCtxMapFns,
+      'main:B:B': transparentCtxMapFns,
+      'main:B:B:A': transparentCtxMapFns,
+      'main:B:B:B': transparentCtxMapFns,
     };
 
     const handlers = {
@@ -600,7 +669,8 @@ describe("dispatcher", () => {
       ctx,
       instanceID: {},
       method: "followArrows",
-      params: []
+      params: [],
+      ctxMapFns
     });
 
     const expectedCallRes = {
@@ -613,6 +683,88 @@ describe("dispatcher", () => {
     };
 
     assert.deepEqual(expectedCallRes, callRes);
+  });
+
+  it('maps the context using the provided functions', () => {
+    const ctx = {
+      raw: {
+        part: {
+          val: 'initial'
+        }
+      }
+    };
+    const graph = {
+      'main': {type: 'graph', nodes: ['main:level1']},
+      'main:level1': {type: 'composite', parent: 'main', nodes: ['main:level1:level2']},
+      'main:level1:level2': {type: 'leaf', parent: 'main:level1'}
+    };
+    const FSMState = {
+      'main': 'main:level1'
+    };
+    const handlers = {
+      'main': (opts) => opts.child(opts),
+      'main:level1': (opts) => {
+        const childRes = opts.child(opts);
+        return {
+          ...childRes,
+          res: childRes.res['level2']
+        };
+      },
+      'main:level1:level2': ({ctx, child}) => {
+        return {
+          res: {gotCtx: ctx},
+          ctx: {val: 'changed'},
+          arrows: [[[null, 'x']]]
+        };
+      },
+    };
+    const ctxMapFns = {
+      // simple map {raw} => {forMain}
+      'main': {
+        in: ({src}) => ({forMain: src.raw}),
+        out: ({src, returned}) => ({raw: returned.forMain})
+      },
+      // slice {forMain: part: x} => {transformed: x}
+      'main:level1': {
+        in: ({src}) => ({transformed: src.forMain.part}),
+        out: ({src, returned}) => ({
+          ...src, 
+          forMain: {
+            ...src.forMain,
+            part: returned.transformed
+          }
+        })},
+      // slice {transformed: x} => x
+      'main:level1:level2': {
+        in: ({src}) => src.transformed,
+        out: ({src, returned}) => ({...src, transformed: returned})
+      }
+    };
+    const callRes = dispatch({
+      graph,
+      FSMState,
+      handlers,
+      ctx,
+      instanceID: {},
+      method: "",
+      params: [],
+      ctxMapFns
+    });
+    assert.deepEqual({
+      arrows: [
+        [['main:level1:level2', 'x'], ['main:level1', 'x']]
+      ],
+      ctx: {
+        raw: {
+          part: {
+            val: 'changed'
+          }
+        }
+      },
+      res: {
+        gotCtx: {val: 'initial'}
+      }
+    }, callRes);
   });
 
 });
