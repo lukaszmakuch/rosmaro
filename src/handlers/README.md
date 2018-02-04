@@ -4,7 +4,7 @@ The end-user, coding the behavior of a node, uses a convenient structure with ma
 
 Example:
 ```
-const Handler = {
+const Node = {
 
   initCtx: {val: 42},
 
@@ -18,13 +18,24 @@ const Handler = {
 }
 ```
 
-The function returned by buildHandler always has the following signature:
+The structure returned by buildHandler always has the following signature:
 ```
-({method, ctx, params, model, child, node}) => ({
-  res,
-  ctx,
-  arrows: [[[null, 'some arrow']]]
-})
+{
+  handlers: {
+    Node: ({method, ctx, params, model, child, node}) => ({
+      res,
+      ctx,
+      arrows: [[[null, 'some arrow']]]
+    })
+  },
+  ctxMapFns: {
+    Node: {
+      in: ({src, localNodeName}) => ctx,
+      out: ({src, localNodeName, returned}) => ctx
+    }
+  }
+}
+
 ```
 
 This is the format used by the dispatcher module.
