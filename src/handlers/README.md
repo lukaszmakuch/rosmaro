@@ -33,6 +33,9 @@ The structure returned by buildHandler always has the following signature:
       in: ({src, localNodeName}) => ctx,
       out: ({src, localNodeName, returned}) => ctx
     }
+  },
+  nodes: {
+    Node: fn
   }
 }
 
