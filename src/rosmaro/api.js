@@ -76,18 +76,18 @@ export default ({
             (
             ) => storage.get(),
 
-            // adds basedOnHandlersPlan {handlers, ctxMapFns, nodes}
+            // adds basedOnHandlersPlan {handlers, ctxTransformFns, nodes}
             (
               readModelData
             ) => makeHandlers(handlersPlan, graphPlan),
 
-            // adds modelParts {graph, handlers, ctxMapFns}
+            // adds modelParts {graph, handlers, ctxTransformFns}
             (
               readModelData,
               basedOnHandlersPlan
             ) => buildGraph({
               plan: graphPlan,
-              //{ctxMapFns, nodes, handlers}
+              //{ctxTransformFns, nodes, handlers}
               ...basedOnHandlersPlan,
               ctx: readModelData ? readModelData.ctx : {}
             }),
@@ -117,7 +117,7 @@ export default ({
               method: method,
               params: [...arguments],
               model,
-              ctxMapFns: modelParts.ctxMapFns
+              ctxTransformFns: modelParts.ctxTransformFns
             }),
 
             // adds newFSMState
@@ -154,7 +154,7 @@ export default ({
               anyArrowFollowed
             ) => buildGraph({
               plan: graphPlan,
-              //{ctxMapFns, nodes, handlers}
+              //{ctxTransformFns, nodes, handlers}
               ...basedOnHandlersPlan,
               ctx: dispatchRes.ctx
             }),

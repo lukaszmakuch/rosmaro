@@ -2,7 +2,7 @@ import assert from 'assert';
 import dispatch from './../src/dispatcher/api';
 import {mapArrows} from './../src/utils';
 
-const transparentCtxMapFns = {
+const transparentCtxTransformFns = {
   in: ({src}) => src, 
   out: ({returned}) => returned
 }; 
@@ -73,10 +73,10 @@ describe("dispatcher", () => {
       method: "",
       params: [],
       model,
-      ctxMapFns: {
-        'main': transparentCtxMapFns,
-        'main:A': transparentCtxMapFns,
-        'main:A:A': transparentCtxMapFns,
+      ctxTransformFns: {
+        'main': transparentCtxTransformFns,
+        'main:A': transparentCtxTransformFns,
+        'main:A:A': transparentCtxTransformFns,
       }
     });
 
@@ -126,8 +126,8 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxMapFns: {
-            'main': transparentCtxMapFns,
+          ctxTransformFns: {
+            'main': transparentCtxTransformFns,
           }
         });
       };
@@ -170,9 +170,9 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxMapFns: {
-            'main': transparentCtxMapFns,
-            'main:A': transparentCtxMapFns,
+          ctxTransformFns: {
+            'main': transparentCtxTransformFns,
+            'main:A': transparentCtxTransformFns,
           }
         });
       };
@@ -215,9 +215,9 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxMapFns: {
-            'main': transparentCtxMapFns,
-            'main:A': transparentCtxMapFns,
+          ctxTransformFns: {
+            'main': transparentCtxTransformFns,
+            'main:A': transparentCtxTransformFns,
           }
         });
       };
@@ -263,10 +263,10 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxMapFns: {
-            'main': transparentCtxMapFns,
-            'main:A': transparentCtxMapFns,
-            'main:B': transparentCtxMapFns,
+          ctxTransformFns: {
+            'main': transparentCtxTransformFns,
+            'main:A': transparentCtxTransformFns,
+            'main:B': transparentCtxTransformFns,
           }
         });
       };
@@ -289,10 +289,10 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxMapFns: {
-            'main': transparentCtxMapFns,
-            'main:A': transparentCtxMapFns,
-            'main:B': transparentCtxMapFns,
+          ctxTransformFns: {
+            'main': transparentCtxTransformFns,
+            'main:A': transparentCtxTransformFns,
+            'main:B': transparentCtxTransformFns,
           }
         });
         const finalCallRes = await callRes;
@@ -334,10 +334,10 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxMapFns: {
-            'main': transparentCtxMapFns,
-            'main:A': transparentCtxMapFns,
-            'main:B': transparentCtxMapFns,
+          ctxTransformFns: {
+            'main': transparentCtxTransformFns,
+            'main:A': transparentCtxTransformFns,
+            'main:B': transparentCtxTransformFns,
           }
         });
       };
@@ -441,12 +441,12 @@ describe("dispatcher", () => {
         instanceID: {},
         method: "a",
         params: [],
-        ctxMapFns: {
-          'main': transparentCtxMapFns,
-          'main:target': transparentCtxMapFns,
-          'main:graph_with_leaving_a': transparentCtxMapFns,
-          'main:graph_with_leaving_a:a': transparentCtxMapFns,
-          'main:graph_with_leaving_a:b': transparentCtxMapFns,
+        ctxTransformFns: {
+          'main': transparentCtxTransformFns,
+          'main:target': transparentCtxTransformFns,
+          'main:graph_with_leaving_a': transparentCtxTransformFns,
+          'main:graph_with_leaving_a:a': transparentCtxTransformFns,
+          'main:graph_with_leaving_a:b': transparentCtxTransformFns,
         }
       }));
 
@@ -474,8 +474,8 @@ describe("dispatcher", () => {
         instanceID: {},
         method: "",
         params: [],
-        ctxMapFns: {
-          'main': transparentCtxMapFns,
+        ctxTransformFns: {
+          'main': transparentCtxTransformFns,
         },
       });
       const expectedCtx = {a: 2};
@@ -496,14 +496,14 @@ describe("dispatcher", () => {
         'main:A': 'main:A:A',
         'main:B': 'main:B:A',
       };
-      const ctxMapFns = {
-        'main': transparentCtxMapFns,
-        'main:A': transparentCtxMapFns,
-        'main:B': transparentCtxMapFns,
-        'main:A:A': transparentCtxMapFns,
-        'main:A:B': transparentCtxMapFns,
-        'main:B:A': transparentCtxMapFns,
-        'main:B:B': transparentCtxMapFns,
+      const ctxTransformFns = {
+        'main': transparentCtxTransformFns,
+        'main:A': transparentCtxTransformFns,
+        'main:B': transparentCtxTransformFns,
+        'main:A:A': transparentCtxTransformFns,
+        'main:A:B': transparentCtxTransformFns,
+        'main:B:A': transparentCtxTransformFns,
+        'main:B:B': transparentCtxTransformFns,
       };
 
       it('allows parts to be added', () => {
@@ -524,7 +524,7 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxMapFns,
+          ctxTransformFns,
         });
         const expectedCtx = {a: "a", b: "b", c: "c"};
         assert.deepEqual(expectedCtx, ctx);
@@ -548,7 +548,7 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxMapFns,
+          ctxTransformFns,
         });
         const expectedCtx = {arr: [{elem: "b"}]};
         assert.deepEqual(expectedCtx, ctx);
@@ -572,7 +572,7 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxMapFns,
+          ctxTransformFns,
         });
         const expectedCtx = {a: "z", b: "x"};
         assert.deepEqual(expectedCtx, ctx);
@@ -595,7 +595,7 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxMapFns,
+          ctxTransformFns,
         });
         const expectedCtx = {a: 2, b: 3};
         assert.deepEqual(expectedCtx, ctx);
@@ -621,14 +621,14 @@ describe("dispatcher", () => {
       'main:B': 'main:B:B'
     };
 
-    const ctxMapFns = {
-      'main': transparentCtxMapFns,
-      'main:A': transparentCtxMapFns,
-      'main:B': transparentCtxMapFns,
-      'main:B:A': transparentCtxMapFns,
-      'main:B:B': transparentCtxMapFns,
-      'main:B:B:A': transparentCtxMapFns,
-      'main:B:B:B': transparentCtxMapFns,
+    const ctxTransformFns = {
+      'main': transparentCtxTransformFns,
+      'main:A': transparentCtxTransformFns,
+      'main:B': transparentCtxTransformFns,
+      'main:B:A': transparentCtxTransformFns,
+      'main:B:B': transparentCtxTransformFns,
+      'main:B:B:A': transparentCtxTransformFns,
+      'main:B:B:B': transparentCtxTransformFns,
     };
 
     const handlers = {
@@ -670,7 +670,7 @@ describe("dispatcher", () => {
       instanceID: {},
       method: "followArrows",
       params: [],
-      ctxMapFns
+      ctxTransformFns
     });
 
     const expectedCallRes = {
@@ -718,7 +718,7 @@ describe("dispatcher", () => {
         };
       },
     };
-    const ctxMapFns = {
+    const ctxTransformFns = {
       // simple map {raw} => {forMain}
       'main': {
         in: ({src}) => ({forMain: src.raw}),
@@ -748,7 +748,7 @@ describe("dispatcher", () => {
       instanceID: {},
       method: "",
       params: [],
-      ctxMapFns
+      ctxTransformFns
     });
     assert.deepEqual({
       arrows: [

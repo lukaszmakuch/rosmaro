@@ -14,7 +14,7 @@ dispatch({
   instanceID,
   params,
   model,
-  ctxMapFns
+  ctxTransformFns
 }) => ({
     arrows: [
       [['main:B:B:A', 'x'], ['main:B:B', 'x'], ['main:B', 'x']],

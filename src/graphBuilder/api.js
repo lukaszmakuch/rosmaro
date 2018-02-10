@@ -4,7 +4,7 @@ import transparentHandler from './../handlers/transparent';
 
 const build = ({
   plan, 
-  ctxMapFns,
+  ctxTransformFns,
   nodes,
   handlers,
   ctx: rawCtx,
@@ -12,8 +12,8 @@ const build = ({
   builtNode = 'main',
   parent = null
 }) => {
-  const ctxMapFn = ctxMapFns[planNode];
-  const ctx = ctxMapFn.in({src: rawCtx, localNodeName: planNode});
+  const ctxTransformFn = ctxTransformFns[planNode];
+  const ctx = ctxTransformFn.in({src: rawCtx, localNodeName: planNode});
   const nodePlan = plan[planNode];
   const type = nodePlan.type;
   const handler = handlers[planNode];
@@ -29,8 +29,8 @@ const build = ({
       handlers: {
         [builtNode]: handler
       },
-      ctxMapFns: {
-        [builtNode]: ctxMapFn
+      ctxTransformFns: {
+        [builtNode]: ctxTransformFn
       }
     };
   }
@@ -44,7 +44,7 @@ const build = ({
       const childPlanNode = regularComposite  ? nodePlan.nodes[planName] : nodePlan.nodeTemplate;
       const built = build({
         plan, 
-        ctxMapFns,
+        ctxTransformFns,
         nodes,
         handlers,
         ctx,
@@ -56,9 +56,9 @@ const build = ({
         nodes: [...soFar.nodes, builtName],
         graph: {...soFar.graph, ...built.graph},
         handlers: {...soFar.handlers, ...built.handlers},
-        ctxMapFns: {...soFar.ctxMapFns, ...built.ctxMapFns}
+        ctxTransformFns: {...soFar.ctxTransformFns, ...built.ctxTransformFns}
       };
-    }, {nodes: [], graph: {}, handlers: {}, ctxMapFns: {}});
+    }, {nodes: [], graph: {}, handlers: {}, ctxTransformFns: {}});
 
     return {
       graph: {
@@ -73,9 +73,9 @@ const build = ({
         [builtNode]: handler,
         ...childRes.handlers
       },
-      ctxMapFns: {
-        [builtNode]: ctxMapFn,
-        ...childRes.ctxMapFns
+      ctxTransformFns: {
+        [builtNode]: ctxTransformFn,
+        ...childRes.ctxTransformFns
       },
     };
   }
@@ -85,7 +85,7 @@ const build = ({
       const builtName = glueNodeName(builtNode, planName);
       const built = build({
         plan, 
-        ctxMapFns,
+        ctxTransformFns,
         nodes,
         handlers,
         ctx,
@@ -97,9 +97,9 @@ const build = ({
         nodes: [...soFar.nodes, builtName],
         graph: {...soFar.graph, ...built.graph},
         handlers: {...soFar.handlers, ...built.handlers},
-        ctxMapFns: {...soFar.ctxMapFns, ...built.ctxMapFns},
+        ctxTransformFns: {...soFar.ctxTransformFns, ...built.ctxTransformFns},
       };
-    }, {nodes: [], graph: {}, handlers: {}, ctxMapFns: {}});
+    }, {nodes: [], graph: {}, handlers: {}, ctxTransformFns: {}});
 
     const emptyArrows = childRes.nodes.reduce((soFar, node) => ({
       ...soFar,
@@ -148,9 +148,9 @@ const build = ({
         [builtNode]: handler,
         ...childRes.handlers
       },
-      ctxMapFns: {
-        [builtNode]: ctxMapFn,
-        ...childRes.ctxMapFns
+      ctxTransformFns: {
+        [builtNode]: ctxTransformFn,
+        ...childRes.ctxTransformFns
       },
     };
   }

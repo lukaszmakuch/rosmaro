@@ -22,7 +22,7 @@ describe('graph builder', () => {
       out: ({returned}) => returned
     };
 
-    const ctxMapFns = {
+    const ctxTransformFns = {
       'main': localNodeSliceFns,
       'A': localNodeSliceFns,
       'AGraph': transparentSliceFns,
@@ -237,27 +237,27 @@ describe('graph builder', () => {
         'main:B:A:B': handlers.BSubB,
       },
 
-      ctxMapFns: {
-        'main': ctxMapFns.main,
-        'main:A': ctxMapFns.A,
-        'main:A:elemA': ctxMapFns.AGraph,
-        'main:A:elemA:A': ctxMapFns.ASubA,
-        'main:A:elemB': ctxMapFns.AGraph,
-        'main:A:elemB:A': ctxMapFns.ASubA,
-        'main:B': ctxMapFns.B,
-        'main:B:A': ctxMapFns.BSub,
-        'main:B:B': ctxMapFns.BSub,
-        'main:B:B:A': ctxMapFns.BSubA,
-        'main:B:B:B': ctxMapFns.BSubB,
-        'main:B:A:A': ctxMapFns.BSubA,
-        'main:B:A:B': ctxMapFns.BSubB,
+      ctxTransformFns: {
+        'main': ctxTransformFns.main,
+        'main:A': ctxTransformFns.A,
+        'main:A:elemA': ctxTransformFns.AGraph,
+        'main:A:elemA:A': ctxTransformFns.ASubA,
+        'main:A:elemB': ctxTransformFns.AGraph,
+        'main:A:elemB:A': ctxTransformFns.ASubA,
+        'main:B': ctxTransformFns.B,
+        'main:B:A': ctxTransformFns.BSub,
+        'main:B:B': ctxTransformFns.BSub,
+        'main:B:B:A': ctxTransformFns.BSubA,
+        'main:B:B:B': ctxTransformFns.BSubB,
+        'main:B:A:A': ctxTransformFns.BSubA,
+        'main:B:A:B': ctxTransformFns.BSubB,
       }
 
     };
 
     const built = build({
       plan: graphPlan,
-      ctxMapFns,
+      ctxTransformFns,
       nodes,
       handlers,
       ctx,

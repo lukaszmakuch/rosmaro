@@ -4,7 +4,7 @@ import invert from 'lodash/invert';
 
 const finalChild = ({ctx}) => ({arrows: [[[null, null]]], ctx, res: undefined});
 
-const assertTransparentCtxMapFn = (mapFn) => {
+const assertTransparentCtxTransformFn = (mapFn) => {
   const ctx = {a: 123, b: 456};
   assert.deepEqual(
     ctx,
@@ -28,9 +28,9 @@ const mockGraph = nodes => invert(nodes);
 
 describe('handlers', () => {
 
-  it('always provides a complete list of ctxMapFns', () => {
-    const {ctxMapFns} = makeHandlers({}, mockGraph(['A']));
-    assertTransparentCtxMapFn(ctxMapFns.A);
+  it('always provides a complete list of ctxTransformFns', () => {
+    const {ctxTransformFns} = makeHandlers({}, mockGraph(['A']));
+    assertTransparentCtxTransformFn(ctxTransformFns.A);
   });
 
   describe('dynamic nodes', () => {
@@ -64,7 +64,7 @@ describe('handlers', () => {
   describe('ctxSlice', () => {
 
     it('allows to use a narrow slice of the whole context', () => {
-      const {handlers, ctxMapFns} = makeHandlers({
+      const {handlers, ctxTransformFns} = makeHandlers({
         node: {
           ctxSlice: 'for the handler',
           method: ({ctx}) => ({
@@ -90,14 +90,14 @@ describe('handlers', () => {
         arrows: [[[null, null]]],
         ctx: {val: 456}
       });
-      assert.deepEqual(ctxMapFns.node.in({
+      assert.deepEqual(ctxTransformFns.node.in({
         src: {
           higher: 987, 
           'for the handler': {val: 123}
         },
         localNodeName: 'anything',
       }), {val: 123});
-      assert.deepEqual(ctxMapFns.node.out({
+      assert.deepEqual(ctxTransformFns.node.out({
         src: {
           higher: 987, 
           'for the handler': {val: 123}
@@ -111,19 +111,19 @@ describe('handlers', () => {
     });
 
     it('creates the slice if it does not exist', () => {
-      const {ctxMapFns} = makeHandlers({
+      const {ctxTransformFns} = makeHandlers({
         node: {
           ctxSlice: 'for the handler'
         }
       }, mockGraph(['node']));
 
-      assert.deepEqual(ctxMapFns.node.in({
+      assert.deepEqual(ctxTransformFns.node.in({
         src: {
           higher: 987, 
         },
         localNodeName: 'anything',
       }), {});
-      assert.deepEqual(ctxMapFns.node.out({
+      assert.deepEqual(ctxTransformFns.node.out({
         src: {
           higher: 987
         },
@@ -137,20 +137,20 @@ describe('handlers', () => {
     });
 
     it('may be used with initCtx', () => {
-      const {ctxMapFns} = makeHandlers({
+      const {ctxTransformFns} = makeHandlers({
         node: {
           ctxSlice: 'for the handler',
           initCtx: {val: 123}
         }
       }, mockGraph(['node']));
 
-      assert.deepEqual(ctxMapFns.node.in({
+      assert.deepEqual(ctxTransformFns.node.in({
         src: {
           higher: 987, 
         },
         localNodeName: 'anything',
       }), {val: 123});
-      assert.deepEqual(ctxMapFns.node.out({
+      assert.deepEqual(ctxTransformFns.node.out({
         src: {
           higher: 987
         },
@@ -166,7 +166,7 @@ describe('handlers', () => {
   });
 
   describe('initial context', () => {
-    const {handlers, ctxMapFns} = makeHandlers({
+    const {handlers, ctxTransformFns} = makeHandlers({
       node: {
         initCtx: {a: 123, b: 456},
         method: ({ctx}) => ctx
@@ -185,12 +185,12 @@ describe('handlers', () => {
         arrows: [[[null, null]]],
         ctx: {}
       });
-      // context mapping functions are responsible for the initial context
-      assert.deepEqual(ctxMapFns.node.in({
+      // context transforming functions are responsible for the initial context
+      assert.deepEqual(ctxTransformFns.node.in({
         src: {},
         localNodeName: 'anything',
       }), {a: 123, b: 456});
-      assert.deepEqual(ctxMapFns.node.out({
+      assert.deepEqual(ctxTransformFns.node.out({
         src: {},
         returned: {a: 123, b: 456},
         localNodeName: 'anything',
@@ -208,12 +208,12 @@ describe('handlers', () => {
         arrows: [[[null, null]]],
         ctx: {c: 987}
       });
-      // context mapping functions are responsible for the initial context
-      assert.deepEqual(ctxMapFns.node.in({
+      // context transforming functions are responsible for the initial context
+      assert.deepEqual(ctxTransformFns.node.in({
         src: {c: 987},
         localNodeName: 'anything',
       }), {c: 987});
-      assert.deepEqual(ctxMapFns.node.out({
+      assert.deepEqual(ctxTransformFns.node.out({
         src: {c: 987},
         returned: {c: 987},
         localNodeName: 'anything',
@@ -225,14 +225,14 @@ describe('handlers', () => {
   describe('alter result', () => {
     it('allows to alter the result of a method call', () => {
 
-      const {handlers, ctxMapFns} = makeHandlers({
+      const {handlers, ctxTransformFns} = makeHandlers({
         node: {
           method: () => 'result',
           afterMethod: ({res}) => 'altered ' + res
         }
       }, mockGraph(['node']));
 
-      assertTransparentCtxMapFn(ctxMapFns.node);
+      assertTransparentCtxTransformFn(ctxTransformFns.node);
 
       assert.deepEqual(handlers.node({
         method: 'method',
@@ -256,7 +256,7 @@ describe('handlers', () => {
       let receivedByA;
       let receivedByB;
 
-      const {handlers, ctxMapFns} = makeHandlers({
+      const {handlers, ctxTransformFns} = makeHandlers({
         node: {
           a({ctx, paramA, paramB, thisModel}) {
             receivedByA = {ctx, paramA, paramB, thisModel};
@@ -278,7 +278,7 @@ describe('handlers', () => {
         }
       }, mockGraph(['node', 'b']));
 
-      assertTransparentCtxMapFn(ctxMapFns.node);
+      assertTransparentCtxTransformFn(ctxTransformFns.node);
 
       const aRes = handlers.node({
         ctx: {whole: 'ctx'},
@@ -318,12 +318,12 @@ describe('handlers', () => {
     });
 
     it('does nothing when a method is not found', () => {
-      const {handlers, ctxMapFns} = makeHandlers({
+      const {handlers, ctxTransformFns} = makeHandlers({
         otherNode: {
           a: () => ({res: 'aRes', arrow: 'x', ctx: {x: 987}})
         }
       }, mockGraph(['a']));
-      assertTransparentCtxMapFn(ctxMapFns.otherNode);
+      assertTransparentCtxTransformFn(ctxTransformFns.otherNode);
       assert.deepEqual(handlers.otherNode({
         method: 'x', 
         ctx: {init: 123}, 
@@ -337,12 +337,12 @@ describe('handlers', () => {
     });
 
     it('may return just a result', () => {
-      const {handlers, ctxMapFns} = makeHandlers({
+      const {handlers, ctxTransformFns} = makeHandlers({
         node: {
           a: () => 'just this'
         }
       }, mockGraph(['node']));
-      assertTransparentCtxMapFn(ctxMapFns.node);
+      assertTransparentCtxTransformFn(ctxTransformFns.node);
       assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
         res: 'just this',
         ctx: {init: 123},
@@ -351,12 +351,12 @@ describe('handlers', () => {
     });
 
     it('may return nothing', () => {
-      const {handlers, ctxMapFns} = makeHandlers({
+      const {handlers, ctxTransformFns} = makeHandlers({
         node: {
           a: () => {}
         }
       }, mockGraph(['node']));
-      assertTransparentCtxMapFn(ctxMapFns.node);
+      assertTransparentCtxTransformFn(ctxTransformFns.node);
       assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
         res: undefined,
         ctx: {init: 123},
@@ -365,10 +365,10 @@ describe('handlers', () => {
     });
 
     it('may return just an arrow', () => {
-      const {handlers, ctxMapFns} = makeHandlers({
+      const {handlers, ctxTransformFns} = makeHandlers({
         node: {a: () => ({arrow: 'x'})}
       }, mockGraph(['node']));
-      assertTransparentCtxMapFn(ctxMapFns.node);
+      assertTransparentCtxTransformFn(ctxTransformFns.node);
       assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
         res: undefined,
         ctx: {init: 123},
@@ -393,7 +393,7 @@ describe('handlers', () => {
         };
       };
 
-      const {handlers, ctxMapFns} = makeHandlers({
+      const {handlers, ctxTransformFns} = makeHandlers({
         node: {
           myMethod: (opts) => {
             passed = opts
@@ -406,7 +406,7 @@ describe('handlers', () => {
         }
       }, mockGraph(['node']));
 
-      assertTransparentCtxMapFn(ctxMapFns.node);
+      assertTransparentCtxTransformFn(ctxTransformFns.node);
 
       const matchingCallRes = handlers.node({
         method: 'forParticularInstance',

@@ -1,6 +1,6 @@
 import omit from 'lodash/omit';
 import isEmpty from 'lodash/isEmpty';
-import {combineCtxMapFns} from './utils';
+import {combineCtxTransformFns} from './utils';
 
 export default plan => {
   const remainingPlan = omit(plan, ['initCtx']);
@@ -12,12 +12,12 @@ export default plan => {
 
       ...next,
 
-      ctxMapFn: combineCtxMapFns({
+      ctxTransformFn: combineCtxTransformFns({
         first: {
           in: ({src, localNodeName}) => isEmpty(src) ? initCtx : src,
           out: ({returned}) => returned
         }, 
-        then: next.ctxMapFn
+        then: next.ctxTransformFn
       })
 
     })

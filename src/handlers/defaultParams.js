@@ -1,4 +1,4 @@
-import {transparentCtxMapFns} from './utils';
+import {transparentCtxTransformFns} from './utils';
 
 export default plan => ({
   remainingPlan: plan,

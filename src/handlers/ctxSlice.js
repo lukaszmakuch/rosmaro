@@ -1,5 +1,5 @@
 import omit from 'lodash/omit';
-import {combineCtxMapFns} from './utils';
+import {combineCtxTransformFns} from './utils';
 
 export default plan => {
   const ctxSlicePath = plan.ctxSlice;
@@ -11,7 +11,7 @@ export default plan => {
       remainingPlan: plan,
       make: (next) => ({
         handler: (opts) => next.handler(opts),
-        ctxMapFn: next.ctxMapFn
+        ctxTransformFn: next.ctxTransformFn
       })
     };
   }
@@ -26,7 +26,7 @@ export default plan => {
 
       ...next,
 
-      ctxMapFn: combineCtxMapFns({
+      ctxTransformFn: combineCtxTransformFns({
         first: {
           in: ({src, localNodeName}) => {
             const ctxSlice = src[ctxSlicePath] || {};
@@ -39,7 +39,7 @@ export default plan => {
             }
           }
         }, 
-        then: next.ctxMapFn
+        then: next.ctxTransformFn
       })
 
     })

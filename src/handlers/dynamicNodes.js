@@ -1,5 +1,5 @@
 import omit from 'lodash/omit';
-import {combineCtxMapFns} from './utils';
+import {combineCtxTransformFns} from './utils';
 
 const emptyNodesFn = () => [];
 

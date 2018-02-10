@@ -35,17 +35,17 @@ const dispatch = ({
   instanceID,
   params,
   model,
-  ctxMapFns
+  ctxTransformFns
 }) => {
   const localNodeName = extractLocalNodeName(node);
-  const nodeCtxMapFns = ctxMapFns[node];
-  const ctx = nodeCtxMapFns.in({
+  const nodeCtxTransformFns = ctxTransformFns[node];
+  const ctx = nodeCtxTransformFns.in({
     src: rawCtx,
     localNodeName
   });
   const mapReturnedCtx = callRes => ({
     ...callRes,
-    ctx: nodeCtxMapFns.out({
+    ctx: nodeCtxTransformFns.out({
       src: rawCtx, 
       returned: callRes.ctx,
       localNodeName
@@ -67,7 +67,7 @@ const dispatch = ({
     method,
     params,
     model,
-    ctxMapFns
+    ctxTransformFns
   });
 
   if (nodeType === 'leaf') {

@@ -28,7 +28,7 @@ The structure returned by buildHandler always has the following signature:
       arrows: [[[null, 'some arrow']]]
     })
   },
-  ctxMapFns: {
+  ctxTransformFns: {
     Node: {
       in: ({src, localNodeName}) => ctx,
       out: ({src, localNodeName, returned}) => ctx

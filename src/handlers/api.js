@@ -2,7 +2,7 @@ import alterRes from './alterRes';
 import defaultParams from './defaultParams';
 import forParticularInstance from './forParticularInstance';
 import leaf from './leaf';
-import {transparentCtxMapFn} from './utils';
+import {transparentCtxTransformFn} from './utils';
 import transparentHandler from './transparent';
 import initCtx from './initCtx';
 import dynamicNodes from './dynamicNodes';
@@ -27,14 +27,14 @@ const stages = [
 
 const transparent = {
   handler: transparentHandler,
-  ctxMapFn: transparentCtxMapFn,
+  ctxTransformFn: transparentCtxTransformFn,
   nodes: ({ctx}) => ([])
 };
 
 /*
 res like {
   handler: fn,
-  ctxMapFn: in: fn, out: fn},
+  ctxTransformFn: in: fn, out: fn},
   nodes: fn
 }
 */
@@ -54,7 +54,7 @@ res like {
     node: fn,
     anotherNode: fn
   },
-  ctxMapFns: {
+  ctxTransformFns: {
     node: {in: fn, out: fn},
     anotherNode: {in: fn, out: fn},
   },
@@ -65,16 +65,16 @@ res like {
 }
 */
 const buildAllHandlers = (handlersPlan, graph) => 
-  reduce(handlersPlan, ({handlers, ctxMapFns, nodes}, handlerPlan, node) => {
-    const {handler, ctxMapFn, nodes: newNodes} = buildHandler(handlerPlan);
+  reduce(handlersPlan, ({handlers, ctxTransformFns, nodes}, handlerPlan, node) => {
+    const {handler, ctxTransformFn, nodes: newNodes} = buildHandler(handlerPlan);
     return {
       handlers: {
         ...handlers,
         [node]: handler
       },
-      ctxMapFns: {
-        ...ctxMapFns,
-        [node]: ctxMapFn
+      ctxTransformFns: {
+        ...ctxTransformFns,
+        [node]: ctxTransformFn
       },
       nodes: {
         ...nodes,
@@ -83,7 +83,7 @@ const buildAllHandlers = (handlersPlan, graph) =>
     };
   }, {
     handlers: {}, 
-    ctxMapFns: mapValues(graph, () => transparentCtxMapFn), 
+    ctxTransformFns: mapValues(graph, () => transparentCtxTransformFn), 
     nodes: {}
   });
 

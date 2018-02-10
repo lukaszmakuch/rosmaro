@@ -1,4 +1,4 @@
-export const combineCtxMapFns = ({first, then}) => ({
+export const combineCtxTransformFns = ({first, then}) => ({
   in: ({src, localNodeName}) => {
     const firstRes = first.in({
       src: src, 
@@ -23,7 +23,7 @@ export const combineCtxMapFns = ({first, then}) => ({
   }
 });
 
-export const transparentCtxMapFn = {
+export const transparentCtxTransformFn = {
   in: ({src}) => src,
   out: ({returned}) => returned
 };
