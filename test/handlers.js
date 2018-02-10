@@ -4,18 +4,18 @@ import invert from 'lodash/invert';
 
 const finalChild = ({ctx}) => ({arrows: [[[null, null]]], ctx, res: undefined});
 
-const assertTransparentCtxTransformFn = (mapFn) => {
+const assertTransparentCtxTransformFn = (transformFn) => {
   const ctx = {a: 123, b: 456};
   assert.deepEqual(
     ctx,
-    mapFn.in({
+    transformFn.in({
       src: ctx, 
       localNodeName: 'anything'
     })
   );
   assert.deepEqual(
     ctx,
-    mapFn.out({
+    transformFn.out({
       returned: ctx, 
       src: ctx, 
       localNodeName: 'anything'
@@ -31,6 +31,52 @@ describe('handlers', () => {
   it('always provides a complete list of ctxTransformFns', () => {
     const {ctxTransformFns} = makeHandlers({}, mockGraph(['A']));
     assertTransparentCtxTransformFn(ctxTransformFns.A);
+  });
+
+  describe('transforming context', () => {
+    it('is a way to transform the context', () => {
+
+      const {handlers, ctxTransformFns} = makeHandlers({
+        node: {
+
+          //this slice is applied BEFORE the initCtx
+          ctxSlice: 'sub',
+
+          initCtx: {
+            text: 'hello',
+            another: 123
+          },
+
+          ctxTransform: {
+            in: ({src, localNodeName}) => ({
+              text: src.text + " " + localNodeName
+            }),
+            out: ({src, localNodeName, returned}) => ({
+              ...src,
+              text: returned.text.replace(localNodeName, "world")
+            })
+          }
+
+        }
+      }, mockGraph(['node']));
+
+      assert.deepEqual(ctxTransformFns.node.in({
+        src: {},
+        localNodeName: 'node',
+      }), {text: 'hello node'});
+
+      assert.deepEqual(ctxTransformFns.node.out({
+        src: {},
+        returned: {text: 'hi node'},
+        localNodeName: 'node',
+      }), {
+        sub: {
+          another: 123,
+          text: 'hi world'
+        }
+      });
+
+    });
   });
 
   describe('dynamic nodes', () => {

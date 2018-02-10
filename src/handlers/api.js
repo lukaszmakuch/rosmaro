@@ -5,6 +5,7 @@ import leaf from './leaf';
 import {transparentCtxTransformFn} from './utils';
 import transparentHandler from './transparent';
 import initCtx from './initCtx';
+import ctxTransform from './ctxTransform';
 import dynamicNodes from './dynamicNodes';
 import ctxSlice from './ctxSlice';
 import reduce from "lodash/reduce";
@@ -19,6 +20,7 @@ const stages = [
   // the sliced context.
   ctxSlice,
   initCtx,
+  ctxTransform,
 
   alterRes,
   forParticularInstance,

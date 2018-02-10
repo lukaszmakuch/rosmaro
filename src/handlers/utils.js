@@ -1,25 +1,40 @@
 export const combineCtxTransformFns = ({first, then}) => ({
   in: ({src, localNodeName}) => {
-    const firstRes = first.in({
+
+    const firstIn = first.in({
       src: src, 
       localNodeName
     });
-    return then.in({
-      src: firstRes,
+
+    const thenIn = then.in({
+      src: firstIn,
       localNodeName
     });
+
+    return thenIn;
+    
   },
   out: ({src, localNodeName, returned}) => {
-    const firstRes = first.out({
+
+    const firstIn = first.in({
       src: src, 
-      localNodeName,
-      returned
+      localNodeName
     });
-    return then.out({
-      src: returned, 
-      localNodeName,
-      returned: firstRes
+
+    const thenOut = then.out({
+      src: firstIn,
+      returned: returned,
+      localNodeName
     });
+
+    const firstOut = first.out({
+      src: src,
+      returned: thenOut,
+      localNodeName
+    });
+
+    return firstOut;
+
   }
 });
 
