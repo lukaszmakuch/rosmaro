@@ -4,13 +4,27 @@ import fsm from './../fsm/api';
 import chain from './operationChain';
 import {callbackize, mergeErrors, nonEmptyArrow} from './../utils';
 import dispatch from './../dispatcher/api';
-import newModelData, {generateInstanceID} from './newModelData';
+import getNewModelData, {generateInstanceID} from './newModelData';
 import { handleRemoveCall} from './callHandler';
 
 const hasAnyArrowBeenFollowed = arrows => arrows.some(nonEmptyArrow);
 
 const extendModelData = ({readModelData, graph}) => {
-  return readModelData || newModelData(graph)
+  // TODO generating new IDs every single time is unnecessary 
+  const newModelData = getNewModelData(graph);
+  if (!readModelData) return newModelData;
+  const modelData = {
+    ...readModelData,
+    instanceID: {
+      ...newModelData.instanceID,
+      ...readModelData.instanceID,
+    },
+    FSMState: {
+      ...newModelData.FSMState,
+      ...readModelData.FSMState,
+    }
+  };
+  return modelData;
 }
 
 const emergencyUnlock = (unlock, bodyErr) => callbackize(
@@ -19,7 +33,18 @@ const emergencyUnlock = (unlock, bodyErr) => callbackize(
   lockErr => {throw mergeErrors(lockErr, bodyErr)}
 );
 
-const removeUnusedFSMState = ({newFSMState, graph}) => newFSMState;
+const removeUnusedFSMState = ({newFSMState, graph}) => {
+  const minimalFSMState = Object.keys(graph).reduce((FSMState, node) => {
+    const existingState = newFSMState[node];
+    if (!existingState) return FSMState;
+    return {
+      ...FSMState,
+      [node]: newFSMState[node]
+    };
+  }, {});
+  // console.log(minimalFSMState);
+  return minimalFSMState;
+}
 
 // 1. releases the lock
 // 2. if any arrow has been followed, triggers the *afterTransition* listener

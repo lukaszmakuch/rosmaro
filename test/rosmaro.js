@@ -2,6 +2,8 @@ import assert from 'assert';
 import rosmaro from '../src/index';
 import lockTestDouble from './lockTestDouble';
 import storageTestDouble from './storageTestDouble';
+import union from 'lodash/union';
+import without from 'lodash/without';
 
 let logEntries = [];
 let lock, storage;
@@ -552,37 +554,146 @@ describe('rosmaro', () => {
 
   });
 
-  it('supports dynamic composites', () => {
+  describe('a dynamic composite', () => {
 
-    const graph = {
-      'main': {
-        type: 'dynamicComposite',
-        nodeTemplate: 'leaf'
-      },
-      'leaf': {type: 'leaf'}
-    };
+    it('alters the graphs based on the context', () => {
 
-    const handlers = {
-      'main': {
-        initCtx: {elems: ['A', 'B']},
-        nodes: ({ctx: {elems}}) => elems
-      },
-      'leaf': {
-        sayHi: ({thisNode}) => `I'm ${thisNode.ID}.`
-      }
-    };
+      const graph = {
+        'main': {
+          type: 'dynamicComposite',
+          nodeTemplate: 'leaf'
+        },
+        'leaf': {type: 'leaf'}
+      };
 
-    const model = rosmaro({
-      graph,
-      handlers,
-      storage: storage,
-      lock: lock.fn
+      const handlers = {
+        'main': {
+          initCtx: {elems: ['A', 'B']},
+          nodes: ({ctx: {elems}}) => elems
+        },
+        'leaf': {
+          sayHi: ({thisNode}) => `I'm ${thisNode.ID}.`
+        }
+      };
+
+      const model = rosmaro({
+        graph,
+        handlers,
+        storage: storage,
+        lock: lock.fn
+      });
+
+      assert.deepEqual(
+        model.sayHi(),
+        {A: "I'm main:A.", B: "I'm main:B."}
+      );
+
     });
 
-    assert.deepEqual(
-      model.sayHi(),
-      {A: "I'm main:A.", B: "I'm main:B."}
-    );
+    it('forgets the state of dynamically removed graphs', () => {
+
+      const graph = {
+        "main": {
+          "type": "dynamicComposite",
+          "nodeTemplate": "Switch"
+        },
+        "Switch": {
+          "type": "graph",
+          "nodes": {
+            "Off": "Off",
+            "On": "On"
+          },
+          "arrows": {
+            "Off": {
+              "toggle": {
+                "target": "On",
+                "entryPoint": "start"
+              }
+            },
+            "On": {
+              "toggle": {
+                "target": "Off",
+                "entryPoint": "start"
+              }
+            }
+          },
+          "entryPoints": {
+            "start": {
+              "target": "Off",
+              "entryPoint": "start"
+            }
+          }
+        },
+        "Off": {
+          "type": "leaf"
+        },
+        "On": {
+          "type": "leaf"
+        }
+      };
+
+      const switchTpl = {
+        toggle: () => ({arrow: 'toggle'}),
+        addSwitch: ({number, ctx}) => ({ctx: {switches: union(ctx.switches, [number])}}),
+        removeSwitch: ({number, ctx}) => ({ctx: {switches: without(ctx.switches, number)}}),
+      };
+      const handlers = {
+        'main': {
+          'initCtx': {switches: [1, 2]},
+          nodes: ({ctx}) => ctx.switches,
+        },
+        On: {'read': () => 'On', ...switchTpl},
+        Off: {'read': () => 'Off', ...switchTpl},
+      };
+
+      const model = rosmaro({
+        graph,
+        handlers,
+        storage: storage,
+        lock: lock.fn
+      });
+
+      assert.deepEqual(
+        model.read(),
+        {1: 'Off', 2: 'Off'}
+      );
+
+      model.toggle();
+
+      assert.deepEqual(
+        model.read(),
+        {1: 'On', 2: 'On'}
+      );
+
+      model.addSwitch({number: 3});
+
+      assert.deepEqual(
+        model.read(),
+        {1: 'On', 2: 'On', 3: 'Off'}
+      );
+
+      model.removeSwitch({number: 2});
+
+      assert.deepEqual(
+        model.read(),
+        {1: 'On', 3: 'Off'}
+      );
+
+      model.addSwitch({number: 2});
+
+      assert.deepEqual(
+        model.read(),
+        {1: 'On', 2: 'Off', 3: 'Off'}
+      );
+
+      model.toggle();
+
+      assert.deepEqual(
+        model.read(),
+        {1: 'Off', 2: 'On', 3: 'On'}
+      );
+
+    });
 
   });
 
@@ -619,7 +730,7 @@ describe('rosmaro', () => {
 
     model.followArrow();
     assert.equal('B', model.readNode());
-    // assert.equal(undefined, model.nonExistentMethod());
+    assert.equal(undefined, model.nonExistentMethod());
   });
 
 });
