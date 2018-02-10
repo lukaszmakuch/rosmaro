@@ -27,4 +27,3 @@ dispatch({
 
 ## Related test files
 - test/dispatcher.js
-- test/pathExtractor.js

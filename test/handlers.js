@@ -457,46 +457,4 @@ describe('handlers', () => {
 
   });
 
-  describe('node actions', () => {
-    it('calls afterLeft and onEntry actions only for their target nodes', () => {
-      ['onEntry', 'afterLeft'].forEach(method => {
-        const {handlers, ctxMapFns} = makeHandlers({
-          node: {
-            [method]: ({ctx}) => {
-              return 'method res';
-            }
-          }
-        }, mockGraph(['node']));
-
-        assertTransparentCtxMapFn(ctxMapFns.node);
-
-        // it's the target
-        assert.deepEqual(handlers.node({
-          method, 
-          ctx: {init: 123}, 
-          params: [{}, {targetID: 'x'}], 
-          child: finalChild,
-          node: {ID: 'x'}
-        }), {
-          res: 'method res',
-          ctx: {init: 123},
-          arrows: [[[null, null]]]
-        });        
-
-        // it's not the target
-        assert.deepEqual(handlers.node({
-          method,
-          ctx: {init: 123}, 
-          params: [undefined, {targetID: 'x'}], 
-          child: finalChild,
-          node: {ID: 'y'}
-        }), {
-          res: undefined,
-          ctx: {init: 123},
-          arrows: [[[null, null]]]
-        });
-      });
-    });
-  });
-
 });

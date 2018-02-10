@@ -1,7 +1,6 @@
 import toPairs from 'lodash/toPairs';
 import flatten from 'lodash/flatten';
 import difference from 'lodash/difference';
-import graphDiff from './graphDiff';
 
 // [{'a': 'a:b'}, {'b': 'b:a'}] => {'a': 'a:b', 'b': 'b:a'}
 export const mergeNewFSMStates = FSMStates => {

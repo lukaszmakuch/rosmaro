@@ -1,7 +1,7 @@
 import filter from 'lodash/filter';
 import {callbackize} from './../utils';
 
-const isAlterFn = fnName => fnName.startsWith('after') && fnName != 'afterLeft';
+const isAlterFn = fnName => fnName.startsWith('after') ;
 
 export default plan => {
   const {remainingPlan, alterFns} = Object.keys(plan).reduce(
