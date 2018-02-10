@@ -22,3 +22,8 @@ export const combineCtxMapFns = ({first, then}) => ({
     });
   }
 });
+
+export const transparentCtxMapFn = {
+  in: ({src}) => src,
+  out: ({returned}) => returned
+};

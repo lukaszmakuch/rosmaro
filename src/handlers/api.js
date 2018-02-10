@@ -3,11 +3,13 @@ import defaultParams from './defaultParams';
 import forParticularInstance from './forParticularInstance';
 import nodeActions from './nodeActions';
 import leaf from './leaf';
+import {transparentCtxMapFn} from './utils';
 import transparentHandler from './transparent';
 import initCtx from './initCtx';
 import dynamicNodes from './dynamicNodes';
 import ctxSlice from './ctxSlice';
 import reduce from "lodash/reduce";
+import mapValues from 'lodash/mapValues';
 
 const stages = [
   defaultParams,
@@ -27,10 +29,7 @@ const stages = [
 
 const transparent = {
   handler: transparentHandler,
-  ctxMapFn: {
-    in: ({src}) => src,
-    out: ({returned}) => returned
-  },
+  ctxMapFn: transparentCtxMapFn,
   nodes: ({ctx}) => ([])
 };
 
@@ -67,22 +66,27 @@ res like {
   }
 }
 */
-const buildAllHandlers = handlersPlan => reduce(handlersPlan, ({handlers, ctxMapFns, nodes}, handlerPlan, node) => {
-  const {handler, ctxMapFn, nodes: newNodes} = buildHandler(handlerPlan);
-  return {
-    handlers: {
-      ...handlers,
-      [node]: handler
-    },
-    ctxMapFns: {
-      ...ctxMapFns,
-      [node]: ctxMapFn
-    },
-    nodes: {
-      ...nodes,
-      [node]: newNodes
-    }
-  };
-}, {handlers: {}, ctxMapFns: {}, nodes: {}});
+const buildAllHandlers = (handlersPlan, graph) => 
+  reduce(handlersPlan, ({handlers, ctxMapFns, nodes}, handlerPlan, node) => {
+    const {handler, ctxMapFn, nodes: newNodes} = buildHandler(handlerPlan);
+    return {
+      handlers: {
+        ...handlers,
+        [node]: handler
+      },
+      ctxMapFns: {
+        ...ctxMapFns,
+        [node]: ctxMapFn
+      },
+      nodes: {
+        ...nodes,
+        [node]: newNodes
+      }
+    };
+  }, {
+    handlers: {}, 
+    ctxMapFns: mapValues(graph, () => transparentCtxMapFn), 
+    nodes: {}
+  });
 
 export default buildAllHandlers;
