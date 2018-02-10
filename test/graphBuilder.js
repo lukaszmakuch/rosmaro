@@ -235,6 +235,22 @@ describe('graph builder', () => {
         'main:B:B:B': handlers.BSubB,
         'main:B:A:A': handlers.BSubA,
         'main:B:A:B': handlers.BSubB,
+      },
+
+      ctxMapFns: {
+        'main': ctxMapFns.main,
+        'main:A': ctxMapFns.A,
+        'main:A:elemA': ctxMapFns.AGraph,
+        'main:A:elemA:A': ctxMapFns.ASubA,
+        'main:A:elemB': ctxMapFns.AGraph,
+        'main:A:elemB:A': ctxMapFns.ASubA,
+        'main:B': ctxMapFns.B,
+        'main:B:A': ctxMapFns.BSub,
+        'main:B:B': ctxMapFns.BSub,
+        'main:B:B:A': ctxMapFns.BSubA,
+        'main:B:B:B': ctxMapFns.BSubB,
+        'main:B:A:A': ctxMapFns.BSubA,
+        'main:B:A:B': ctxMapFns.BSubB,
       }
 
     };

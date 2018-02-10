@@ -2,14 +2,6 @@ import {glueNodeName} from './nodeNames';
 import omit from 'lodash/omit';
 import transparentHandler from './../handlers/transparent';
 
-/*
-plan: graphPlan,
-ctxMapFns,
-nodes,
-handlers,
-ctx,
-*/
-
 const build = ({
   plan, 
   ctxMapFns,
@@ -20,6 +12,7 @@ const build = ({
   builtNode = 'main',
   parent = null
 }) => {
+  const ctxMapFn = ctxMapFns[planNode];
   const ctx = ctxMapFns[planNode].in({src: rawCtx, localNodeName: planNode});
   const nodePlan = plan[planNode];
   const type = nodePlan.type;
@@ -35,6 +28,9 @@ const build = ({
       },
       handlers: {
         [builtNode]: handler
+      },
+      ctxMapFns: {
+        [builtNode]: ctxMapFn
       }
     };
   }
@@ -59,9 +55,10 @@ const build = ({
       return {
         nodes: [...soFar.nodes, builtName],
         graph: {...soFar.graph, ...built.graph},
-        handlers: {...soFar.handlers, ...built.handlers}
+        handlers: {...soFar.handlers, ...built.handlers},
+        ctxMapFns: {...soFar.ctxMapFns, ...built.ctxMapFns}
       };
-    }, {nodes: [], graph: {}, handlers: {}});
+    }, {nodes: [], graph: {}, handlers: {}, ctxMapFns: {}});
 
     return {
       graph: {
@@ -75,7 +72,11 @@ const build = ({
       handlers: {
         [builtNode]: handler,
         ...childRes.handlers
-      }
+      },
+      ctxMapFns: {
+        [builtNode]: ctxMapFn,
+        ...childRes.ctxMapFns
+      },
     };
   }
 
@@ -95,9 +96,10 @@ const build = ({
       return {
         nodes: [...soFar.nodes, builtName],
         graph: {...soFar.graph, ...built.graph},
-        handlers: {...soFar.handlers, ...built.handlers}
+        handlers: {...soFar.handlers, ...built.handlers},
+        ctxMapFns: {...soFar.ctxMapFns, ...built.ctxMapFns},
       };
-    }, {nodes: [], graph: {}, handlers: {}});
+    }, {nodes: [], graph: {}, handlers: {}, ctxMapFns: {}});
 
     const emptyArrows = childRes.nodes.reduce((soFar, node) => ({
       ...soFar,
@@ -145,7 +147,11 @@ const build = ({
       handlers: {
         [builtNode]: handler,
         ...childRes.handlers
-      }
+      },
+      ctxMapFns: {
+        [builtNode]: ctxMapFn,
+        ...childRes.ctxMapFns
+      },
     };
   }
 
