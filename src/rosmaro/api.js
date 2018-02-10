@@ -4,28 +4,9 @@ import fsm from './../fsm/api';
 import chain from './operationChain';
 import {callbackize, mergeErrors, nonEmptyArrow} from './../utils';
 import dispatch from './../dispatcher/api';
-import getNewModelData, {generateInstanceID} from './newModelData';
-import { handleRemoveCall} from './callHandler';
+import extendModelData, {generateInstanceID} from './modelData';
 
 const hasAnyArrowBeenFollowed = arrows => arrows.some(nonEmptyArrow);
-
-const extendModelData = ({readModelData, graph}) => {
-  // TODO generating new IDs every single time is unnecessary 
-  const newModelData = getNewModelData(graph);
-  if (!readModelData) return newModelData;
-  const modelData = {
-    ...readModelData,
-    instanceID: {
-      ...newModelData.instanceID,
-      ...readModelData.instanceID,
-    },
-    FSMState: {
-      ...newModelData.FSMState,
-      ...readModelData.FSMState,
-    }
-  };
-  return modelData;
-}
 
 const emergencyUnlock = (unlock, bodyErr) => callbackize(
   unlock,
