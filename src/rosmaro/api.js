@@ -56,15 +56,7 @@ export default ({
 
           // removing the model
           ? [
-            () => 
-              readModelData(storage, graph),
-            (modelData) => 
-              handleRemoveCall({
-                graph,
-                handlers, 
-                modelData,
-                model,
-              }),
+            // actually remove the model
             () => {
               storage.set(undefined);
               return {res: undefined, anyArrowFollowed: false}

@@ -269,7 +269,7 @@ describe('rosmaro', () => {
   
   });
 
-  xit('may be removed', () => {
+  it('may be removed', () => {
 
     const graph = {
       'main': {
@@ -286,19 +286,10 @@ describe('rosmaro', () => {
     };
 
     const handlers = {
-      'main': {
-        afterLeft: () => log('left main'),
-      },
-
-      'B': {
-        afterLeft: () => log('left B'),
-      },
-
       'A': {
         method: () => {
           return {ctx: {x: 'x'}, arrow: 'x', res: 'x'}
-        },
-        afterLeft: () => log('left A'),
+        }
       },
     };
 
@@ -324,11 +315,6 @@ describe('rosmaro', () => {
     assert.deepEqual(logEntries, [
       'locking',
       'locked',
-      'getting data',
-      'got data',
-
-      'left B',
-      'left main',
 
       'setting data',
       'set data',
