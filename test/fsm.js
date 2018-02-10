@@ -88,9 +88,7 @@ describe('fsm', () => {
     arrows: [[['main:A', undefined]]],
 
     expectedRes: {
-      leftNodes: [],
-      enteredNodes: [],
-      FSMState: {'main': 'main:A'}
+      'main': 'main:A'
     }
 
   }));
@@ -131,11 +129,7 @@ describe('fsm', () => {
         arrows: [[['main:B', 'y']]],
 
         expectedRes: {
-          leftNodes: ['main:B'],
-          enteredNodes: ['main:C'],
-          FSMState: {
-            'main': 'main:C'
-          }
+          'main': 'main:C'
         }
 
       }));
@@ -172,11 +166,7 @@ describe('fsm', () => {
         arrows: [[['main:A', 'self']]],
 
         expectedRes: {
-          leftNodes: [],
-          enteredNodes: [],
-          FSMState: {
-            'main': 'main:A'
-          }
+          'main': 'main:A'
         }
 
       }));
@@ -269,12 +259,8 @@ describe('fsm', () => {
         },
 
         expectedRes: {
-          FSMState: {
-            'main': 'main:A',
-            'main:A': 'main:A:B'
-          },
-          leftNodes: ['main:A:A'],
-          enteredNodes: ['main:A:B']
+          'main': 'main:A',
+          'main:A': 'main:A:B'
         }
 
       }));
@@ -325,12 +311,8 @@ describe('fsm', () => {
         arrows: [[['main:A:A', 'y'], ['main:A', 'y']]],
 
         expectedRes: {
-          FSMState: {
-            'main': 'main:B',
-            'main:A': 'main:A:A'
-          },
-          leftNodes: ['main:A:A', 'main:A'],
-          enteredNodes: ['main:B']
+          'main': 'main:B',
+          'main:A': 'main:A:A'
         }
 
       }));
@@ -381,12 +363,8 @@ describe('fsm', () => {
         arrows: [[['main:A:B', 'x'], ['main:A', 'x']]],
 
         expectedRes: {
-          FSMState: {
-            'main': 'main:A',
-            'main:A': 'main:A:A'
-          },
-          leftNodes: ['main:A:B'],
-          enteredNodes: ['main:A:A']
+          'main': 'main:A',
+          'main:A': 'main:A:A'
         }
 
       }));
@@ -438,12 +416,8 @@ describe('fsm', () => {
         arrows: [[['main:A:B', 'x'], ['main:A', 'x']]],
 
         expectedRes: {
-          FSMState: {
-            'main': 'main:A',
-            'main:A': 'main:A:B'
-          },
-          leftNodes: [],
-          enteredNodes: []
+          'main': 'main:A',
+          'main:A': 'main:A:B'
         }
 
       }));
@@ -499,12 +473,8 @@ describe('fsm', () => {
         arrows: [[['leaf', 'self'], ['subgraph', 'self'], ['composite', 'self']]],
 
         expectedRes: {
-          FSMState: {
-            'main': 'composite',
-            'subgraph': 'leaf'
-          },
-          leftNodes: [],
-          enteredNodes: []
+          'main': 'composite',
+          'subgraph': 'leaf'
         }
 
       }));
@@ -563,12 +533,8 @@ describe('fsm', () => {
         arrows: [[['main:B', 'x']]],
 
         expectedRes: {
-          FSMState: {
-            'main': 'main:A',
-            'main:A': 'main:A:B'
-          },
-          leftNodes: ['main:B'],
-          enteredNodes: ['main:A', 'main:A:B']
+          'main': 'main:A',
+          'main:A': 'main:A:B'
         }
 
       }));
@@ -635,12 +601,8 @@ describe('fsm', () => {
         ],
 
         expectedRes: {
-          FSMState: {
-            'main:A': 'main:A:B',
-            'main:B': 'main:B:B',
-          },
-          leftNodes: ['main:A:A', 'main:B:A'],
-          enteredNodes: ['main:B:B', 'main:A:B']
+          'main:A': 'main:A:B',
+          'main:B': 'main:B:B',
         }
 
       }));
@@ -683,11 +645,7 @@ describe('fsm', () => {
         },
 
         expectedRes: {
-          FSMState: {
-            'main': 'main:B'
-          },
-          leftNodes: ['main:A:A', 'main:A:B', 'main:A'],
-          enteredNodes: ['main:B']
+          'main': 'main:B'
         }
 
       }));
@@ -724,11 +682,7 @@ describe('fsm', () => {
         },
 
         expectedRes: {
-          FSMState: {
-            'main': 'main:B'
-          },
-          leftNodes: ['main:A:A', 'main:A:B', 'main:A'],
-          enteredNodes: ['main:B']
+          'main': 'main:B'
         }
 
       }));
@@ -781,12 +735,8 @@ describe('fsm', () => {
         },
 
         expectedRes: {
-          FSMState: {
-            'main': 'main:B',
-            'main:A': 'main:A:B'
-          },
-          leftNodes: ['main:A:A:A', 'main:A:A:B', 'main:A:A', 'main:A:B', 'main:A'],
-          enteredNodes: ['main:B', 'main:A:B']
+          'main': 'main:B',
+          'main:A': 'main:A:B'
         }
 
       }));
@@ -885,13 +835,9 @@ describe('fsm', () => {
         ],
 
         expectedRes: {
-          FSMState: {
-            'main': 'main:B',
-            'main:B:A': 'main:B:A:B',
-            'main:B:B': 'main:B:B:B'
-          },
-          leftNodes: ['main:A'],
-          enteredNodes: ['main:B', 'main:B:B', 'main:B:A', 'main:B:B:B', 'main:B:A:B']
+          'main': 'main:B',
+          'main:B:A': 'main:B:A:B',
+          'main:B:B': 'main:B:B:B'
         }
 
       }));

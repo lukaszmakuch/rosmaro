@@ -1,5 +1,4 @@
 import map from 'lodash/map';
-import graphDiff from './graphDiff';
 import {initState, mergeNewFSMStates} from './state';
 import {nonEmptyArrow} from './../utils';
 export {initState};
@@ -80,7 +79,7 @@ const followDown = ({FSMState, graph, target, entryPoint}) => {
 
 };
 
-// res: {FSMState, leftNodes, enteredNodes}
+// res: newFSMState
 export default ({
   graph, 
   FSMState, 
@@ -98,9 +97,5 @@ export default ({
     ...map(allFollowedDown, 'newFSMState')
   ];
   const newFSMState = {...FSMState, ...mergeNewFSMStates(allNewFSMStates)};
-
-  return {
-    FSMState: newFSMState,
-    ...graphDiff({graph, oldFSMState: FSMState, newFSMState})
-  };
+  return newFSMState;
 };
