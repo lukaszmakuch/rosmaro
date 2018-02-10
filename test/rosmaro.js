@@ -269,7 +269,7 @@ describe('rosmaro', () => {
   
   });
 
-  it('may be removed', () => {
+  xit('may be removed', () => {
 
     const graph = {
       'main': {
@@ -566,6 +566,40 @@ describe('rosmaro', () => {
 
   });
 
+  it('supports dynamic composites', () => {
+
+    const graph = {
+      'main': {
+        type: 'dynamicComposite',
+        nodeTemplate: 'leaf'
+      },
+      'leaf': {type: 'leaf'}
+    };
+
+    const handlers = {
+      'main': {
+        initCtx: {elems: ['A', 'B']},
+        nodes: ({ctx: {elems}}) => elems
+      },
+      'leaf': {
+        sayHi: ({thisNode}) => `I'm ${thisNode.ID}.`
+      }
+    };
+
+    const model = rosmaro({
+      graph,
+      handlers,
+      storage: storage,
+      lock: lock.fn
+    });
+
+    assert.deepEqual(
+      model.sayHi(),
+      {A: "I'm main:A.", B: "I'm main:B."}
+    );
+
+  });
+
   it('supports a transition from A to B', () => {
 
     const graph = {
@@ -599,56 +633,7 @@ describe('rosmaro', () => {
 
     model.followArrow();
     assert.equal('B', model.readNode());
-    assert.equal(undefined, model.nonExistentMethod());
+    // assert.equal(undefined, model.nonExistentMethod());
   });
-
-  it('supports dynamic composites', () => {
-
-    const graph = {
-      "main": {
-        "type": "graph",
-        "nodes": {
-          "Dynamic": "Dynamic"
-        },
-        "arrows": {
-          "Dynamic": {
-            "self": {
-              "target": "Dynamic",
-              "entryPoint": "start"
-            }
-          }
-        },
-        "entryPoints": {
-          "start": {
-            "target": "Dynamic",
-            "entryPoint": "start"
-          }
-        }
-      },
-      "Dynamic": {
-        "type": "dynamicComposite",
-        "nodeTemplate": "Template"
-      },
-      "Template": {
-        "type": "graph",
-        "nodes": {
-          "Leaf": "Leaf"
-        },
-        "arrows": {},
-        "entryPoints": {}
-      },
-      "Leaf": {
-        "type": "leaf"
-      }
-    };
-
-    const handler = {
-      'Dynamic': {
-        nodes: 
-      }
-    }
-
-  });
-
 
 });

@@ -1,5 +1,6 @@
 import assert from 'assert';
 import makeHandlers from './../src/handlers/api';
+import invert from 'lodash/invert';
 
 const finalChild = ({ctx}) => ({arrows: [[[null, null]]], ctx, res: undefined});
 
@@ -22,7 +23,15 @@ const assertTransparentCtxMapFn = (mapFn) => {
   );
 };
 
+// All we need to build handlers is to read the list of all nodes.
+const mockGraph = nodes => invert(nodes);
+
 describe('handlers', () => {
+
+  it('always provides a complete list of ctxMapFns', () => {
+    const {ctxMapFns} = makeHandlers({}, mockGraph(['A']));
+    assertTransparentCtxMapFn(ctxMapFns.A);
+  });
 
   describe('dynamic nodes', () => {
 
@@ -30,7 +39,7 @@ describe('handlers', () => {
       const {nodes} = makeHandlers({
         dynamic: {
         }
-      });
+      }, mockGraph(['dynamic']));
 
       assert.deepEqual([], nodes.dynamic());
     });
@@ -42,7 +51,7 @@ describe('handlers', () => {
         dynamic: {
           nodes: nodesFn
         }
-      });
+      }, mockGraph(['dynamic']));
 
       const elems = ['a', 'b', 'c'];
       const ctx = {elems};
@@ -63,7 +72,7 @@ describe('handlers', () => {
             ctx: {val: 456}
           })
         }
-      });
+      }, mockGraph(['node']));
 
       assert.deepEqual(handlers.node({
         method: 'method',
@@ -106,7 +115,7 @@ describe('handlers', () => {
         node: {
           ctxSlice: 'for the handler'
         }
-      });
+      }, mockGraph(['node']));
 
       assert.deepEqual(ctxMapFns.node.in({
         src: {
@@ -133,7 +142,7 @@ describe('handlers', () => {
           ctxSlice: 'for the handler',
           initCtx: {val: 123}
         }
-      });
+      }, mockGraph(['node']));
 
       assert.deepEqual(ctxMapFns.node.in({
         src: {
@@ -162,7 +171,7 @@ describe('handlers', () => {
         initCtx: {a: 123, b: 456},
         method: ({ctx}) => ctx
       }
-    });
+    }, mockGraph(['node']));
 
     it('allows to set an initial context if the context is empty', () => {
       // the handler itself doesn't modify the context
@@ -221,7 +230,7 @@ describe('handlers', () => {
           method: () => 'result',
           afterMethod: ({res}) => 'altered ' + res
         }
-      });
+      }, mockGraph(['node']));
 
       assertTransparentCtxMapFn(ctxMapFns.node);
 
@@ -267,7 +276,7 @@ describe('handlers', () => {
             };
           }
         }
-      });
+      }, mockGraph(['node', 'b']));
 
       assertTransparentCtxMapFn(ctxMapFns.node);
 
@@ -313,7 +322,7 @@ describe('handlers', () => {
         otherNode: {
           a: () => ({res: 'aRes', arrow: 'x', ctx: {x: 987}})
         }
-      });
+      }, mockGraph(['a']));
       assertTransparentCtxMapFn(ctxMapFns.otherNode);
       assert.deepEqual(handlers.otherNode({
         method: 'x', 
@@ -332,7 +341,7 @@ describe('handlers', () => {
         node: {
           a: () => 'just this'
         }
-      });
+      }, mockGraph(['node']));
       assertTransparentCtxMapFn(ctxMapFns.node);
       assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
         res: 'just this',
@@ -346,7 +355,7 @@ describe('handlers', () => {
         node: {
           a: () => {}
         }
-      });
+      }, mockGraph(['node']));
       assertTransparentCtxMapFn(ctxMapFns.node);
       assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
         res: undefined,
@@ -358,7 +367,7 @@ describe('handlers', () => {
     it('may return just an arrow', () => {
       const {handlers, ctxMapFns} = makeHandlers({
         node: {a: () => ({arrow: 'x'})}
-      });
+      }, mockGraph(['node']));
       assertTransparentCtxMapFn(ctxMapFns.node);
       assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
         res: undefined,
@@ -395,7 +404,7 @@ describe('handlers', () => {
             }
           }
         }
-      });
+      }, mockGraph(['node']));
 
       assertTransparentCtxMapFn(ctxMapFns.node);
 
@@ -457,7 +466,7 @@ describe('handlers', () => {
               return 'method res';
             }
           }
-        });
+        }, mockGraph(['node']));
 
         assertTransparentCtxMapFn(ctxMapFns.node);
 

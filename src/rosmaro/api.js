@@ -1,14 +1,42 @@
 import buildGraph from './../graphBuilder/api';
-import buildHandler from './../handlers/api';
+import makeHandlers from './../handlers/api';
+import fsm from './../fsm/api';
 import chain from './operationChain';
-import {callbackize, mergeErrors} from './../utils';
+import {callbackize, mergeErrors, nonEmptyArrow} from './../utils';
+import dispatch from './../dispatcher/api';
 import newModelData, {generateInstanceID} from './newModelData';
-import {handleCall, handleRemoveCall} from './callHandler';
+import { handleRemoveCall} from './callHandler';
 
-const readModelData = (storage, graph) => callbackize(
-  () => storage.get(),
-  stored => stored || newModelData(graph)
+const hasAnyArrowBeenFollowed = arrows => arrows.some(nonEmptyArrow);
+
+const extendModelData = ({readModelData, graph}) => {
+  return readModelData || newModelData(graph)
+}
+
+const emergencyUnlock = (unlock, bodyErr) => callbackize(
+  unlock,
+  () => {throw bodyErr;},
+  lockErr => {throw mergeErrors(lockErr, bodyErr)}
 );
+
+const removeUnusedFSMState = ({newFSMState, graph}) => newFSMState;
+
+// 1. releases the lock
+// 2. if any arrow has been followed, triggers the *afterTransition* listener
+// 3. returns the result of the call
+const regularUnlock = (unlock, res, anyArrowFollowed, afterTransition) => callbackize(
+  unlock, 
+  () => {
+    if (anyArrowFollowed) afterTransition();
+    return res;
+  }
+);
+
+const getNewInstanceID = ({
+  anyArrowFollowed,
+  oldInstanceID,
+  graph
+}) => anyArrowFollowed ? generateInstanceID(graph) : oldInstanceID;
 
 export default ({
   graph: graphPlan,
@@ -18,13 +46,6 @@ export default ({
   afterTransition = () => {}
 }) => {
 
-  const {graph, handlers} = buildGraph({
-    plan: {
-      graph: graphPlan,
-      handlers: handlersPlan
-    },
-    buildHandler
-  });
 
   const model = new Proxy({}, {
     get(target, method) {
@@ -52,48 +73,151 @@ export default ({
 
           //handling a call
           : [
-            () => 
-              readModelData(storage, graph),
-            (modelData) => 
-              handleCall({
-                graph,
-                handlers, 
-                modelData,
-                method,
-                model,
-                params: [...arguments]
+
+            // adds readModelData (null or {FSMState, ctx, instanceID})
+            (
+            ) => storage.get(),
+
+            // adds basedOnHandlersPlan {handlers, ctxMapFns, nodes}
+            (
+              readModelData
+            ) => makeHandlers(handlersPlan, graphPlan),
+
+            // adds modelParts {graph, handlers, ctxMapFns}
+            (
+              readModelData,
+              basedOnHandlersPlan
+            ) => buildGraph({
+              plan: graphPlan,
+              //{ctxMapFns, nodes, handlers}
+              ...basedOnHandlersPlan,
+              ctx: readModelData ? readModelData.ctx : {}
+            }),
+
+            // adds modelData {FSMState, ctx, instanceID}
+            (
+              readModelData,
+              basedOnHandlersPlan,
+              modelParts
+            ) => extendModelData({
+              readModelData,
+              graph: modelParts.graph
+            }),
+
+            // adds dispatchRes {arrows, ctx, res}
+            (
+              readModelData,
+              basedOnHandlersPlan,
+              modelParts,
+              modelData
+            ) => dispatch({
+              graph: modelParts.graph,
+              FSMState: modelData.FSMState,
+              handlers: modelParts.handlers,
+              instanceID: modelData.instanceID,
+              ctx: modelData.ctx,
+              method: method,
+              params: [...arguments],
+              model,
+              ctxMapFns: modelParts.ctxMapFns
+            }),
+
+            // adds newFSMState
+            (
+              readModelData,
+              basedOnHandlersPlan,
+              modelParts,
+              modelData,
+              dispatchRes
+            ) => fsm({
+              graph: modelParts.graph, 
+              FSMState: modelData.FSMState, 
+              arrows: dispatchRes.arrows
+            }),
+
+            // adds anyArrowFollowed
+            (
+              readModelData,
+              basedOnHandlersPlan,
+              modelParts,
+              modelData,
+              dispatchRes,
+              newFSMState
+            ) => hasAnyArrowBeenFollowed(dispatchRes.arrows),
+
+            // adds newModelParts (so we know new new graph)
+            (
+              readModelData,
+              basedOnHandlersPlan,
+              modelParts,
+              modelData,
+              dispatchRes,
+              newFSMState,
+              anyArrowFollowed
+            ) => buildGraph({
+              plan: graphPlan,
+              //{ctxMapFns, nodes, handlers}
+              ...basedOnHandlersPlan,
+              ctx: dispatchRes.ctx
+            }),
+
+            // adds newInstanceID
+            (
+              readModelData,
+              basedOnHandlersPlan,
+              modelParts,
+              modelData,
+              dispatchRes,
+              newFSMState,
+              anyArrowFollowed,
+              newModelParts
+            ) => getNewInstanceID({
+              anyArrowFollowed,
+              oldInstanceID: modelData.instanceID,
+              graph: newModelParts.graph
+            }),
+
+            // stores the data
+            (
+              readModelData,
+              basedOnHandlersPlan,
+              modelParts,
+              modelData,
+              dispatchRes,
+              newFSMState,
+              anyArrowFollowed,
+              newModelParts,
+              newInstanceID
+            ) => storage.set({
+              FSMState: removeUnusedFSMState({
+                newFSMState, 
+                graph: newModelParts.graph
               }),
-            (modelData, handleRes) => 
-              storage.set(handleRes.newModelData),
-            (modelData, handleRes) => ({
-              res: handleRes.res,
-              anyArrowFollowed: handleRes.anyArrowFollowed
+              ctx: dispatchRes.ctx,
+              instanceID: newInstanceID
+            }),
+
+            (
+              readModelData,
+              basedOnHandlersPlan,
+              modelParts,
+              modelData,
+              dispatchRes,
+              newFSMState,
+              anyArrowFollowed
+            ) => ({
+              res: dispatchRes.res,
+              anyArrowFollowed
             })
+
           ]
-        );
-
-        const emergencyUnlock = (unlock, bodyErr) => callbackize(
-          unlock,
-          () => {throw bodyErr;},
-          lockErr => {throw mergeErrors(lockErr, bodyErr)}
-        );
-
-        // 1. releases the lock
-        // 2. if any arrow has been followed, triggers the *afterTransition* listener
-        // 3. returns the result of the call
-        const regularUnlock = (unlock, res, anyArrowFollowed) => callbackize(
-          unlock, 
-          () => {
-            if (anyArrowFollowed) afterTransition();
-            return res;
-          }
         );
 
         return callbackize(
           lock,
           unlock => callbackize(
             handlingBody,
-            ({res, anyArrowFollowed}) => regularUnlock(unlock, res, anyArrowFollowed),
+            ({res, anyArrowFollowed}) => regularUnlock(unlock, res, anyArrowFollowed, afterTransition),
             bodyErr => emergencyUnlock(unlock, bodyErr)
           )
         );
