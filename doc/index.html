@@ -198,16 +198,20 @@ Below is a list of utilities useful when using Rosmaro together with other libra
 
 - [Rosmaro-React](https://github.com/lukaszmakuch/rosmaro-react) for building React user interfaces
 
+## Rosmaro elsewhere
+- [React and visual automata-based programming](https://medium.com/dailyjs/react-and-visual-automata-based-programming-c1d13e153cde) - an article about building a wizard using Rosmaro and React
+
 # Graphs
 
 ## Introduction
 
 The graph is the most outer layer of a _Rosmaro model_. It is meant to represent all of the possible changes of behavior. 
 
-There are three types of nodes:
+There are four types of nodes:
 
 - leaves
 - composites
+- dynamic composites
 - graphs
 
 The model graph is represented by a collection of nodes, where each node has a unique name. The root node of the model graph is __the _main_ node, which is mandatory__. It may be of any of the supported node types, even a leaf.
@@ -297,6 +301,83 @@ In such a situation, the entered __entry point is required to be present in both
 To sum it up, the result of _main:some node_ following the _action_ arrow to enter _composite_ through the entry point _p_ is setting the model to _(main:composite:subgraph A:B, main:composite:subgraph B:A)_.
 
 Composites are __transparent to arrows followed by their children__. If at least one child follows some arrow, the whole composite follows this arrow. If two or more children follow some arrows, the composite follows those few arrows simultaneously.
+
+## Dynamic composites
+
+Dynamic composites are very similar to regular composites with one very important difference - __the list of children nodes is generated using a function of the context__.
+
+Let's take a look at this regular composite.
+```json
+{
+  "main": {
+    "type": "composite",
+    "nodes": {
+      "First": "Child",
+      "Second": "Child"
+    }
+  },
+  "Child": {"type": "leaf"}
+}
+```
+
+The main composite has two chilren: First and Second. They are all leafs defined by the Child node. The number of main's children never changes. 
+
+The same graph structure may be achieved using a dynamic composite.
+
+```json
+{
+  "main": {
+    "type": "dynamicComposite",
+    "nodeTemplate": "leaf"
+  },
+  "Child": {"type": "leaf"}
+}
+```
+
+The handler of the main node must define a function of the context which returns local names of the children.
+
+```javascript
+{
+  main: {
+    nodes: ({ctx}) => ctx.myChildren
+  }
+}
+```
+
+This dynamic composite associated with the handler visible above results in a graph identical to the regular composite described at the beginning of this section, when the context looks like this.
+```javascript
+{
+  myChildren: ["First", "Second"]
+}
+```
+
+However, as soon as a transition changes the context, the graph also changes.
+
+Let's say the context looks like this.
+```javascript
+{
+  myChildren: ["First", "Second", "Third"]
+}
+```
+
+Then the graph equals the following regular composite.
+```json
+{
+  "main": {
+    "type": "composite",
+    "nodes": {
+      "First": "Child",
+      "Second": "Child",
+      "Third": "Child"
+    }
+  },
+  "Child": {"type": "leaf"}
+}
+```
+
+What's important to note is that __when a dynamically generated child is removed, its current nodes are forgotten__. So if there were three dynamic children: First, Second and Third and we removed the Second one, the next time it appears it behaves like it never existed.
+
+If you find this helpful, you may also be interested in [context slices](#handlers-context-slices).
 
 ## Graphs
 Graphs are the most important type of nodes. 
@@ -429,7 +510,7 @@ Rosmaro models may be called without any parameters or with only one object.
 The complete example of a method handler for _myMethod_ looks like this:
 ```javascript
 {
-  myMethod: ({paramA, paramB, ctx, thisModel}) => ({
+  myMethod: ({paramA, paramB, ctx, thisModel, thisNode}) => ({
     arrow: 'arrow to follow',
     ctx: newCtx,
     res: 'method call result'
@@ -437,7 +518,7 @@ The complete example of a method handler for _myMethod_ looks like this:
 }
 ```
 
-As we can see, a method handler takes one object. It contains all the fields which were passed during the model method call (_paramA_ and _paramB_) and few extra ones, which include _ctx_ and _thisModel_. The result of a handler method call may be one of the following forms:
+As we can see, a method handler takes one object. It contains all the fields which were passed during the model method call (_paramA_ and _paramB_) and few extra ones, which include _ctx_, _thisModel_ and _thisNode_. The result of a handler method call may be one of the following forms:
 ```javascript
 // no arrow is followed
 // the context is not altered
@@ -499,6 +580,10 @@ h('input.ctrl-button', {
 This works as expected and __never causes a deadlock__.
 
 Moreover, because the _generateCode_ method call happens when the button is clicked and not before the handler returns, the call is fully synchronous if the locking mechanism, storage mechanism and the handler for _generateCode_ are synchronous themselves.
+
+_thisNode_ is very similar to _thisModel_. It's also an object which may be used to call Rosmaro model methods. However, only methods defined by the handler that received it and handlers of its children are going to be called.
+
+It means that when there's an active composite with two children and each of them responds to the _myMethod_ method, calling _thisModel.myMethod_ actually calls two methods, while calling _thisNode.myMethod_ from within a child's handler calls only one method.
 
 When it comes to method call results, things are straightforward in case of leaves and graphs. The result is what the method handler returns as the result. However, things get a bit (but just a bit) more complicated when composite nodes are used. Let's take a look at the following composite.
 
@@ -596,6 +681,8 @@ The context, by default, is shared among all method handlers. It is a good way t
 
 Context slices help to solve this problem by making handlers of some nodes (and handlers of their children) operate on narrow slices of the whole context.
 
+### Object property slices
+
 Let's assume the whole, model-wide context looks like this.
 ```javascript
 {
@@ -618,70 +705,83 @@ const PetNodeHandler = {
 
 Any new context returned by a handler which operates on a slice of the whole context will modify just this slice and leave the rest untouched.
 
-If you find this helpful, you may also be interested in [the initial context](#handlers-initial-context).
+### Local node name based slices
 
-## Lifecycle hooks
-When it's necessary to cause some side-effects, for example when a _Rosmaro model_ is used to control some imperative API, lifecycle hooks may turn out to be helpful.
+It's the special type of context slices. Instead of specifying a fixes name, it uses the local node name.
 
-There are two lifecycle hooks:
-
-- onEntry
-- afterLeft
-
-And this is how we use them:
+Let's say the context looks like this.
 ```javascript
-const handlers = {
-
-  A: {
-    goSomewhere: ({ctx}) => ({arrow: 'x', ctx: {...ctx, a: 'new value'}}),
-    afterLeft: ({ctx}) => { /*...*/ }
-  },
-
-  B: {
-    onEntry: ({ctx}) => { /*...*/ }
-  }
-
+{
+  First: {name: 'Solange'},
+  Second: {name: 'Łukasz'}
 }
 ```
-Let's assume the context is like this:
+
+The graph has a composite with two children: First and Second.
+
+![A composite with two children: First and Second](img/composite_first_second.png)
+
+Then we can specify that children should get slices of the context based on their local names.
+
 ```javascript
-{a: 'old value', b: 'static'}
+const First = {
+  ctxSlice: 'localNodeName',
+  method: ({ctx}) {
+    // ctx is {name: 'Solange'}
+  }
+};
+
+const Second = {
+  ctxSlice: 'localNodeName',
+  method: ({ctx}) {
+    // ctx is {name: 'Łukasz'}
+  }
+};
 ```
-And that the graph looks like this:
 
-![graph a to b](img/graph_with_a_and_b.png)
+This is especially helpful when working with dynamic composites. The local node name may be some type of ID.
 
-When the _goSomewhere_ method is called it makes the _A_ node follow the _x_ arrow which the graph connects to the _B_ node. It makes the _B_ node the active one and sets the new context:
+If you find this helpful, you may also be interested in [the initial context](#handlers-initial-context).
+
+## Method autorun
+
+When a transition to a different node occurs, __the _run_ method of the whole model is called automatically__.
+
 ```javascript
-{a: 'new value', b: 'static'}
+const Choice = {
+  run: ({ctx}) => ({
+    arrow: ctx.pet === 'cat' ? 'has a cat' : 'has no cat'
+  })
+}
 ```
 
-First, the _goSomewhere_ method returns.
+It may cause a transition, which may lead to a state which responds to the _run_ method by causing another transition and so on. It is an elegant way of implementing choice states.
 
-Then, the _onEntry_ hook of the _B_ node is called with the _new_ context.
+The method call result is always the result of the first method call, without the results of the automatically called _run_ methods.
 
-Next, the _afterLeft_ hook of the _A_ node is called with the _old_ context.
+## Renaming methods
 
-If there's a node which is entered and left within the same transaction, what happens when a composite follows two arrows to two nodes on different levels, both _onEntry_ and _afterLeft_ hooks are called with the _new_ context.
+Let's take a look at the following handler.
+```javascript
+const ActiveNode = {
+  a: () => 'the result of a()'
+};
+```
 
-Finally, the model returns what did the _goSomewhere_ method return.
+Calling _model.a()_ gives us _the result of a()_.
 
-The _onEntry_ lifecycle hook is called only when a transition occurs. When the model is freshly created and the node is active just because the _start entry point_ is connected to it, the ___onEntry_ lifecycle hook is not called__. 
+We can specify a way how method names change.
 
-Both _onEntry_ and _afterLeft_ lifecycle hooks are called __without user provided parameters__.
+```javascript
+const ActiveNode = {
+  methodMap: {
+    x: 'a'
+  },
+  a: () => 'the result of a()'
+};
+```
 
-__Loops don't trigger lifecycle hooks__, because in the end they don't actually change the active node.
-
-Lifecycle hooks are always called in the following order:
-
-1. onEntry hook of the most outer node involved
-1. ...
-1. onEntry hook of the most inner node involved 
-1. afterLeft hook of the most inner node involved
-1. ...
-1. afterLeft hook of the most outer node involved
-
-Where inner nodes mean children and outer nodes mean parents.
+Thanks to this change we can call _model.x()_ and still get _the result of a()_.
 
 # Building a model
 
