@@ -109,6 +109,39 @@ describe('handlers', () => {
 
   describe('ctxSlice', () => {
 
+    describe('special slice types', () => {
+
+      it('allows to get a slice based on the local node name', () => {
+
+        const {ctxTransformFns} = makeHandlers({
+          node: {
+            ctxSlice: 'localNodeName'
+          }
+        }, mockGraph(['node']));
+
+        assert.deepEqual(ctxTransformFns.node.in({
+          src: {
+            higher: 987, 
+            'kid': {val: 123}
+          },
+          localNodeName: 'kid',
+        }), {val: 123});
+        assert.deepEqual(ctxTransformFns.node.out({
+          src: {
+            higher: 987, 
+            'kid': {val: 123}
+          },
+          returned: {val: 456},
+          localNodeName: 'kid',
+        }), {
+          higher: 987, 
+          'kid': {val: 456}
+        });
+
+      });
+
+    });
+
     it('allows to use a narrow slice of the whole context', () => {
       const {handlers, ctxTransformFns} = makeHandlers({
         node: {
