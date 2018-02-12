@@ -680,9 +680,10 @@ describe('rosmaro', () => {
         addSwitch: ({number, ctx}) => ({ctx: {switches: union(ctx.switches, [number])}}),
         removeSwitch: ({number, ctx}) => ({ctx: {switches: without(ctx.switches, number)}}),
       };
+      
       const handlers = {
-        'main': {
-          'initCtx': {switches: [1, 2]},
+        main: {
+          initCtx: {switches: [1, 2]},
           nodes: ({ctx}) => ctx.switches,
         },
         On: {'read': () => 'On', ...switchTpl},
