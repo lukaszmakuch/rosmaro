@@ -206,6 +206,114 @@ describe('rosmaro', () => {
   
   });
 
+  describe('method autorun', () => {
+
+    const graph = {
+      "main": {
+        "type": "graph",
+        "nodes": {
+          "A": "A",
+          "B": "B",
+          "C": "C"
+        },
+        "arrows": {
+          "A": {
+            "x": {
+              "target": "B",
+              "entryPoint": "start"
+            }
+          },
+          "B": {
+            "x": {
+              "target": "C",
+              "entryPoint": "start"
+            }
+          }
+        },
+        "entryPoints": {
+          "start": {
+            "target": "A",
+            "entryPoint": "start"
+          }
+        }
+      },
+      "A": {
+        "type": "leaf"
+      },
+      "B": {
+        "type": "leaf"
+      },
+      "C": {
+        "type": "leaf"
+      }
+    };
+
+    it('is NOT triggered when the model is created', () => {
+      let methodRan = false;
+
+      const handlers = {
+        'A': {
+          run: () => {
+            methodRan = true;
+            return {arrow: 'x'};
+          }
+        },
+      };
+
+      const model = rosmaro({
+        graph,
+        handlers,
+        storage: storage,
+        lock: lock.fn
+      });
+
+      assert(!methodRan);
+    });
+
+    it('is triggered if the target state responds to the run method', () => {
+
+      let ARan = false;
+      let BRan = false;
+      let CRan = false;
+
+      const handlers = {
+        'A': {
+          doSomething: () => {
+            ARan = true;
+            return {arrow: 'x', res: 'A res'};
+          }
+        },
+        'B': {
+          run: () => {
+            BRan = true;
+            return {arrow: 'x', res: 'B res'};
+          }
+        },
+        'C': {
+          run: () => {
+            CRan = true;
+          },
+          readNode: () => 'C'
+        }
+      };
+
+      const model = rosmaro({
+        graph,
+        handlers,
+        storage: storage,
+        lock: lock.fn
+      });
+
+      assert.deepEqual('A res', model.doSomething());
+      assert(ARan);
+      assert(BRan);
+      assert(CRan);
+      assert.deepEqual('C', model.readNode());
+
+    });
+
+  });
+
   it('may be removed', () => {
 
     const graph = {

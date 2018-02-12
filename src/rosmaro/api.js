@@ -44,6 +44,167 @@ const getNewInstanceID = ({
   graph
 }) => anyArrowFollowed ? generateInstanceID(graph) : oldInstanceID;
 
+// res {newModelData: {FSMState, ctx, instanceId}, anyArrowFollowed, res}
+const handleMethodCall = ({
+  model,
+  method,
+  parameters,
+  readModelData,
+  basedOnHandlersPlan,
+  graphPlan
+}) => {
+  return chain([
+
+    // adds modelParts {graph, handlers, ctxTransformFns}
+    (
+    ) => buildGraph({
+      plan: graphPlan,
+      //{ctxTransformFns, nodes, handlers}
+      ...basedOnHandlersPlan,
+      ctx: readModelData ? readModelData.ctx : {}
+    }),
+
+
+    // adds modelData {FSMState, ctx, instanceID}
+    (
+      modelParts
+    ) => extendModelData({
+      readModelData,
+      graph: modelParts.graph
+    }),
+
+    // adds dispatchRes {arrows, ctx, res}
+    (
+      modelParts,
+      modelData
+    ) => dispatch({
+      graph: modelParts.graph,
+      FSMState: modelData.FSMState,
+      handlers: modelParts.handlers,
+      instanceID: modelData.instanceID,
+      ctx: modelData.ctx,
+      method: method,
+      params: parameters,
+      model,
+      ctxTransformFns: modelParts.ctxTransformFns
+    }),
+
+    // adds newFSMState
+    (
+      modelParts,
+      modelData,
+      dispatchRes
+    ) => fsm({
+      graph: modelParts.graph, 
+      FSMState: modelData.FSMState, 
+      arrows: dispatchRes.arrows
+    }),
+
+    // adds anyArrowFollowed
+    (
+      modelParts,
+      modelData,
+      dispatchRes,
+      newFSMState
+    ) => hasAnyArrowBeenFollowed(dispatchRes.arrows),
+
+    // adds newModelParts (so we know the new graph)
+    (
+      modelParts,
+      modelData,
+      dispatchRes,
+      newFSMState,
+      anyArrowFollowed
+    ) => buildGraph({
+      plan: graphPlan,
+      //{ctxTransformFns, nodes, handlers}
+      ...basedOnHandlersPlan,
+      ctx: dispatchRes.ctx
+    }),
+
+    // adds newInstanceID
+    (
+      modelParts,
+      modelData,
+      dispatchRes,
+      newFSMState,
+      anyArrowFollowed,
+      newModelParts
+    ) => getNewInstanceID({
+      anyArrowFollowed,
+      oldInstanceID: modelData.instanceID,
+      graph: newModelParts.graph
+    }),
+
+    // returns {newModelData: {FSMState, ctx, instanceId}, anyArrowFollowed, res}
+    (
+      modelParts,
+      modelData,
+      dispatchRes,
+      newFSMState,
+      anyArrowFollowed,
+      newModelParts,
+      newInstanceID
+    ) => ({
+      newModelData: {
+        FSMState: removeUnusedFSMState({
+          newFSMState, 
+          graph: newModelParts.graph
+        }),
+        ctx: dispatchRes.ctx,
+        instanceID: newInstanceID
+      },
+      anyArrowFollowed,
+      res: dispatchRes.res
+    }),
+
+  ]);
+};
+
+const handleManyPossibleMethodCalls = ({
+  model,
+  method,
+  parameters,
+  readModelData,
+  basedOnHandlersPlan,
+  graphPlan,
+  firstCall = true,
+  firstRes = undefined,
+  firstCallFollowedArrow = false
+}) => {
+
+  return callbackize(
+    () => handleMethodCall({
+      model,
+      method,
+      parameters,
+      readModelData,
+      basedOnHandlersPlan,
+      graphPlan
+    }),
+    ({newModelData, anyArrowFollowed, res}) => {
+      if (!anyArrowFollowed) return {
+        newModelData, 
+        anyArrowFollowed: firstCall ? anyArrowFollowed : firstCallFollowedArrow, 
+        res: firstCall ? res : firstRes
+      };
+
+      return handleManyPossibleMethodCalls({
+        model,
+        method: 'run',
+        parameters: [],
+        readModelData: newModelData,
+        basedOnHandlersPlan,
+        graphPlan,
+        firstCall: false,
+        firstRes: firstCall ? res : firstRes,
+        firstCallFollowedArrow: firstCall ? anyArrowFollowed : firstCallFollowedArrow
+      });
+    }
+  );
+
+};
+
 export default ({
   graph: graphPlan,
   handlers: handlersPlan,
@@ -51,7 +212,6 @@ export default ({
   lock,
   afterTransition = () => {}
 }) => {
-
 
   const model = new Proxy({}, {
     get(target, method) {
@@ -81,130 +241,32 @@ export default ({
               readModelData
             ) => makeHandlers(handlersPlan, graphPlan),
 
-            // adds modelParts {graph, handlers, ctxTransformFns}
+            // adds {newModelData: {FSMState, ctx, instanceId}, anyArrowFollowed, res}
             (
               readModelData,
               basedOnHandlersPlan
-            ) => buildGraph({
-              plan: graphPlan,
-              //{ctxTransformFns, nodes, handlers}
-              ...basedOnHandlersPlan,
-              ctx: readModelData ? readModelData.ctx : {}
-            }),
-
-            // adds modelData {FSMState, ctx, instanceID}
-            (
-              readModelData,
-              basedOnHandlersPlan,
-              modelParts
-            ) => extendModelData({
-              readModelData,
-              graph: modelParts.graph
-            }),
-
-            // adds dispatchRes {arrows, ctx, res}
-            (
-              readModelData,
-              basedOnHandlersPlan,
-              modelParts,
-              modelData
-            ) => dispatch({
-              graph: modelParts.graph,
-              FSMState: modelData.FSMState,
-              handlers: modelParts.handlers,
-              instanceID: modelData.instanceID,
-              ctx: modelData.ctx,
-              method: method,
-              params: [...arguments],
+            ) => handleManyPossibleMethodCalls({
               model,
-              ctxTransformFns: modelParts.ctxTransformFns
-            }),
-
-            // adds newFSMState
-            (
+              method,
+              parameters: [...arguments],
               readModelData,
               basedOnHandlersPlan,
-              modelParts,
-              modelData,
-              dispatchRes
-            ) => fsm({
-              graph: modelParts.graph, 
-              FSMState: modelData.FSMState, 
-              arrows: dispatchRes.arrows
-            }),
-
-            // adds anyArrowFollowed
-            (
-              readModelData,
-              basedOnHandlersPlan,
-              modelParts,
-              modelData,
-              dispatchRes,
-              newFSMState
-            ) => hasAnyArrowBeenFollowed(dispatchRes.arrows),
-
-            // adds newModelParts (so we know new new graph)
-            (
-              readModelData,
-              basedOnHandlersPlan,
-              modelParts,
-              modelData,
-              dispatchRes,
-              newFSMState,
-              anyArrowFollowed
-            ) => buildGraph({
-              plan: graphPlan,
-              //{ctxTransformFns, nodes, handlers}
-              ...basedOnHandlersPlan,
-              ctx: dispatchRes.ctx
-            }),
-
-            // adds newInstanceID
-            (
-              readModelData,
-              basedOnHandlersPlan,
-              modelParts,
-              modelData,
-              dispatchRes,
-              newFSMState,
-              anyArrowFollowed,
-              newModelParts
-            ) => getNewInstanceID({
-              anyArrowFollowed,
-              oldInstanceID: modelData.instanceID,
-              graph: newModelParts.graph
+              graphPlan
             }),
 
             // stores the data
             (
               readModelData,
               basedOnHandlersPlan,
-              modelParts,
-              modelData,
-              dispatchRes,
-              newFSMState,
-              anyArrowFollowed,
-              newModelParts,
-              newInstanceID
-            ) => storage.set({
-              FSMState: removeUnusedFSMState({
-                newFSMState, 
-                graph: newModelParts.graph
-              }),
-              ctx: dispatchRes.ctx,
-              instanceID: newInstanceID
-            }),
+              {newModelData, anyArrowFollowed, res}
+            ) => storage.set(newModelData),
 
             (
               readModelData,
               basedOnHandlersPlan,
-              modelParts,
-              modelData,
-              dispatchRes,
-              newFSMState,
-              anyArrowFollowed
+              {newModelData, anyArrowFollowed, res}
             ) => ({
-              res: dispatchRes.res,
+              res: res,
               anyArrowFollowed
             })
 
