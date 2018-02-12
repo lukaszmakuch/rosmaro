@@ -294,6 +294,48 @@ describe('handlers', () => {
     });
   });
 
+  describe('renaming methods', () => {
+
+    it('allows to rename methods', () => {
+
+      const {handlers, ctxTransformFns} = makeHandlers({
+        node: {
+          methodMap: {
+            x: 'a',
+            y: 'c'
+          },
+          a: () => 'a res',
+          b: () => 'b res',
+          c: () => 'c res',
+        }
+      }, mockGraph(['node']));
+
+      assertTransparentCtxTransformFn(ctxTransformFns.node);
+
+      const assertRes = ({method, expectedRes}) => assert.deepEqual(
+        handlers.node({
+          method,
+          node: {},
+          params: [{param: 123}],
+          ctx: {whole: 'ctx'},
+          model: {},
+          child: () => {}
+        }), 
+        {
+          res: expectedRes,
+          arrows: [[[null, null]]],
+          ctx: {whole: 'ctx'}
+        }
+      );
+
+      assertRes({method: 'x', expectedRes: 'a res'});
+      assertRes({method: 'b', expectedRes: 'b res'});
+      assertRes({method: 'y', expectedRes: 'c res'});
+
+    });
+
+  });
+
   describe('leaf', () => {
 
     it('associates functions with methods', () => {

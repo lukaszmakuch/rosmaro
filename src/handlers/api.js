@@ -5,6 +5,7 @@ import leaf from './leaf';
 import {transparentCtxTransformFn} from './utils';
 import transparentHandler from './transparent';
 import initCtx from './initCtx';
+import methodMap from './methodMap';
 import ctxTransform from './ctxTransform';
 import dynamicNodes from './dynamicNodes';
 import ctxSlice from './ctxSlice';
@@ -22,6 +23,7 @@ const stages = [
   initCtx,
   ctxTransform,
 
+  methodMap,
   alterRes,
   forParticularNode,
   leaf
