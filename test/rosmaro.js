@@ -386,7 +386,7 @@ describe('rosmaro', () => {
 
     const handlers = {
       'node': {
-        getID: ({thisNode: {ID}}) => ID,
+        getID: ({nodeInfo: {ID}}) => ID,
         transition: () => ({arrow: 'x'})
       }
     };
@@ -615,7 +615,7 @@ describe('rosmaro', () => {
           nodes: ({ctx: {elems}}) => elems
         },
         'leaf': {
-          sayHi: ({thisNode}) => `I'm ${thisNode.ID}.`
+          sayHi: ({nodeInfo}) => `I'm ${nodeInfo.ID}.`
         }
       };
 

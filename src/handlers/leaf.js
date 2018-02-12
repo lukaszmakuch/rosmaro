@@ -35,7 +35,7 @@ export default plan => ({
           ctx,
           ...params[0],
           thisModel: model,
-          thisNode: node
+          nodeInfo: node
         }),
         rawRes => {
           const callRes = extendRes(rawRes, ctx);

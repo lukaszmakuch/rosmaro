@@ -424,14 +424,13 @@ describe('handlers', () => {
 
   });
 
-  describe('for particular instance', () => {
-    it('calls a method only if the current node is a particular instance', () => {
+  describe('calling particular node (and its children)', () => {
+
+    it('allows to call just one child of a composite', () => {
+
       const model = {};
 
-      let childCalled, passed;
-
       const child = () => {
-        childCalled = true;
         return {
           res: 'childRes',
           arrows: [[[null, 'childArrow']]],
@@ -440,65 +439,103 @@ describe('handlers', () => {
       };
 
       const {handlers, ctxTransformFns} = makeHandlers({
-        node: {
+        target: {
           myMethod: (opts) => {
-            passed = opts
             return {
-              res: 'handlerRes',
-              arrow: 'instanceArrow',
-              ctx: {instance: 'ctx'}
+              res: 'targetResult',
+              arrow: 'targetArrow',
+              ctx: {target: 'ctx'}
             }
           }
         }
+      }, mockGraph(['target']));
+
+      assertTransparentCtxTransformFn(ctxTransformFns.target);
+
+      // this call is meant to be received by this handler
+      assert.deepEqual(
+        handlers.target({
+          method: 'myMethod',
+          node: {instanceID: 'abc', ID: 'main:A:B'},
+          params: [{a: 2, b: 3}, {
+            targetNode: 'main:A:B'
+          }],
+          ctx: {whole: 'ctx'},
+          model,
+          child
+        }), 
+        {
+          res: 'targetResult',
+          arrows: [[[null, 'targetArrow']]],
+          ctx: {target: 'ctx'}
+        }
+      );
+
+      // the target node may be a parent node as well
+      assert.deepEqual(
+        handlers.target({
+          method: 'myMethod',
+          node: {instanceID: 'abc', ID: 'main:A:B'},
+          params: [{a: 2, b: 3}, {
+            targetNode: 'main:A'
+          }],
+          ctx: {whole: 'ctx'},
+          model,
+          child
+        }), 
+        {
+          res: 'targetResult',
+          arrows: [[[null, 'targetArrow']]],
+          ctx: {target: 'ctx'}
+        }
+      );
+
+      // this call is not meant to be received by the handler
+      assert.deepEqual(
+        handlers.target({
+          method: 'myMethod',
+          node: {instanceID: 'abc', ID: 'main:B'},
+          params: [{a: 2, b: 3}, {
+            targetNode: 'main:A:B'
+          }],
+          ctx: {whole: 'ctx'},
+          model,
+          child
+        }), 
+        {
+          res: 'childRes',
+          arrows: [[[null, 'childArrow']]],
+          ctx: {child: 'ctx'}
+        }
+      );
+    });
+
+    it('passes thisNode decorator object to every handler', () => {
+
+      const {handlers} = makeHandlers({
+        node: {
+          getThisNode: ({thisNode}) => ({res: thisNode})
+        }
       }, mockGraph(['node']));
 
-      assertTransparentCtxTransformFn(ctxTransformFns.node);
+      const model = {
+        modelMethod: function () { return {passedToModel: [...arguments]}; }
+      };
 
-      const matchingCallRes = handlers.node({
-        method: 'forParticularInstance',
-        node: {instanceID: 'abc', ID: 'main:A:B'},
-        params: [{a: 2, b: 3}, {
-          targetInstance: 'abc', 
-          originalMethod: 'myMethod'
-        }],
-        ctx: {whole: 'ctx'},
+      const thisNode = handlers.node({
+        method: 'getThisNode',
+        node: {instanceID: 'abc', ID: 'main:B'},
+        params: [],
+        ctx: {},
         model,
-        child
-      });
-      assert.deepEqual(matchingCallRes, {
-        res: 'handlerRes',
-        arrows: [[[null, 'instanceArrow']]],
-        ctx: {instance: 'ctx'}
-      });
-      assert.deepEqual(passed, {
-        ctx: {whole: 'ctx'}, 
-        a: 2, 
-        b: 3, 
-        thisModel: model, 
-        thisNode: {instanceID: 'abc', ID: 'main:A:B'}
-      });
-      passed = undefined;
-      childCalled = undefined;
+        child: () => {}
+      }).res;
 
-      const differentCallRes = handlers.node({
-        method: 'forParticularInstance',
-        node: {instanceID: 'abc', ID: 'main:A:B'},
-        params: [{a: 2, b: 3}, {
-          targetInstance: 'qwe', 
-          originalMethod: 'myMethod'
-        }],
-        ctx: {whole: 'ctx'},
-        model,
-        child
-      });
-      assert.deepEqual(differentCallRes, {
-        res: 'childRes',
-        arrows: [[[null, 'childArrow']]],
-        ctx: {child: 'ctx'}
-      });
-      assert.deepEqual(undefined, passed);
-      assert.deepEqual(childCalled, true);
-      
+      assert.deepEqual(
+        {passedToModel: [{paramA: 123, paramB: 456}, {targetNode: 'main:B'}]},
+        thisNode.modelMethod({paramA: 123, paramB: 456})
+      );
+
     });
 
   });
