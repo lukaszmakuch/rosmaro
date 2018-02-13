@@ -510,7 +510,7 @@ Rosmaro models may be called without any parameters or with only one object.
 The complete example of a method handler for _myMethod_ looks like this:
 ```javascript
 {
-  myMethod: ({paramA, paramB, ctx, thisModel, thisNode}) => ({
+  myMethod: ({paramA, paramB, ctx, thisModel, thisModelNode}) => ({
     arrow: 'arrow to follow',
     ctx: newCtx,
     res: 'method call result'
@@ -518,7 +518,7 @@ The complete example of a method handler for _myMethod_ looks like this:
 }
 ```
 
-As we can see, a method handler takes one object. It contains all the fields which were passed during the model method call (_paramA_ and _paramB_) and few extra ones, which include _ctx_, _thisModel_ and _thisNode_. The result of a handler method call may be one of the following forms:
+As we can see, a method handler takes one object. It contains all the fields which were passed during the model method call (_paramA_ and _paramB_) and few extra ones, which include _ctx_, _thisModel_ and _thisModelNode_. The result of a handler method call may be one of the following forms:
 ```javascript
 // no arrow is followed
 // the context is not altered
@@ -581,7 +581,7 @@ This works as expected and __never causes a deadlock__.
 
 Moreover, because the _generateCode_ method call happens when the button is clicked and not before the handler returns, the call is fully synchronous if the locking mechanism, storage mechanism and the handler for _generateCode_ are synchronous themselves.
 
-_thisNode_ is very similar to _thisModel_. It's also an object which may be used to call Rosmaro model methods. However, only methods defined by the handler that received it and handlers of its children are going to be called.
+_thisModelNode_ is very similar to _thisModel_. It's also an object which may be used to call Rosmaro model methods. However, only methods defined by the handler that received it and handlers of its children are going to be called.
 
 It means that when there's an active composite with two children and each of them responds to the _myMethod_ method, calling _thisModel.myMethod_ actually calls two methods, while calling _thisNode.myMethod_ from within a child's handler calls only one method.
 
