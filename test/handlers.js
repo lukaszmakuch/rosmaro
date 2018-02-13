@@ -585,11 +585,11 @@ describe('handlers', () => {
       );
     });
 
-    it('passes thisNode decorator object to every handler', () => {
+    it('passes thisModelNode object to every handler', () => {
 
       const {handlers} = makeHandlers({
         node: {
-          getThisNode: ({thisNode}) => ({res: thisNode})
+          getthisModelNode: ({thisModelNode}) => ({res: thisModelNode})
         }
       }, mockGraph(['node']));
 
@@ -597,8 +597,8 @@ describe('handlers', () => {
         modelMethod: function () { return {passedToModel: [...arguments]}; }
       };
 
-      const thisNode = handlers.node({
-        method: 'getThisNode',
+      const thisModelNode = handlers.node({
+        method: 'getthisModelNode',
         node: {instanceID: 'abc', ID: 'main:B'},
         params: [],
         ctx: {},
@@ -608,7 +608,7 @@ describe('handlers', () => {
 
       assert.deepEqual(
         {passedToModel: [{paramA: 123, paramB: 456}, {targetNode: 'main:B'}]},
-        thisNode.modelMethod({paramA: 123, paramB: 456})
+        thisModelNode.modelMethod({paramA: 123, paramB: 456})
       );
 
     });

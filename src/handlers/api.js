@@ -1,6 +1,6 @@
 import alterRes from './alterRes';
 import defaultParams from './defaultParams';
-import forParticularNode from './forParticularNode';
+import thisModelNode from './thisModelNode';
 import leaf from './leaf';
 import {transparentCtxTransformFn} from './utils';
 import transparentHandler from './transparent';
@@ -25,7 +25,7 @@ const stages = [
 
   methodMap,
   alterRes,
-  forParticularNode,
+  thisModelNode,
   leaf
 ];
 

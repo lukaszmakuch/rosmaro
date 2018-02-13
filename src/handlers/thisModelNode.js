@@ -2,7 +2,7 @@
 The returned object calls the model object 
 passing the ID of the node in meta-parameters (second parameter).
 */
-const makeThisNodeDecorator = ({model, node}) => new Proxy({}, {
+const makeThisModelNodeDecorator = ({model, node}) => new Proxy({}, {
   get(target, method) {
     return function () {
       const params = [...arguments];
@@ -23,7 +23,7 @@ export default plan => ({
         params: [
           {
             ...rawOpts.params[0],
-            thisNode: makeThisNodeDecorator(rawOpts)
+            thisModelNode: makeThisModelNodeDecorator(rawOpts)
           },
           rawOpts.params[1],
         ]
