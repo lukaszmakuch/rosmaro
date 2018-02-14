@@ -745,25 +745,6 @@ This is especially helpful when working with dynamic composites. The local node 
 
 If you find this helpful, you may also be interested in [the initial context](#handlers-initial-context).
 
-## Context transforming functions
-
-When the initial context and context slices are not enough, we can specify context transforming functions.
-
-This is how we do it.
-```javascript
-const SomeHandler = {
-  ctxTransform: {
-    in: ({src, localNodeName}) => {/* The context for this node and its children. */},
-    out: ({src, localNodeName, returned}) => {/* The context for the parent of this node. */}
-  }
-};
-```
-The _in_ function takes the context which "arrived" to this node (_src_) and the local name of the node (_localNodeName_) and returns a version of the context meant to be seen by this node and its children. This function allows us to map the context as it flows deeper into the graph.
-
-The _out_ function gets the context which "arrived" to this node (_src_), the local name of the node (_localNodeName_) and the context returned by the handler (_returned_). This functions allows us to format the context returned by this node in a way it will be understood by its parent node as it flows up the graph.
-
-In fact, both context slices and the initial context are just shortcuts. Under the hood they are implemented using context transforming functions.
-
 ## Method autorun
 
 When a transition to a different node occurs, __the _run_ method of the whole model is called automatically__.
