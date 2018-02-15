@@ -9,7 +9,7 @@
     "finite state machine",
     "automata-based programming"
   ],
-  "version": "0.4.0",
+  "version": "0.5.0",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
   "dependencies": {
     "deep-diff": "^0.3.8",
