@@ -102,45 +102,6 @@ describe('handlers', () => {
 
   describe('ctxSlice', () => {
 
-    describe('special slice types', () => {
-
-      it('allows to get a slice based on the local node name', () => {
-
-        const {lenses} = makeHandlers({
-          node: {
-            ctxSlice: 'localNodeName'
-          }
-        }, mockGraph(['node']));
-
-        assert.deepEqual(
-          Rview(
-            lenses.node({localNodeName: 'kid'}), 
-            {
-              higher: 987, 
-              'kid': {val: 123}
-            }
-          ),
-          {val: 123}
-        );
-        assert.deepEqual(
-          Rset(
-            lenses.node({localNodeName: 'kid'}), 
-            {val: 456}, 
-            {
-              higher: 987, 
-              kid: {val: 123}
-            }
-          ),
-          {
-            higher: 987, 
-            'kid': {val: 456}
-          }
-        );
-
-      });
-
-    });
-
     it('allows to use a narrow slice of the whole context', () => {
       const {handlers, lenses} = makeHandlers({
         node: {

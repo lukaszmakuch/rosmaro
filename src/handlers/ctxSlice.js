@@ -1,18 +1,6 @@
 import omit from 'lodash/omit';
 import {compose as Rcompose, lensPath as RlensPath} from 'ramda';
 
-const localNodeNameSlice = ({opts: {localNodeName}}) => RlensPath([localNodeName]);
-
-const objectPropertySliceFns = ({ctxSlicePath}) => RlensPath([ctxSlicePath]);
-
-const getLens = ({ctxSlicePath, opts}) => {
-  if (ctxSlicePath === 'localNodeName') {
-    return localNodeNameSlice({ctxSlicePath, opts});
-  } else {
-    return objectPropertySliceFns({ctxSlicePath});
-  }
-};
-
 export default plan => {
   const ctxSlicePath = plan.ctxSlice;
 
@@ -39,7 +27,7 @@ export default plan => {
       ...next,
 
       lens: (opts) => Rcompose(
-        getLens({ctxSlicePath, opts}), 
+        RlensPath([ctxSlicePath]), 
         next.lens(opts)
       )
 
