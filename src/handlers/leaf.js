@@ -1,5 +1,4 @@
 import {callbackize} from './../utils';
-import {transparentCtxTransformFns} from './utils';
 
 const extendRes = (res, ctx) => {
   if (!res) return {res: undefined, arrow: null, ctx};

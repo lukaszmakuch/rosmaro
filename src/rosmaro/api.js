@@ -55,11 +55,11 @@ const handleMethodCall = ({
 }) => {
   return chain([
 
-    // adds modelParts {graph, handlers, ctxTransformFns}
+    // adds modelParts {graph, handlers, lenses}
     (
     ) => buildGraph({
       plan: graphPlan,
-      //{ctxTransformFns, nodes, handlers}
+      //{lenses, nodes, handlers}
       ...basedOnHandlersPlan,
       ctx: readModelData ? readModelData.ctx : {}
     }),
@@ -86,7 +86,7 @@ const handleMethodCall = ({
       method: method,
       params: parameters,
       model,
-      ctxTransformFns: modelParts.ctxTransformFns
+      lenses: modelParts.lenses
     }),
 
     // adds newFSMState
@@ -117,7 +117,7 @@ const handleMethodCall = ({
       anyArrowFollowed
     ) => buildGraph({
       plan: graphPlan,
-      //{ctxTransformFns, nodes, handlers}
+      //{lenses, nodes, handlers}
       ...basedOnHandlersPlan,
       ctx: dispatchRes.ctx
     }),
@@ -236,7 +236,7 @@ export default ({
             (
             ) => storage.get(),
 
-            // adds basedOnHandlersPlan {handlers, ctxTransformFns, nodes}
+            // adds basedOnHandlersPlan {handlers, lenses, nodes}
             (
               readModelData
             ) => makeHandlers(handlersPlan, graphPlan),

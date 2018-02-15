@@ -1,5 +1,6 @@
 import assert from 'assert';
 import build, {mapMain} from './../src/graphBuilder/api';
+import {identity as Ridentity, lens as Rlens, lensPath as RlensPath} from 'ramda';
 
 const buildHandler = plan => ({built: plan});
 
@@ -13,24 +14,18 @@ describe('graph builder', () => {
       }
     };
 
-    const localNodeSliceFns = {
-      in: ({src, localNodeName}) => src[localNodeName],
-      out: ({src, localNodeName, returned}) => ({...src, [localNodeName]: returned})
-    };
-    const transparentSliceFns = {
-      in: ({src}) => src,
-      out: ({returned}) => returned
-    };
+    const localNodeLens = ({localNodeName}) => RlensPath([localNodeName]);
+    const identityLens = () => Rlens(Ridentity, Ridentity);
 
-    const ctxTransformFns = {
-      'main': localNodeSliceFns,
-      'A': localNodeSliceFns,
-      'AGraph': transparentSliceFns,
-      'ASubA': transparentSliceFns,
-      'B': transparentSliceFns,
-      'BSub': transparentSliceFns,
-      'BSubA': transparentSliceFns,
-      'BSubB': transparentSliceFns,
+    const lenses = {
+      'main': localNodeLens,
+      'A': localNodeLens,
+      'AGraph': identityLens,
+      'ASubA': identityLens,
+      'B': identityLens,
+      'BSub': identityLens,
+      'BSubA': identityLens,
+      'BSubB': identityLens,
     };
 
     const emptyNodes = () => [];
@@ -237,27 +232,27 @@ describe('graph builder', () => {
         'main:B:A:B': handlers.BSubB,
       },
 
-      ctxTransformFns: {
-        'main': ctxTransformFns.main,
-        'main:A': ctxTransformFns.A,
-        'main:A:elemA': ctxTransformFns.AGraph,
-        'main:A:elemA:A': ctxTransformFns.ASubA,
-        'main:A:elemB': ctxTransformFns.AGraph,
-        'main:A:elemB:A': ctxTransformFns.ASubA,
-        'main:B': ctxTransformFns.B,
-        'main:B:A': ctxTransformFns.BSub,
-        'main:B:B': ctxTransformFns.BSub,
-        'main:B:B:A': ctxTransformFns.BSubA,
-        'main:B:B:B': ctxTransformFns.BSubB,
-        'main:B:A:A': ctxTransformFns.BSubA,
-        'main:B:A:B': ctxTransformFns.BSubB,
+      lenses: {
+        'main': lenses.main,
+        'main:A': lenses.A,
+        'main:A:elemA': lenses.AGraph,
+        'main:A:elemA:A': lenses.ASubA,
+        'main:A:elemB': lenses.AGraph,
+        'main:A:elemB:A': lenses.ASubA,
+        'main:B': lenses.B,
+        'main:B:A': lenses.BSub,
+        'main:B:B': lenses.BSub,
+        'main:B:B:A': lenses.BSubA,
+        'main:B:B:B': lenses.BSubB,
+        'main:B:A:A': lenses.BSubA,
+        'main:B:A:B': lenses.BSubB,
       }
 
     };
 
     const built = build({
       plan: graphPlan,
-      ctxTransformFns,
+      lenses,
       nodes,
       handlers,
       ctx,

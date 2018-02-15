@@ -1,6 +1,6 @@
 import omit from 'lodash/omit';
 import isEmpty from 'lodash/isEmpty';
-import {combineCtxTransformFns} from './utils';
+import {compose as Rcompose, identity as Ridentity, lens as Rlens} from 'ramda';
 
 export default plan => {
   const remainingPlan = omit(plan, ['initCtx']);
@@ -12,13 +12,13 @@ export default plan => {
 
       ...next,
 
-      ctxTransformFn: combineCtxTransformFns({
-        first: {
-          in: ({src, localNodeName}) => isEmpty(src) ? initCtx : src,
-          out: ({returned}) => returned
-        }, 
-        then: next.ctxTransformFn
-      })
+      lens: opts => Rcompose(
+        Rlens(
+          ctx => isEmpty(ctx) ? initCtx : ctx,
+          Ridentity
+        ),
+        next.lens(opts)
+      )
 
     })
   };

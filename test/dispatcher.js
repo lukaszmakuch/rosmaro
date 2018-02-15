@@ -1,11 +1,9 @@
 import assert from 'assert';
 import dispatch from './../src/dispatcher/api';
 import {mapArrows} from './../src/utils';
+import {identity as Ridentity, lens as Rlens, lensPath as RlensPath} from 'ramda';
 
-const transparentCtxTransformFns = {
-  in: ({src}) => src, 
-  out: ({returned}) => returned
-}; 
+const identityLens = () => Rlens(Ridentity, Ridentity);
 
 describe("dispatcher", () => {
 
@@ -73,10 +71,10 @@ describe("dispatcher", () => {
       method: "",
       params: [],
       model,
-      ctxTransformFns: {
-        'main': transparentCtxTransformFns,
-        'main:A': transparentCtxTransformFns,
-        'main:A:A': transparentCtxTransformFns,
+      lenses: {
+        'main': identityLens,
+        'main:A': identityLens,
+        'main:A:A': identityLens,
       }
     });
 
@@ -126,8 +124,8 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxTransformFns: {
-            'main': transparentCtxTransformFns,
+          lenses: {
+            'main': identityLens,
           }
         });
       };
@@ -170,9 +168,9 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxTransformFns: {
-            'main': transparentCtxTransformFns,
-            'main:A': transparentCtxTransformFns,
+          lenses: {
+            'main': identityLens,
+            'main:A': identityLens,
           }
         });
       };
@@ -215,9 +213,9 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxTransformFns: {
-            'main': transparentCtxTransformFns,
-            'main:A': transparentCtxTransformFns,
+          lenses: {
+            'main': identityLens,
+            'main:A': identityLens,
           }
         });
       };
@@ -263,10 +261,10 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxTransformFns: {
-            'main': transparentCtxTransformFns,
-            'main:A': transparentCtxTransformFns,
-            'main:B': transparentCtxTransformFns,
+          lenses: {
+            'main': identityLens,
+            'main:A': identityLens,
+            'main:B': identityLens,
           }
         });
       };
@@ -289,10 +287,10 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxTransformFns: {
-            'main': transparentCtxTransformFns,
-            'main:A': transparentCtxTransformFns,
-            'main:B': transparentCtxTransformFns,
+          lenses: {
+            'main': identityLens,
+            'main:A': identityLens,
+            'main:B': identityLens,
           }
         });
         const finalCallRes = await callRes;
@@ -334,10 +332,10 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxTransformFns: {
-            'main': transparentCtxTransformFns,
-            'main:A': transparentCtxTransformFns,
-            'main:B': transparentCtxTransformFns,
+          lenses: {
+            'main': identityLens,
+            'main:A': identityLens,
+            'main:B': identityLens,
           }
         });
       };
@@ -441,12 +439,12 @@ describe("dispatcher", () => {
         instanceID: {},
         method: "a",
         params: [],
-        ctxTransformFns: {
-          'main': transparentCtxTransformFns,
-          'main:target': transparentCtxTransformFns,
-          'main:graph_with_leaving_a': transparentCtxTransformFns,
-          'main:graph_with_leaving_a:a': transparentCtxTransformFns,
-          'main:graph_with_leaving_a:b': transparentCtxTransformFns,
+        lenses: {
+          'main': identityLens,
+          'main:target': identityLens,
+          'main:graph_with_leaving_a': identityLens,
+          'main:graph_with_leaving_a:a': identityLens,
+          'main:graph_with_leaving_a:b': identityLens,
         }
       }));
 
@@ -474,8 +472,8 @@ describe("dispatcher", () => {
         instanceID: {},
         method: "",
         params: [],
-        ctxTransformFns: {
-          'main': transparentCtxTransformFns,
+        lenses: {
+          'main': identityLens,
         },
       });
       const expectedCtx = {a: 2};
@@ -496,14 +494,14 @@ describe("dispatcher", () => {
         'main:A': 'main:A:A',
         'main:B': 'main:B:A',
       };
-      const ctxTransformFns = {
-        'main': transparentCtxTransformFns,
-        'main:A': transparentCtxTransformFns,
-        'main:B': transparentCtxTransformFns,
-        'main:A:A': transparentCtxTransformFns,
-        'main:A:B': transparentCtxTransformFns,
-        'main:B:A': transparentCtxTransformFns,
-        'main:B:B': transparentCtxTransformFns,
+      const lenses = {
+        'main': identityLens,
+        'main:A': identityLens,
+        'main:B': identityLens,
+        'main:A:A': identityLens,
+        'main:A:B': identityLens,
+        'main:B:A': identityLens,
+        'main:B:B': identityLens,
       };
 
       it('allows parts to be added', () => {
@@ -524,7 +522,7 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxTransformFns,
+          lenses,
         });
         const expectedCtx = {a: "a", b: "b", c: "c"};
         assert.deepEqual(expectedCtx, ctx);
@@ -548,7 +546,7 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxTransformFns,
+          lenses,
         });
         const expectedCtx = {arr: [{elem: "b"}]};
         assert.deepEqual(expectedCtx, ctx);
@@ -572,7 +570,7 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxTransformFns,
+          lenses,
         });
         const expectedCtx = {a: "z", b: "x"};
         assert.deepEqual(expectedCtx, ctx);
@@ -595,7 +593,7 @@ describe("dispatcher", () => {
           instanceID: {},
           method: "",
           params: [],
-          ctxTransformFns,
+          lenses,
         });
         const expectedCtx = {a: 2, b: 3};
         assert.deepEqual(expectedCtx, ctx);
@@ -621,14 +619,14 @@ describe("dispatcher", () => {
       'main:B': 'main:B:B'
     };
 
-    const ctxTransformFns = {
-      'main': transparentCtxTransformFns,
-      'main:A': transparentCtxTransformFns,
-      'main:B': transparentCtxTransformFns,
-      'main:B:A': transparentCtxTransformFns,
-      'main:B:B': transparentCtxTransformFns,
-      'main:B:B:A': transparentCtxTransformFns,
-      'main:B:B:B': transparentCtxTransformFns,
+    const lenses = {
+      'main': identityLens,
+      'main:A': identityLens,
+      'main:B': identityLens,
+      'main:B:A': identityLens,
+      'main:B:B': identityLens,
+      'main:B:B:A': identityLens,
+      'main:B:B:B': identityLens,
     };
 
     const handlers = {
@@ -670,7 +668,7 @@ describe("dispatcher", () => {
       instanceID: {},
       method: "followArrows",
       params: [],
-      ctxTransformFns
+      lenses
     });
 
     const expectedCallRes = {
@@ -718,27 +716,27 @@ describe("dispatcher", () => {
         };
       },
     };
-    const ctxTransformFns = {
+    const lenses = {
       // simple map {raw} => {forMain}
-      'main': {
-        in: ({src}) => ({forMain: src.raw}),
-        out: ({src, returned}) => ({raw: returned.forMain})
-      },
+      'main': () => Rlens(
+          ctx => ({forMain: ctx.raw}),
+          (returned, src) => ({raw: returned.forMain})
+        ),
       // slice {forMain: part: x} => {'level2': x}
-      'main:level1': {
-        in: ({src}) => ({'level2': src.forMain.part}),
-        out: ({src, returned}) => ({
-          ...src, 
-          forMain: {
-            ...src.forMain,
-            part: returned['level2']
-          }
-        })},
-      // slice {'level2': x} => x
-      'main:level1:level2': {
-        in: ({src, localNodeName}) => src[localNodeName],
-        out: ({src, localNodeName, returned}) => ({...src, [localNodeName]: returned})
-      }
+      'main:level1': () => Rlens(
+          ctx => {
+            return ({'level2': ctx.forMain.part})
+          },
+          (returned, src) => ({
+            ...src, 
+            forMain: {
+              ...src.forMain,
+              part: returned['level2']
+            }
+          })
+        ),
+      // slice {'level2': x} => x 
+      'main:level1:level2': ({localNodeName}) => RlensPath([localNodeName])
     };
     const callRes = dispatch({
       graph,
@@ -748,7 +746,7 @@ describe("dispatcher", () => {
       instanceID: {},
       method: "",
       params: [],
-      ctxTransformFns
+      lenses
     });
     assert.deepEqual({
       arrows: [

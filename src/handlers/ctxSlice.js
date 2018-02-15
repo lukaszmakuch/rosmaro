@@ -1,32 +1,15 @@
 import omit from 'lodash/omit';
-import {combineCtxTransformFns} from './utils';
+import {compose as Rcompose, lensPath as RlensPath} from 'ramda';
 
-const localNodeNameSlice = () => ({
-  in: ({src, localNodeName}) => (src[localNodeName] || {}),
-  out: ({src, localNodeName, returned}) => ({
-    ...src,
-    [localNodeName]: returned
-  })
-});
+const localNodeNameSlice = ({opts: {localNodeName}}) => RlensPath([localNodeName]);
 
-const objectPropertySliceFns = ctxSlicePath => ({
-  in: ({src, localNodeName}) => {
-    const ctxSlice = src[ctxSlicePath] || {};
-    return ctxSlice;
-  },
-  out: ({src, returned, localNodeName}) => {
-    return {
-      ...src,
-      [ctxSlicePath]: returned
-    }
-  }
-});
+const objectPropertySliceFns = ({ctxSlicePath}) => RlensPath([ctxSlicePath]);
 
-const getCtxMapFn = ctxSlicePath => {
+const getLens = ({ctxSlicePath, opts}) => {
   if (ctxSlicePath === 'localNodeName') {
-    return localNodeNameSlice(ctxSlicePath);
+    return localNodeNameSlice({ctxSlicePath, opts});
   } else {
-    return objectPropertySliceFns(ctxSlicePath);
+    return objectPropertySliceFns({ctxSlicePath});
   }
 };
 
@@ -40,7 +23,7 @@ export default plan => {
       remainingPlan: plan,
       make: (next) => ({
         handler: (opts) => next.handler(opts),
-        ctxTransformFn: next.ctxTransformFn
+        lens: next.lens
       })
     };
   }
@@ -55,10 +38,10 @@ export default plan => {
 
       ...next,
 
-      ctxTransformFn: combineCtxTransformFns({
-        first: getCtxMapFn(ctxSlicePath), 
-        then: next.ctxTransformFn
-      })
+      lens: (opts) => Rcompose(
+        getLens({ctxSlicePath, opts}), 
+        next.lens(opts)
+      )
 
     })
   };

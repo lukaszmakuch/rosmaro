@@ -6,13 +6,15 @@
     "fsm",
     "dispatch",
     "visual programming",
-    "state machine"
+    "finite state machine",
+    "automata-based programming"
   ],
   "version": "0.4.0",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
   "dependencies": {
     "deep-diff": "^0.3.8",
     "lodash": "^4.17.4",
+    "ramda": "^0.25.0",
     "uuid": "^3.0.1"
   },
   "devDependencies": {

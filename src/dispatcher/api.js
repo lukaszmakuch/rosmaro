@@ -1,6 +1,7 @@
 import {callbackize, extractPromises} from './../utils';
 import defaultParentHandler from './../handlers/transparent';
 import {mergeCtxs} from './ctx';
+import {view as Rview, set as Rset} from 'ramda';
 
 // arrows like [ [['a:a:a', 'x']] [['a:a:b', 'x']] ]
 // node like 'a:a'
@@ -35,21 +36,14 @@ const dispatch = ({
   instanceID,
   params,
   model,
-  ctxTransformFns
+  lenses
 }) => {
   const localNodeName = extractLocalNodeName(node);
-  const nodeCtxTransformFns = ctxTransformFns[node];
-  const ctx = nodeCtxTransformFns.in({
-    src: rawCtx,
-    localNodeName
-  });
+  const nodeLens = lenses[node]({localNodeName});
+  const ctx = Rview(nodeLens, rawCtx)
   const mapReturnedCtx = callRes => ({
     ...callRes,
-    ctx: nodeCtxTransformFns.out({
-      src: rawCtx, 
-      returned: callRes.ctx,
-      localNodeName
-    })
+    ctx: Rset(nodeLens, callRes.ctx, rawCtx)
   });
   const handler = opts => callbackize(
     () => (handlers[node] || defaultParentHandler)(opts),
@@ -67,7 +61,7 @@ const dispatch = ({
     method,
     params,
     model,
-    ctxTransformFns
+    lenses
   });
 
   if (nodeType === 'leaf') {

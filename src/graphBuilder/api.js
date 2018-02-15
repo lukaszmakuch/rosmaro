@@ -1,10 +1,11 @@
 import {glueNodeName} from './nodeNames';
 import omit from 'lodash/omit';
 import transparentHandler from './../handlers/transparent';
+import {view as Rview} from 'ramda';
 
 const build = ({
   plan, 
-  ctxTransformFns,
+  lenses,
   nodes,
   handlers,
   ctx: rawCtx,
@@ -12,8 +13,8 @@ const build = ({
   builtNode = 'main',
   parent = null
 }) => {
-  const ctxTransformFn = ctxTransformFns[planNode];
-  const ctx = ctxTransformFn.in({src: rawCtx, localNodeName: planNode});
+  const nodeLens = lenses[planNode];
+  const ctx = Rview(nodeLens({localNodeName: planNode}), rawCtx);
   const nodePlan = plan[planNode];
   const type = nodePlan.type;
   const handler = handlers[planNode];
@@ -29,8 +30,8 @@ const build = ({
       handlers: {
         [builtNode]: handler
       },
-      ctxTransformFns: {
-        [builtNode]: ctxTransformFn
+      lenses: {
+        [builtNode]: nodeLens
       }
     };
   }
@@ -44,7 +45,7 @@ const build = ({
       const childPlanNode = regularComposite  ? nodePlan.nodes[planName] : nodePlan.nodeTemplate;
       const built = build({
         plan, 
-        ctxTransformFns,
+        lenses,
         nodes,
         handlers,
         ctx,
@@ -56,9 +57,9 @@ const build = ({
         nodes: [...soFar.nodes, builtName],
         graph: {...soFar.graph, ...built.graph},
         handlers: {...soFar.handlers, ...built.handlers},
-        ctxTransformFns: {...soFar.ctxTransformFns, ...built.ctxTransformFns}
+        lenses: {...soFar.lenses, ...built.lenses}
       };
-    }, {nodes: [], graph: {}, handlers: {}, ctxTransformFns: {}});
+    }, {nodes: [], graph: {}, handlers: {}, lenses: {}});
 
     return {
       graph: {
@@ -73,9 +74,9 @@ const build = ({
         [builtNode]: handler,
         ...childRes.handlers
       },
-      ctxTransformFns: {
-        [builtNode]: ctxTransformFn,
-        ...childRes.ctxTransformFns
+      lenses: {
+        [builtNode]: nodeLens,
+        ...childRes.lenses
       },
     };
   }
@@ -85,7 +86,7 @@ const build = ({
       const builtName = glueNodeName(builtNode, planName);
       const built = build({
         plan, 
-        ctxTransformFns,
+        lenses,
         nodes,
         handlers,
         ctx,
@@ -97,9 +98,9 @@ const build = ({
         nodes: [...soFar.nodes, builtName],
         graph: {...soFar.graph, ...built.graph},
         handlers: {...soFar.handlers, ...built.handlers},
-        ctxTransformFns: {...soFar.ctxTransformFns, ...built.ctxTransformFns},
+        lenses: {...soFar.lenses, ...built.lenses},
       };
-    }, {nodes: [], graph: {}, handlers: {}, ctxTransformFns: {}});
+    }, {nodes: [], graph: {}, handlers: {}, lenses: {}});
 
     const emptyArrows = childRes.nodes.reduce((soFar, node) => ({
       ...soFar,
@@ -148,9 +149,9 @@ const build = ({
         [builtNode]: handler,
         ...childRes.handlers
       },
-      ctxTransformFns: {
-        [builtNode]: ctxTransformFn,
-        ...childRes.ctxTransformFns
+      lenses: {
+        [builtNode]: nodeLens,
+        ...childRes.lenses
       },
     };
   }

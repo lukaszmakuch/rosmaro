@@ -1,42 +1,37 @@
 import assert from 'assert';
 import makeHandlers from './../src/handlers/api';
 import invert from 'lodash/invert';
+import {view as Rview, set as Rset, lens as Rlens} from 'ramda';
 
 const finalChild = ({ctx}) => ({arrows: [[[null, null]]], ctx, res: undefined});
 
-const assertTransparentCtxTransformFn = (transformFn) => {
+const assertIdentityLens = lensFactory => {
+  const lens = lensFactory();
   const ctx = {a: 123, b: 456};
   assert.deepEqual(
     ctx,
-    transformFn.in({
-      src: ctx, 
-      localNodeName: 'anything'
-    })
+    Rview(lens, ctx)
   );
   assert.deepEqual(
     ctx,
-    transformFn.out({
-      returned: ctx, 
-      src: ctx, 
-      localNodeName: 'anything'
-    })
+    Rset(lens, ctx, ctx)
   );
-};
+}
 
 // All we need to build handlers is to read the list of all nodes.
 const mockGraph = nodes => invert(nodes);
 
 describe('handlers', () => {
 
-  it('always provides a complete list of ctxTransformFns', () => {
-    const {ctxTransformFns} = makeHandlers({}, mockGraph(['A']));
-    assertTransparentCtxTransformFn(ctxTransformFns.A);
+  it('always provides a complete list of lenses', () => {
+    const {lenses} = makeHandlers({}, mockGraph(['A']));
+    assertIdentityLens(lenses.A);
   });
 
-  describe('transforming context', () => {
+  describe('context lenses', () => {
     it('is a way to transform the context', () => {
 
-      const {handlers, ctxTransformFns} = makeHandlers({
+      const {handlers, lenses} = makeHandlers({
         node: {
 
           //this slice is applied BEFORE the initCtx
@@ -47,34 +42,32 @@ describe('handlers', () => {
             another: 123
           },
 
-          ctxTransform: {
-            in: ({src, localNodeName}) => ({
-              text: src.text + " " + localNodeName
+          ctxLens: ({localNodeName}) => Rlens(
+            ctx => ({
+              text: ctx.text + " " + localNodeName
             }),
-            out: ({src, localNodeName, returned}) => ({
+            (returned, src) => ({
               ...src,
               text: returned.text.replace(localNodeName, "world")
             })
-          }
+          )
 
         }
       }, mockGraph(['node']));
 
-      assert.deepEqual(ctxTransformFns.node.in({
-        src: {},
-        localNodeName: 'node',
-      }), {text: 'hello node'});
-
-      assert.deepEqual(ctxTransformFns.node.out({
-        src: {},
-        returned: {text: 'hi node'},
-        localNodeName: 'node',
-      }), {
-        sub: {
-          another: 123,
-          text: 'hi world'
+      assert.deepEqual(
+        Rview(lenses.node({localNodeName: 'node'}), {}),
+        {text: 'hello node'}
+      );
+      assert.deepEqual(
+        Rset(lenses.node({localNodeName: 'node'}), {text: 'hi node'}, {}),
+        {
+          sub: {
+            another: 123,
+            text: 'hi world'
+          }
         }
-      });
+      );
 
     });
   });
@@ -113,37 +106,43 @@ describe('handlers', () => {
 
       it('allows to get a slice based on the local node name', () => {
 
-        const {ctxTransformFns} = makeHandlers({
+        const {lenses} = makeHandlers({
           node: {
             ctxSlice: 'localNodeName'
           }
         }, mockGraph(['node']));
 
-        assert.deepEqual(ctxTransformFns.node.in({
-          src: {
+        assert.deepEqual(
+          Rview(
+            lenses.node({localNodeName: 'kid'}), 
+            {
+              higher: 987, 
+              'kid': {val: 123}
+            }
+          ),
+          {val: 123}
+        );
+        assert.deepEqual(
+          Rset(
+            lenses.node({localNodeName: 'kid'}), 
+            {val: 456}, 
+            {
+              higher: 987, 
+              kid: {val: 123}
+            }
+          ),
+          {
             higher: 987, 
-            'kid': {val: 123}
-          },
-          localNodeName: 'kid',
-        }), {val: 123});
-        assert.deepEqual(ctxTransformFns.node.out({
-          src: {
-            higher: 987, 
-            'kid': {val: 123}
-          },
-          returned: {val: 456},
-          localNodeName: 'kid',
-        }), {
-          higher: 987, 
-          'kid': {val: 456}
-        });
+            'kid': {val: 456}
+          }
+        );
 
       });
 
     });
 
     it('allows to use a narrow slice of the whole context', () => {
-      const {handlers, ctxTransformFns} = makeHandlers({
+      const {handlers, lenses} = makeHandlers({
         node: {
           ctxSlice: 'for the handler',
           method: ({ctx}) => ({
@@ -169,83 +168,103 @@ describe('handlers', () => {
         arrows: [[[null, null]]],
         ctx: {val: 456}
       });
-      assert.deepEqual(ctxTransformFns.node.in({
-        src: {
+
+      assert.deepEqual(
+        Rview(
+          lenses.node({localNodeName: 'anything'}), 
+          {
+            higher: 987, 
+            'for the handler': {val: 123}
+          }
+        ),
+        {val: 123}
+      );
+      assert.deepEqual(
+        Rset(
+          lenses.node({localNodeName: 'anything'}), 
+          {val: 456}, 
+          {
+            higher: 987, 
+            'for the handler': {val: 123}
+          }
+        ),
+        {
           higher: 987, 
-          'for the handler': {val: 123}
-        },
-        localNodeName: 'anything',
-      }), {val: 123});
-      assert.deepEqual(ctxTransformFns.node.out({
-        src: {
-          higher: 987, 
-          'for the handler': {val: 123}
-        },
-        returned: {val: 456},
-        localNodeName: 'anything',
-      }), {
-        higher: 987, 
-        'for the handler': {val: 456}
-      });
+          'for the handler': {val: 456}
+        }
+      );
+
     });
 
     it('creates the slice if it does not exist', () => {
-      const {ctxTransformFns} = makeHandlers({
+      const {lenses} = makeHandlers({
         node: {
           ctxSlice: 'for the handler'
         }
       }, mockGraph(['node']));
 
-      assert.deepEqual(ctxTransformFns.node.in({
-        src: {
+      assert.deepEqual(
+        Rview(
+          lenses.node({localNodeName: 'anything'}), 
+          {
+            higher: 987, 
+          }
+        ),
+        {}
+      );
+      assert.deepEqual(
+        Rset(
+          lenses.node({localNodeName: 'anything'}), 
+          {val: 123}, 
+          {
+            higher: 987, 
+          }
+        ),
+        {
           higher: 987, 
-        },
-        localNodeName: 'anything',
-      }), {});
-      assert.deepEqual(ctxTransformFns.node.out({
-        src: {
-          higher: 987
-        },
-        returned: {val: 123},
-        localNodeName: 'anything',
-      }), {
-        higher: 987, 
-        'for the handler': {val: 123}
-      });
+          'for the handler': {val: 123}
+        }
+      );
 
     });
 
     it('may be used with initCtx', () => {
-      const {ctxTransformFns} = makeHandlers({
+      const {lenses} = makeHandlers({
         node: {
           ctxSlice: 'for the handler',
           initCtx: {val: 123}
         }
       }, mockGraph(['node']));
 
-      assert.deepEqual(ctxTransformFns.node.in({
-        src: {
+      assert.deepEqual(
+        Rview(
+          lenses.node({localNodeName: 'anything'}), 
+          {
+            higher: 987, 
+          }
+        ),
+        {val: 123}
+      );
+      assert.deepEqual(
+        Rset(
+          lenses.node({localNodeName: 'anything'}), 
+          {val: 456}, 
+          {
+            higher: 987, 
+          }
+        ),
+        {
           higher: 987, 
-        },
-        localNodeName: 'anything',
-      }), {val: 123});
-      assert.deepEqual(ctxTransformFns.node.out({
-        src: {
-          higher: 987
-        },
-        returned: {val: 456},
-        localNodeName: 'anything',
-      }), {
-        higher: 987, 
-        'for the handler': {val: 456}
-      });
+          'for the handler': {val: 456}
+        }
+      );
 
     });
 
   });
 
   describe('initial context', () => {
-    const {handlers, ctxTransformFns} = makeHandlers({
+    const {handlers, lenses} = makeHandlers({
       node: {
         initCtx: {a: 123, b: 456},
         method: ({ctx}) => ctx
@@ -264,16 +283,21 @@ describe('handlers', () => {
         arrows: [[[null, null]]],
         ctx: {}
       });
-      // context transforming functions are responsible for the initial context
-      assert.deepEqual(ctxTransformFns.node.in({
-        src: {},
-        localNodeName: 'anything',
-      }), {a: 123, b: 456});
-      assert.deepEqual(ctxTransformFns.node.out({
-        src: {},
-        returned: {a: 123, b: 456},
-        localNodeName: 'anything',
-      }), {a: 123, b: 456});
+      assert.deepEqual(
+        Rview(
+          lenses.node({localNodeName: 'anything'}), 
+          {}
+        ),
+        {a: 123, b: 456}
+      );
+      assert.deepEqual(
+        Rset(
+          lenses.node({localNodeName: 'anything'}), 
+          {a: 123, b: 456}, 
+          {}
+        ),
+        {a: 123, b: 456}
+      );
     });
 
     it('does NOT use the initial context if there is already some context', () => {
@@ -287,16 +311,21 @@ describe('handlers', () => {
         arrows: [[[null, null]]],
         ctx: {c: 987}
       });
-      // context transforming functions are responsible for the initial context
-      assert.deepEqual(ctxTransformFns.node.in({
-        src: {c: 987},
-        localNodeName: 'anything',
-      }), {c: 987});
-      assert.deepEqual(ctxTransformFns.node.out({
-        src: {c: 987},
-        returned: {c: 987},
-        localNodeName: 'anything',
-      }), {c: 987});
+      assert.deepEqual(
+        Rview(
+          lenses.node({localNodeName: 'anything'}), 
+          {c: 987}
+        ),
+        {c: 987}
+      );
+      assert.deepEqual(
+        Rset(
+          lenses.node({localNodeName: 'anything'}), 
+          {c: 987}, 
+          {c: 987}
+        ),
+        {c: 987}
+      );
     });
 
   });
@@ -304,14 +333,14 @@ describe('handlers', () => {
   describe('alter result', () => {
     it('allows to alter the result of a method call', () => {
 
-      const {handlers, ctxTransformFns} = makeHandlers({
+      const {handlers, lenses} = makeHandlers({
         node: {
           method: () => 'result',
           afterMethod: ({res}) => 'altered ' + res
         }
       }, mockGraph(['node']));
 
-      assertTransparentCtxTransformFn(ctxTransformFns.node);
+      assertIdentityLens(lenses.node);
 
       assert.deepEqual(handlers.node({
         method: 'method',
@@ -331,7 +360,7 @@ describe('handlers', () => {
 
     it('allows to rename methods', () => {
 
-      const {handlers, ctxTransformFns} = makeHandlers({
+      const {handlers, lenses} = makeHandlers({
         node: {
           methodMap: {
             x: 'a',
@@ -343,7 +372,7 @@ describe('handlers', () => {
         }
       }, mockGraph(['node']));
 
-      assertTransparentCtxTransformFn(ctxTransformFns.node);
+      assertIdentityLens(lenses.node);
 
       const assertRes = ({method, expectedRes}) => assert.deepEqual(
         handlers.node({
@@ -377,7 +406,7 @@ describe('handlers', () => {
       let receivedByA;
       let receivedByB;
 
-      const {handlers, ctxTransformFns} = makeHandlers({
+      const {handlers, lenses} = makeHandlers({
         node: {
           a({ctx, paramA, paramB, thisModel}) {
             receivedByA = {ctx, paramA, paramB, thisModel};
@@ -399,7 +428,7 @@ describe('handlers', () => {
         }
       }, mockGraph(['node', 'b']));
 
-      assertTransparentCtxTransformFn(ctxTransformFns.node);
+      assertIdentityLens(lenses.node);
 
       const aRes = handlers.node({
         ctx: {whole: 'ctx'},
@@ -439,12 +468,12 @@ describe('handlers', () => {
     });
 
     it('does nothing when a method is not found', () => {
-      const {handlers, ctxTransformFns} = makeHandlers({
+      const {handlers, lenses} = makeHandlers({
         otherNode: {
           a: () => ({res: 'aRes', arrow: 'x', ctx: {x: 987}})
         }
       }, mockGraph(['a']));
-      assertTransparentCtxTransformFn(ctxTransformFns.otherNode);
+      assertIdentityLens(lenses.otherNode);
       assert.deepEqual(handlers.otherNode({
         method: 'x', 
         ctx: {init: 123}, 
@@ -458,12 +487,12 @@ describe('handlers', () => {
     });
 
     it('may return just a result', () => {
-      const {handlers, ctxTransformFns} = makeHandlers({
+      const {handlers, lenses} = makeHandlers({
         node: {
           a: () => 'just this'
         }
       }, mockGraph(['node']));
-      assertTransparentCtxTransformFn(ctxTransformFns.node);
+      assertIdentityLens(lenses.node);
       assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
         res: 'just this',
         ctx: {init: 123},
@@ -472,12 +501,12 @@ describe('handlers', () => {
     });
 
     it('may return nothing', () => {
-      const {handlers, ctxTransformFns} = makeHandlers({
+      const {handlers, lenses} = makeHandlers({
         node: {
           a: () => {}
         }
       }, mockGraph(['node']));
-      assertTransparentCtxTransformFn(ctxTransformFns.node);
+      assertIdentityLens(lenses.node);
       assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
         res: undefined,
         ctx: {init: 123},
@@ -486,10 +515,10 @@ describe('handlers', () => {
     });
 
     it('may return just an arrow', () => {
-      const {handlers, ctxTransformFns} = makeHandlers({
+      const {handlers, lenses} = makeHandlers({
         node: {a: () => ({arrow: 'x'})}
       }, mockGraph(['node']));
-      assertTransparentCtxTransformFn(ctxTransformFns.node);
+      assertIdentityLens(lenses.node);
       assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
         res: undefined,
         ctx: {init: 123},
@@ -513,7 +542,7 @@ describe('handlers', () => {
         };
       };
 
-      const {handlers, ctxTransformFns} = makeHandlers({
+      const {handlers, lenses} = makeHandlers({
         target: {
           myMethod: (opts) => {
             return {
@@ -525,7 +554,7 @@ describe('handlers', () => {
         }
       }, mockGraph(['target']));
 
-      assertTransparentCtxTransformFn(ctxTransformFns.target);
+      assertIdentityLens(lenses.target);
 
       // this call is meant to be received by this handler
       assert.deepEqual(

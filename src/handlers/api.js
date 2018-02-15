@@ -2,15 +2,15 @@ import alterRes from './alterRes';
 import defaultParams from './defaultParams';
 import thisModelNode from './thisModelNode';
 import leaf from './leaf';
-import {transparentCtxTransformFn} from './utils';
 import transparentHandler from './transparent';
 import initCtx from './initCtx';
 import methodMap from './methodMap';
-import ctxTransform from './ctxTransform';
+import ctxLens from './ctxLens';
 import dynamicNodes from './dynamicNodes';
 import ctxSlice from './ctxSlice';
 import reduce from "lodash/reduce";
 import mapValues from 'lodash/mapValues';
+import {identity as Ridentity, lens as Rlens} from 'ramda';
 
 const stages = [
   defaultParams,
@@ -21,7 +21,7 @@ const stages = [
   // the sliced context.
   ctxSlice,
   initCtx,
-  ctxTransform,
+  ctxLens,
 
   methodMap,
   alterRes,
@@ -29,16 +29,12 @@ const stages = [
   leaf
 ];
 
-const transparent = {
-  handler: transparentHandler,
-  ctxTransformFn: transparentCtxTransformFn,
-  nodes: ({ctx}) => ([])
-};
+const identityLens = () => Rlens(Ridentity, Ridentity);
 
 /*
 res like {
   handler: fn,
-  ctxTransformFn: in: fn, out: fn},
+  lens
   nodes: fn
 }
 */
@@ -48,7 +44,11 @@ const buildHandler = (handlerPlan = {}, stageIndex = 0) => {
     const {make, remainingPlan} = stage(handlerPlan);
     return make(buildHandler(remainingPlan, stageIndex + 1));
   } else {
-    return transparent;
+    return {
+      handler: transparentHandler,
+      lens: identityLens,
+      nodes: ({ctx}) => ([])
+    };
   }
 };
 
@@ -58,9 +58,9 @@ res like {
     node: fn,
     anotherNode: fn
   },
-  ctxTransformFns: {
-    node: {in: fn, out: fn},
-    anotherNode: {in: fn, out: fn},
+  lenses: {
+    node,
+    anotherNode,
   },
   nodes: {
     node: fn,
@@ -69,16 +69,16 @@ res like {
 }
 */
 const buildAllHandlers = (handlersPlan, graph) => 
-  reduce(handlersPlan, ({handlers, ctxTransformFns, nodes}, handlerPlan, node) => {
-    const {handler, ctxTransformFn, nodes: newNodes} = buildHandler(handlerPlan);
+  reduce(handlersPlan, ({handlers, lenses, nodes}, handlerPlan, node) => {
+    const {handler, lens, nodes: newNodes} = buildHandler(handlerPlan);
     return {
       handlers: {
         ...handlers,
         [node]: handler
       },
-      ctxTransformFns: {
-        ...ctxTransformFns,
-        [node]: ctxTransformFn
+      lenses: {
+        ...lenses,
+        [node]: lens
       },
       nodes: {
         ...nodes,
@@ -87,7 +87,7 @@ const buildAllHandlers = (handlersPlan, graph) =>
     };
   }, {
     handlers: {}, 
-    ctxTransformFns: mapValues(graph, () => transparentCtxTransformFn), 
+    lenses: mapValues(graph, () => identityLens), 
     nodes: {}
   });
 
