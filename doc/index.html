@@ -681,9 +681,6 @@ The context, by default, is shared among all method handlers. It is a good way t
 
 Context slices help to solve this problem by making handlers of some nodes (and handlers of their children) operate on narrow slices of the whole context.
 
----
- Object property slices
-
 Let's assume the whole, model-wide context looks like this.
 ```javascript
 {
@@ -706,10 +703,16 @@ const PetNodeHandler = {
 
 Any new context returned by a handler which operates on a slice of the whole context will modify just this slice and leave the rest untouched.
 
----
-Local node name based slices
+If you find this helpful, you may also be interested in [context lenses](#handlers-context-lenses) or [the initial context](#handlers-initial-context).
 
-It's the special type of context slices. Instead of specifying a fixes name, it uses the local node name.
+## Context lenses
+
+Context lenses are meant to be used when simple context slices are not sufficient. A lens is built of two functions:
+
+- a function that zooms the context in
+- a function that zooms the context out
+
+Rosmaro uses [Rambda lenses](http://ramdajs.com/docs/#lens).
 
 Let's say the context looks like this.
 ```javascript
@@ -719,31 +722,33 @@ Let's say the context looks like this.
 }
 ```
 
-The graph has a composite with two children: First and Second.
+Within the graph there's a composite with two children: First and Second.
 
 ![A composite with two children: First and Second](img/composite_first_second.png)
 
-Then we can specify that children should get slices of the context based on their local names.
+We can then specify a lens factory. In this example, the produced lens slices the context based on the local name of the node.
 
 ```javascript
+import {lensPath} from 'ramda';
+
+const localNodeLens = ({localNodeName}) => lensPath([localNodeName]);
+
 const First = {
-  ctxSlice: 'localNodeName',
+  ctxLens: localNodeLens,
   method: ({ctx}) {
     // ctx is {name: 'Solange'}
   }
 };
 
 const Second = {
-  ctxSlice: 'localNodeName',
+  ctxLens: localNodeLens,
   method: ({ctx}) {
     // ctx is {name: 'Łukasz'}
   }
 };
 ```
 
-This is especially helpful when working with dynamic composites. The local node name may be some type of ID.
-
-If you find this helpful, you may also be interested in [the initial context](#handlers-initial-context).
+This turns out to be especially helpful when working with dynamic composites, when the local node name is often some kind of ID.
 
 ## Method autorun
 
