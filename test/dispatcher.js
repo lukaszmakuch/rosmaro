@@ -317,6 +317,33 @@ describe("dispatcher", () => {
 
     });
 
+    it('handles composites with no children', () => {
+      const graph = {
+        'main': {type: 'composite', nodes: []}
+      };
+      const handlers = {
+
+      };
+      const dispatchRes = dispatch({
+        graph,
+        FSMState: {},
+        handlers,
+        ctx: {},
+        instanceID: {},
+        method: "",
+        params: [],
+        lenses: {
+          'main': identityLens
+        }
+      });
+      assert.deepEqual({
+        arrows: [
+        ],
+        ctx: {},
+        res: {}
+      }, dispatchRes);
+    });
+
     describe('composite handlers', () => {
       const dispatchWithHandlers = handlers => {
         const graph = {

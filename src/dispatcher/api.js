@@ -120,7 +120,7 @@ const dispatch = ({
             ctxs: [...soFar.ctxs, nodeRes.ctx],
             res: {...soFar.res, [relativeChildNode]: nodeRes.res}
           };
-        }, {arrows: [], ctxs: [], res: undefined});
+        }, {arrows: [], ctxs: [], res: {}});
         return {
           arrows: addNodeToArrows(node, allCompNodeRes.arrows),
           res: allCompNodeRes.res,
