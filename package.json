@@ -9,9 +9,10 @@
     "finite state machine",
     "automata-based programming"
   ],
-  "version": "0.6.0",
+  "version": "0.7.0",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
   "dependencies": {
+    "babel-preset-es2015": "^6.24.1",
     "deep-diff": "^0.3.8",
     "lodash": "^4.17.4",
     "ramda": "^0.25.0",
