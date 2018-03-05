@@ -1,126 +1,269 @@
-#rosmaro-logo {
-  display: block;
-  margin: 0 auto;
-  max-width: 400px;
+html, body {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  font-family: sans-serif;
+  font-size: 13pt;
+  font-family: 'Karma', serif;
+  font-weight: 400;
 }
 
-.examples-heading, 
-.main-heading {
-  margin-top: 4rem;
-  font-size: 4rem;
+h2.section-header {
   text-align: center;
-  font-weight: normal;
+  font-size: 3em;
+  padding-top: 1em;
+  font-weight: 300;
 }
 
-.example {
-  margin-top: 2em;
-}
-
-.example-step-heading {
-  color: #aa7a61;
-  font-size: 4em;
-}
-
-.header h2 {
-  font-weight: bold;
+/* new header  - start*/
+.page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  font-size: 1em;
-  text-transform: uppercase;
+  padding: 0 1em;
+}
+.page-logo {
+  margin-top: 3em;
+  height: 6em;
+}
+.main-header {
+  font-weight: 300;
+  margin: 0;
+  margin-top: 1em;
+  font-size: 3em;
+}
+.page-header .slogan {
+  padding: 0 2em;
+  font-weight: 300;
+}
+/* new header  - end*/
+
+/*footer - start*/
+.page-footer {
+  width: 100%;
+  background-color: #24c89f;
+  color: #fff;
+  text-align: center;
+  margin-top: 10em;
+  text-align: center;
+}
+.page-footer p {
+  margin: 2em;
+}
+/*footer - end*/
+
+/*menu - start*/
+
+.page-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.header nav {
-  display: block;
+.page-menu ul {
+  list-style: none;
+} 
+
+.page-menu li {
+  display: inline-block;
 }
 
-a {
-  color: #aa7a61;
+@media (max-width: 35em) {
+  .page-menu li {
+    margin-bottom: 1em;
+    display: block;
+  }
 }
 
-a:hover {
+@media (min-width: 35em) {
+  .page-menu li {
+    display: inline-block;
+  }
+}
+
+.page-menu a {
+  text-decoration: none;
+  width: 8em;
+  display: inline-block;
+  text-align: center;
+  border-style: solid;
+  padding: 1em;
+  border-width: 0 0 0.5em 0;
+  margin: 0 1em;
+}
+
+.page-menu .regular-menu-link {
   color: #000;
+  background-color: #eee;
+  border-color: #aaa;
 }
 
-.footer {
-  text-align: center;
+.page-menu .regular-menu-link:hover {
+  color: #aaa;
+  background-color: #fff;
+  border-color: #ddd;
 }
 
-.footer p {
-  margin-top: 4em;
-  color: #999;
-  font-size: 1em;
+.page-menu .featured-menu-link {
+  color: #fff;
+  background-color: #24c89f;
+  border-color: #208a6f;
 }
 
-.header .nav a {
-  text-transform: uppercase;
-  font-size: 1em;
+.page-menu .featured-menu-link:hover {
+  color: #fff;
+  background-color: #37ffcd;
+  border-color: #33e4b7;
 }
 
-.example-step-divider {
-  margin: 6rem auto;
-  border: 0;
+/*menu - end*/
+
+/* characteristics - start */
+
+.characteristics-bg {
+  /*background-color: #24c89f;
+  color: #fff;*/
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .characteristics {
-  margin-top: 2em;
+  display: flex;
 }
 
-.characteristics * {
-  font-size: 1em;
+.characteristics a {
+  padding: 0.1em 0.3em;
+  text-decoration: none;
+  color: #fff;
+  background-color: #24c89f;
 }
 
-.characteristics h4 {
-  margin-top: 2em;
-  font-weight: bold;
-  text-transform: uppercase;
+.characteristics a:hover {
+  padding: 0.1em 0.3em;
+  text-decoration: none;
+  color: #fff;
+  background-color: #37ffcd;
 }
 
-.container {
-  max-width: 56rem;
-}
+@media (min-width: 56em) {
+  .characteristics {
+    flex-direction: row;
+  }
+  .single-characteristic {
+    max-width: 15em;
+    height: 10em;
+  }                      
 
-/* Space out content a bit */
-body {
-  padding-top: 1.5rem;
-  padding-bottom: 1.5rem;
 }
-
-.btn-primary, 
-.btn-primary.disabled, 
-.btn-primary:disabled, 
-.btn-primary:not([disabled]):not(.disabled).active, 
-.btn-primary:not([disabled]):not(.disabled):active,
-.show > .btn-primary.dropdown-toggle {
-  background-color: #aa7a61;
-  border: none;
-}
-
-.btn-primary:hover {
-  background-color: #644839;
-}
-
 @media (max-width: 56em) {
+  .characteristics {
+    flex-direction: column;
+  }
+}
+.single-characteristic {
 
-  #rosmaro-logo {
-    z-index: 1;
-    max-width: 100%;
-    padding: 0px 10px;
+  padding: 1em;
+}                      
+
+/* characteristics - end */
+
+/* 101 steps - start */
+
+.r101-step-description {
+  background-color: #24c89f;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.r101-step .r101-description-container {
+  margin: 2em;
+  max-width: 30em;
+}
+
+.r101-step .r101-step-description h3 {
+  font-size: 3em;
+  display: inline-block;
+  font-weight: 300;
+  margin: 0;
+  padding: 0;
+}
+
+.r101-step .r101-step-description p {
+}
+
+.r101-step {
+  margin-top: 4em;
+  margin-bottom: 4em;
+  display: flex;
+}
+
+.r101-step-content {
+  background: url(img/screenshot_bg.jpg);
+  display: flex;
+  align-items: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.r101-step-content img {
+  max-width: 100%;
+  max-height: 25em;
+}
+
+.r101-step-description, .r101-step-content {
+  overflow: hidden;
+}
+
+.r101-step-content {
+  flex-direction: row;
+  justify-content: center;
+}
+
+@media (min-width: 66em) {
+
+  .r101-step-lr .r101-step-description {
+    flex-basis: 40%;
+    align-items: flex-end;
   }
 
-  .examples-heading, 
-  .main-heading,
-  .example-step-heading {
-    font-size: 1.5em;
+  .r101-step-rl .r101-step-description {
+    flex-basis: 40%;
+    align-items: flex-start;
   }
 
-  .nav {
-    margin-bottom: -100px;
+  .r101-step-lr .r101-step-content, .r101-step-rl .r101-step-content {
+    flex-basis: 60%;
   }
 
-  .nav-item {
-    z-index: 2;
-    text-align: right;
-    width: 100%;
-    display: block;
+  .r101-step {
+    height: 25em;
+  }
+
+  .r101-step-lr {
+    flex-direction: row;
+  }
+
+  .r101-step-rl {
+    flex-direction: row-reverse;
   }
 
 }
+
+@media (max-width: 66em) {
+
+  .r101-step-description {
+    align-items: center;
+  }
+
+  .r101-step-lr, .r101-step-rl {
+    flex-direction: column-reverse;
+  }
+
+}
+
+ 
+/* 101 steps - end */

@@ -2,170 +2,117 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1">
     <meta name="description" content="A visual automata-based programming library for JavaScript.">
     <meta name="author" content="Łukasz Makuch">
     <link rel="icon" href="img/favicon.ico">
     <title>Rosmaro - visual automata-based programming</title>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/color-brewer.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-    <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
-    <script>hljs.initHighlightingOnLoad();</script>
-    <!-- Custom styles for this template -->
+    <link href="https://fonts.googleapis.com/css?family=Karma:300,400,700" rel="stylesheet">
     <link href="style.css" rel="stylesheet">
   </head>
 
-  <body>
+  <body >
 
-      <header class="header clearfix container">
-        
-          <nav class="clearfix">
-            <ul class="nav nav-pills float-right">
-              <li class="nav-item">
-                <a class="nav-link" target="_blank" rel="noopener noreferrer" href="https://rosmaro.js.org/doc">Documentation</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" target="_blank" rel="noopener noreferrer" href="https://rosmaro.js.org/editor">Visual editor</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" target="_blank" rel="noopener noreferrer" href="http://github.com/lukaszmakuch/rosmaro">Source code</a>
-              </li>
-            </ul>
-          </nav>
-          <img src="img/logo.png" id="rosmaro-logo"/>
-          <h1 class="main-heading">Rosmaro</h1>
-          <h2>visual automata-based programming</h2>
-      </header>
+    <header class="page-header">
+      <img src="img/logo.png" class="page-logo" alt="Walrus" />
+      <h1 class="main-header">Rosmaro</h1>
+      <h2 class="slogan">Don't fight with boolean flags!<br/> Draw changes of behavior.</h2>
+      <p>Use visual automata-based programming to build rich user interfaces, stateful services or anything you want!</p>
+    </header>
 
-      <main role="main">
+    <nav class="page-menu">
+      <ul>
+        <li><a class="featured-menu-link" target="_blank" rel="noopener noreferrer" href="https://rosmaro.js.org/doc/">Get started!</a></li>
+        <li><a class="regular-menu-link" href="https://rosmaro.js.org/editor/" target="_blank" rel="noopener noreferrer">Visual Editor</a></li>
+      </ul>
+    </nav>
 
-        <div class="characteristics-bg">
-          <div class="container">
-            <div class="row characteristics">
-              <div class="col-lg-4">
-                <div class="single-characteristic">
-                  <h4>Visual editing</h4>
-                  <p>Changes of behavior are drawn using the <a href="https://rosmaro.js.org/editor">Rosmaro Visual Editor</a>. It produces a human-readable JSON file.</p>
-                </div>
-
-                <div class="single-characteristic">
-                  <h4>Dynamic graphs</h4>
-                  <p>The children of a composite node may be specified using a function of the context.</p>
-                </div>
-              </div>
-
-              <div class="col-lg-4">
-                <div class="single-characteristic">
-                  <h4>The right model for the job</h4>
-                  <p>The behavior-related state is expressed by a state machine, while the data-related state lives in a dictionary.</p>
-                </div>
-
-                <div class="single-characteristic">
-                  <h4>Async / await just works</h4>
-                  <p>The whole model may be fully synchronous, but if anything needs to be asynchronous, it just works.</p>
-                </div>
-              </div>
-              <div class="col-lg-4">
-                <div class="single-characteristic">
-                  <h4>Graph-based dispatch</h4>
-                  <p>Method calls are dispatched based on the current node of the state machine. There's no need to check the current state.</p>
-                </div>
-
-                <div class="single-characteristic">
-                  <h4>Ready for the back-end</h4>
-                  <p>Locking prevents the model from going into an inconsistent state. <br>The storage may be asynchronous.</p>
-                </div>
-
-              </div>
-            </div>
+    <section>
+      <div class="r101-step r101-step-rl">
+        <div class="r101-step-description">
+          <div class="r101-description-container">
+            <h3>Draw changes of behavior.</h3>
+            <p>Nodes represent different behaviors which never change. Arrows symbolize events.</p>
           </div>
         </div>
-
-        <!-- <hr class="example-step-divider"> -->
-        <div class="container">
-          <h3 class="examples-heading">Rosmaro 101</h3>
+        <div class="r101-step-content">
+          <img src="img/r101_editor.png" alt="visual editor" />
         </div>
+      </div>
 
-        <hr class="example-step-divider">
-        <div class="example container">
-          <div class="row example-step d-flex flex-row-reverse">
-            <div class="col-md-7">
-              <h2 class="example-step-heading">Draw changes of behavior.</h2>
-              <p class="lead">Nodes represent different behaviors which never change. Arrows symbolize events.</p>
-            </div>
-            <div class="col-md-5">
-              <img class="img-fluid mx-auto"  style="max-height:250px" src="img/example-graph.png" >
-            </div>
+      <div class="r101-step r101-step-lr">
+        <div class="r101-step-description">
+          <div class="r101-description-container">
+            <h3>Code different behaviors.</h3>
+            <p>Associate drawn nodes with code handling method calls.</p>
           </div>
         </div>
+        <div class="r101-step-content">
+          <img src="img/r101_code.png" alt="the code is stateless" />
+        </div>
+      </div>
 
-        <hr class="example-step-divider">
-        <div class="example container">
-          <div class="row example-step">
-            <div class="col-md-5">
-              <h2 class="example-step-heading">Code different behaviors. </h2>
-              <p class="lead">Associate drawn nodes with code handling method calls. </p>
-            </div>
-            <div class="col-md-7">
-              <pre><code class="javascript">
-const Prince = {
-  introduceYourself: () => "I am The Prince of Rosmaro!",
-  eat: ({dish}) => {
-    if (dish === 'pizza') return {arrow: 'ate pizza'};
-  }
-};
-
-const Frog = {
-  introduceYourself: () => "Ribbit! Ribbit!"
-};
-              </code></pre>
-            </div>
+      <div class="r101-step r101-step-rl">
+        <div class="r101-step-description">
+          <div class="r101-description-container">
+            <h3>Have fun!</h3>
+            <p>The model is stateful. <br/>Method calls are dispatched based upon the graph.</p>
           </div>
         </div>
+        <div class="r101-step-content">
+          <img src="img/r101_running.png" alt="the model is stateful" />
+        </div>
+      </div>
+    </section>
 
-        <hr class="example-step-divider">
-        <div class="example container">
-          <div class="row example-step d-flex flex-row-reverse">
-            <div class="col-md-7">
-              <h2 class="example-step-heading">Have fun! </h2>
-              <p class="lead">
-                The model is stateful.<br>
-                Method calls are dispatched based upon the graph.
-              </p>
-            </div>
-            <div class="col-md-5">
-              <pre><code class="javascript">
-> model.introduceYourself();
-'I am The Prince of Rosmaro!'
 
-> model.eat({dish: 'yakisoba'});
-undefined
+    <section class="characteristics-bg">
+      <div>
 
-> model.introduceYourself();
-'I am The Prince of Rosmaro!'
+        <h2 class="section-header">What can Rosmaro give you?</h2>
 
-> model.eat({dish: 'pizza'});
-undefined
+        <main class="characteristics">
 
-> model.introduceYourself();
-'Ribbit! Ribbit!'
-              </code></pre>
-            </div>
+          <div class="col">
+            <section class="single-characteristic">
+              <h3>Visual editing</h3>
+              <p>Changes of behavior are drawn using the <a href="https://rosmaro.js.org/editor">Rosmaro&nbsp;Visual&nbsp;Editor</a>. It produces a human-readable JSON file.</p>
+            </section>
+            <section class="single-characteristic">
+              <h3>Dynamic graphs</h3>
+              <p>The children of a composite node may be specified using a function of the context.</p>
+            </section>
+          </div>
+
+          <div class="col">
+            <section class="single-characteristic">
+              <h3>The right model for the job</h3>
+              <p>The behavior-related state is expressed by a state machine, while the data-related state lives in a dictionary.</p>
+            </section>
+            <section class="single-characteristic">
+              <h3>Async / await just works</h3>
+              <p>The whole model may be fully synchronous, but if anything needs to be asynchronous, it just works.</p>
+            </section>
+          </div>
+
+          <div class="col">
+            <section class="single-characteristic">
+              <h3>Graph-based dispatch</h3>
+              <p>Method calls are dispatched based on the current node of the state machine. There's no need to check the current state.</p>
+            </section>
+            <section class="single-characteristic">
+              <h3>Ready for the back-end</h3>
+              <p>Locking prevents the model from going into an inconsistent state. <br>The storage may be asynchronous.</p>
+            </section>
           </div>
         </div>
+      </div>
 
+    </div>
 
-      </main>
-
-      <footer class="footer">
-        <div class="container">
-          <p>Check out the documentation to learn more about Rosmaro itself and how to <strong>use it with React</strong>.</p>
-          <a class="btn btn-lg btn-primary" href="https://rosmaro.js.org/doc" target="_blank" rel="noopener noreferrer" role="button">Learn more</a>
-          <p>The Rosmaro project was started by Łukasz Makuch in 2016.</p>
-        </div>
-      </footer>
+    <footer class="page-footer">
+      <p>The Rosmaro project was started by Łukasz Makuch in 2016.</p>
+    </footer>
 
   </body>
 </html>

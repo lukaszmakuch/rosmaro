@@ -45,29 +45,38 @@
 
 
   <script id="doc" type="text/markdown" src="index.html">
-# Rosmaro 101
+# Getting started
+Don't fight with boolean flags! Draw changes of behavior.
 
-## What is Rosmaro
+---
 
-Rosmaro is a visual automata-based programming library for JavaScript. 
+Rosmaro is a visual [automata-based programming](https://en.wikipedia.org/wiki/Automata-based_programming) library for JavaScript.
 
-It allows to build stateful objects - _Rosmaro models_. They keep data-related state in a dictionary structure and express behavior-related state using a state machine.
+It comes with a [visual editor](https://rosmaro.js.org/editor).
 
-If you wish, you can think of Rosmaro using one of the following metaphors:
+You draw a directed graph:
+![Graphical editor](../img/r101_editor.png)
 
-- An event-based routing for methods
-- An object where _this_ is a state machine 
-- A flavor of state diagrams brought to life
+You write code, preferably functional:
+![Functional code](../img/r101_code.png)
 
-## What makes Rosmaro interesting
+You get a stateful object:
+![Stateful object](../img/r101_running.png)
 
-There are at least few reasons why Rosmaro may be interesting:
+You may want to use Rosmaro to build rich user interfaces, safe back-end services or anything you want!
 
-- Reduced number of error-prone conditional statements achieved by replacing many boolean flags with a graph.
-- Programing using a human-friendly, declarative visual language that says _what_ should happen and not _how_ should it happen. 
-- Code decoupling - any particular handler has a constant behavior that never changes and is not directly connected to any other handler.
+## Blogs
+- [React and visual automata-based programming](https://medium.com/dailyjs/react-and-visual-automata-based-programming-c1d13e153cde) - building a wizard with many paths in Rosmaro and React
+- [An introduction to visual automata-based programming in Rosmaro](https://medium.freecodecamp.org/an-introduction-to-visual-automata-based-programming-in-rosmaro-100dae8eb969) - basics of Rosmaro in a blog post
+- [Programming without boolean values: To-Do App](https://codeburst.io/programming-without-boolean-values-to-do-app-2455035c87f5) - building a To-Do application without booleans
 
-## Example
+## Utilities
+- [Rosmaro-React](https://github.com/lukaszmakuch/rosmaro-react) React integration
+
+## License
+Rosmaro is licensed under the MIT license.
+
+# An example
 
 Building a _Rosmaro model_ consists of two steps: 
 
@@ -189,18 +198,6 @@ undefined
 'Ribbit! Ribbit!'
 ```
 
-## License
-Rosmaro is licensed under the MIT license.
-
-## Integrations
-
-Below is a list of utilities useful when using Rosmaro together with other libraries.
-
-- [Rosmaro-React](https://github.com/lukaszmakuch/rosmaro-react) for building React user interfaces
-
-## Rosmaro elsewhere
-- [React and visual automata-based programming](https://medium.com/dailyjs/react-and-visual-automata-based-programming-c1d13e153cde) - an article about building a wizard using Rosmaro and React
-
 # Graphs
 
 ## Introduction
@@ -216,7 +213,7 @@ There are four types of nodes:
 
 The model graph is represented by a collection of nodes, where each node has a unique name. The root node of the model graph is __the _main_ node, which is mandatory__. It may be of any of the supported node types, even a leaf.
 
-Let's take a look at [the example graph](#rosmaro-101-example) one more time. It's a collection of three nodes:
+Let's take a look at [the example graph](#an-example) one more time. It's a collection of three nodes:
 
 - a graph called _main_
 - a leaf called _Prince_
