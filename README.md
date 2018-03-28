@@ -25,6 +25,7 @@ You may want to use Rosmaro to build rich user interfaces, safe back-end service
 - [React and visual automata-based programming](https://medium.com/dailyjs/react-and-visual-automata-based-programming-c1d13e153cde) - building a wizard with many paths in Rosmaro and React
 - [An introduction to visual automata-based programming in Rosmaro](https://medium.freecodecamp.org/an-introduction-to-visual-automata-based-programming-in-rosmaro-100dae8eb969) - basics of Rosmaro in a blog post
 - [Programming without boolean values: To-Do App](https://codeburst.io/programming-without-boolean-values-to-do-app-2455035c87f5) - building a To-Do application without booleans
+- [State management in JavaScript: data-related state and behavior-related state](https://lukaszmakuch.pl/post/behavior-related-state-and-data-related-state)
 
 ## Documentation
 - [An example](https://rosmaro.js.org/doc/#an-example)
