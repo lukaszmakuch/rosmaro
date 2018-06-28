@@ -33,9 +33,7 @@ const dispatch = ({
   handlers, 
   ctx: rawCtx, 
   method,
-  instanceID,
   params,
-  model,
   lenses
 }) => {
   const localNodeName = extractLocalNodeName(node);
@@ -50,17 +48,15 @@ const dispatch = ({
     mapReturnedCtx
   );
   const nodeType = graph[node].type;
-  const nodeData = {ID: node, instanceID: instanceID[node]};
+  const nodeData = {ID: node};
   const callDispatch = ({node, ctx, method, params}) => dispatch({
     graph,
     node,
     FSMState,
     handlers,
     ctx,
-    instanceID,
     method,
     params,
-    model,
     lenses
   });
 
@@ -69,7 +65,6 @@ const dispatch = ({
       method, 
       ctx, 
       params, 
-      model: model, 
       child: dummyChildFn, 
       node: nodeData
     });
@@ -137,7 +132,7 @@ const dispatch = ({
 
     };
 
-    return handler({method, ctx, params, model, child: childFn, node: nodeData});
+    return handler({method, ctx, params, child: childFn, node: nodeData});
   }
 
   if (nodeType === 'graph') {
@@ -156,7 +151,7 @@ const dispatch = ({
       }));
     }
 
-    return handler({method, ctx, model, params, child: childFn, node: nodeData});
+    return handler({method, ctx, params, child: childFn, node: nodeData});
   }
 };
 

@@ -20,15 +20,18 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-preset-env": "^1.4.0",
+    "jest": "^22.4.0",
     "babel-register": "^6.24.1",
     "babel-plugin-syntax-object-rest-spread": "^6.13.0",
-    "babel-plugin-transform-object-rest-spread": "^6.23.0",
-    "mocha": "^3.2.0"
+    "babel-plugin-transform-object-rest-spread": "^6.23.0"
+  },
+  "jest": {
+    "testRegex": "((\\.|/)(test|spec))\\.jsx?$"
   },
   "main": "./dist/index.js",
   "scripts": {
     "build": "rm -rf dist && babel src -d dist",
-    "test": "./node_modules/mocha/bin/mocha --compilers js:babel-register",
+    "test": "./node_modules/.bin/jest",
     "prepublish": "npm run build"
   }
 }

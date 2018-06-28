@@ -109,32 +109,7 @@ describe('rosmaro', () => {
     'CompositeTarget': CompositeTargetHandler,
     'GraphTarget': GraphTargetHandler
   };
-
-  it('passes a reference to the whole model to handlers', () => {
-
-    const graph = {
-      'main': {type: 'leaf'}
-    };
-
-    let receivedReference;
-    const handlers = {
-      'main': {method: ({thisModel}) => {
-        receivedReference = thisModel;
-      }}
-    };
-
-    const model = rosmaro({
-      graph,
-      handlers,
-      storage: storage,
-      lock: lock.fn
-    });
-
-    model.method();
-
-    assert(receivedReference === model);
-  });
-
+  
   describe('afterTransition', () => {
     // one graph node which does a loop
     const graph = {

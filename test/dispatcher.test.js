@@ -7,7 +7,7 @@ const identityLens = () => Rlens(Ridentity, Ridentity);
 
 describe("dispatcher", () => {
 
-  it('passes node IDs and a model reference to handlers', () => {
+  it('passes node IDs to handlers', () => {
 
     const graph = {
       'main': {
@@ -53,7 +53,6 @@ describe("dispatcher", () => {
       ctx: {},
       method: "",
       params: [],
-      model,
       lenses: {
         'main': identityLens,
         'main:A': identityLens,
@@ -122,7 +121,6 @@ describe("dispatcher", () => {
         FSMState,
         handlers,
         ctx: {},
-        instanceID: {},
         method: "a",
         params: [],
         lenses: {
@@ -155,7 +153,6 @@ describe("dispatcher", () => {
         FSMState: {},
         handlers,
         ctx: initCtx,
-        instanceID: {},
         method: "",
         params: [],
         lenses: {
@@ -205,7 +202,6 @@ describe("dispatcher", () => {
           FSMState,
           handlers,
           ctx: initCtx,
-          instanceID: {},
           method: "",
           params: [],
           lenses,
@@ -229,7 +225,6 @@ describe("dispatcher", () => {
           FSMState,
           handlers,
           ctx: initCtx,
-          instanceID: {},
           method: "",
           params: [],
           lenses,
@@ -253,7 +248,6 @@ describe("dispatcher", () => {
           FSMState,
           handlers,
           ctx: initCtx,
-          instanceID: {},
           method: "",
           params: [],
           lenses,
@@ -276,7 +270,6 @@ describe("dispatcher", () => {
           FSMState,
           handlers,
           ctx: {},
-          instanceID: {},
           method: "",
           params: [],
           lenses,
