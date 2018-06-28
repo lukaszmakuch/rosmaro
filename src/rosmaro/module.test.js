@@ -77,7 +77,7 @@ const postpone = originalFn => {
   return {resolve: resolveFn, reject: rejectFn, fn};
 };
 
-describe('rosmaro', () => {
+xdescribe('rosmaro', () => {
 
   beforeEach(() => {
     logEntries = [];

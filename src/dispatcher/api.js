@@ -32,8 +32,7 @@ const dispatch = ({
   FSMState, 
   handlers, 
   ctx: rawCtx, 
-  method,
-  params,
+  action,
   lenses
 }) => {
   const localNodeName = extractLocalNodeName(node);
@@ -49,22 +48,20 @@ const dispatch = ({
   );
   const nodeType = graph[node].type;
   const nodeData = {ID: node};
-  const callDispatch = ({node, ctx, method, params}) => dispatch({
+  const callDispatch = ({node, ctx, action}) => dispatch({
     graph,
     node,
     FSMState,
     handlers,
     ctx,
-    method,
-    params,
+    action,
     lenses
   });
 
   if (nodeType === 'leaf') {
     const leafRes = () => handler({
-      method, 
+      action, 
       ctx, 
-      params, 
       child: dummyChildFn, 
       node: nodeData
     });
@@ -80,7 +77,7 @@ const dispatch = ({
   if (nodeType === 'composite') {
     const composedNodes = graph[node].nodes;
 
-    const childFn = ({method, ctx, params}) => {
+    const childFn = ({action}) => {
 
       const compNodesRes = extractPromises(composedNodes.reduce((allRes, childNode) => {
         const addNode = rawRes => ({
@@ -90,8 +87,7 @@ const dispatch = ({
         const rawRes = () => callDispatch({
           node: childNode,
           ctx,
-          method,
-          params
+          action
         });
         const callRes = callbackize(rawRes, addNode);
         return [...allRes, callRes];
@@ -132,17 +128,16 @@ const dispatch = ({
 
     };
 
-    return handler({method, ctx, params, child: childFn, node: nodeData});
+    return handler({action, ctx, child: childFn, node: nodeData});
   }
 
   if (nodeType === 'graph') {
     const activeChild = FSMState[node];
-    const childFn = ({method, ctx, params}) => {
+    const childFn = ({action}) => {
       const childRes = () => callDispatch({
         node: activeChild,
         ctx,
-        method,
-        params
+        action
       });
 
       return callbackize(childRes, childRes => ({
@@ -151,7 +146,7 @@ const dispatch = ({
       }));
     }
 
-    return handler({method, ctx, params, child: childFn, node: nodeData});
+    return handler({action, ctx, child: childFn, node: nodeData});
   }
 };
 
