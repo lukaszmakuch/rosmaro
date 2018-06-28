@@ -1,5 +1,5 @@
 import assert from 'assert';
-import makeHandlers from './../src/handlers/api';
+import makeHandlers from './api';
 import invert from 'lodash/invert';
 import {view as Rview, set as Rset, lens as Rlens} from 'ramda';
 

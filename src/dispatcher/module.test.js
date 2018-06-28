@@ -1,6 +1,6 @@
 import assert from 'assert';
-import dispatch from './../src/dispatcher/api';
-import {mapArrows} from './../src/utils';
+import dispatch from './api';
+import {mapArrows} from './../utils';
 import {identity as Ridentity, lens as Rlens, lensPath as RlensPath} from 'ramda';
 
 const identityLens = () => Rlens(Ridentity, Ridentity);

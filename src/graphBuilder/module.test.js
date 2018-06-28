@@ -1,5 +1,5 @@
 import assert from 'assert';
-import build, {mapMain} from './../src/graphBuilder/api';
+import build, {mapMain} from './api';
 import {identity as Ridentity, lens as Rlens, lensPath as RlensPath} from 'ramda';
 
 const buildHandler = plan => ({built: plan});

@@ -1,7 +1,7 @@
 import assert from 'assert';
-import rosmaro from '../src/index';
-import lockTestDouble from './lockTestDouble';
-import storageTestDouble from './storageTestDouble';
+import rosmaro from '../index';
+import lockTestDouble from './../../test/lockTestDouble';
+import storageTestDouble from './../../test/storageTestDouble';
 import union from 'lodash/union';
 import without from 'lodash/without';
 
@@ -109,7 +109,7 @@ describe('rosmaro', () => {
     'CompositeTarget': CompositeTargetHandler,
     'GraphTarget': GraphTargetHandler
   };
-  
+
   describe('afterTransition', () => {
     // one graph node which does a loop
     const graph = {
