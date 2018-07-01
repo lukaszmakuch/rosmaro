@@ -1,1 +1,1 @@
-export default (opts) => opts.child(opts);
+export default (opts) => opts.child({action: opts.action});

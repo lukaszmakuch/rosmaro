@@ -3,7 +3,7 @@ import makeHandlers from './api';
 import invert from 'lodash/invert';
 import {view as Rview, set as Rset, lens as Rlens} from 'ramda';
 
-const finalChild = ({ctx}) => ({arrows: [[[null, null]]], ctx, res: undefined});
+const finalChild = () => ({arrows: [[[null, null]]], ctx: {type: 'finalChildCtx'}, res: undefined});
 
 const assertIdentityLens = lensFactory => {
   const lens = lensFactory();
@@ -21,7 +21,47 @@ const assertIdentityLens = lensFactory => {
 // All we need to build handlers is to read the list of all nodes.
 const mockGraph = nodes => invert(nodes);
 
-describe('handlers', () => {
+describe('handler', () => {
+  it('groups handles, lenses and nodes', () => {
+
+    const MyNodeHandler = () => ({});
+    const MyNodeLens = {};
+    const MyNodeNodes = () => [];
+
+    const input = {
+      MyNode: {
+        handler: MyNodeHandler,
+        lens: MyNodeLens,
+        nodes: MyNodeNodes,
+      }
+    };
+
+    const output = makeHandlers(input, mockGraph(['MyNode', 'EmptyNode']));
+
+    // These are just rewritten.
+    assert.deepEqual(output.handlers['MyNode'], MyNodeHandler);
+    assert.deepEqual(output.lenses['MyNode'], MyNodeLens);
+    assert.deepEqual(output.nodes['MyNode'], MyNodeNodes);
+
+    // These are transparent, automatically generated ones,
+    // because the user didn't provided anything for the EmptyNode.
+    assertIdentityLens(output.lenses['EmptyNode']);
+    assert.deepEqual(output.nodes['EmptyNode'](), []);
+    assert.deepEqual(output.handlers['EmptyNode']({
+      method: 'x', 
+      ctx: {init: 123}, 
+      params: [], 
+      child: finalChild
+    }), {
+      res: undefined,
+      ctx: {type: 'finalChildCtx'},
+      arrows: [[[null, null]]]
+    });
+
+  });
+});
+
+xdescribe('handlers', () => {
 
   it('always provides a complete list of lenses', () => {
     const {lenses} = makeHandlers({}, mockGraph(['A']));
@@ -33,14 +73,6 @@ describe('handlers', () => {
 
       const {handlers, lenses} = makeHandlers({
         node: {
-
-          //this slice is applied BEFORE the initCtx
-          ctxSlice: 'sub',
-
-          initCtx: {
-            text: 'hello',
-            another: 123
-          },
 
           ctxLens: ({localNodeName}) => Rlens(
             ctx => ({
@@ -100,197 +132,6 @@ describe('handlers', () => {
 
   });
 
-  describe('ctxSlice', () => {
-
-    it('allows to use a narrow slice of the whole context', () => {
-      const {handlers, lenses} = makeHandlers({
-        node: {
-          ctxSlice: 'for the handler',
-          method: ({ctx}) => ({
-            res: {receivedCtx: ctx},
-            ctx: {val: 456}
-          })
-        }
-      }, mockGraph(['node']));
-
-      assert.deepEqual(handlers.node({
-        method: 'method',
-        node: {},
-        params: [],
-        ctx: {
-          higher: 987, 
-          'for the handler': {val: 123}
-        },
-      }), {
-        res: {receivedCtx: {
-          higher: 987, 
-          'for the handler': {val: 123}
-        }},
-        arrows: [[[null, null]]],
-        ctx: {val: 456}
-      });
-
-      assert.deepEqual(
-        Rview(
-          lenses.node({localNodeName: 'anything'}), 
-          {
-            higher: 987, 
-            'for the handler': {val: 123}
-          }
-        ),
-        {val: 123}
-      );
-      assert.deepEqual(
-        Rset(
-          lenses.node({localNodeName: 'anything'}), 
-          {val: 456}, 
-          {
-            higher: 987, 
-            'for the handler': {val: 123}
-          }
-        ),
-        {
-          higher: 987, 
-          'for the handler': {val: 456}
-        }
-      );
-
-    });
-
-    it('creates the slice if it does not exist', () => {
-      const {lenses} = makeHandlers({
-        node: {
-          ctxSlice: 'for the handler'
-        }
-      }, mockGraph(['node']));
-
-      assert.deepEqual(
-        Rview(
-          lenses.node({localNodeName: 'anything'}), 
-          {
-            higher: 987, 
-          }
-        ),
-        {}
-      );
-      assert.deepEqual(
-        Rset(
-          lenses.node({localNodeName: 'anything'}), 
-          {val: 123}, 
-          {
-            higher: 987, 
-          }
-        ),
-        {
-          higher: 987, 
-          'for the handler': {val: 123}
-        }
-      );
-
-    });
-
-    it('may be used with initCtx', () => {
-      const {lenses} = makeHandlers({
-        node: {
-          ctxSlice: 'for the handler',
-          initCtx: {val: 123}
-        }
-      }, mockGraph(['node']));
-
-      assert.deepEqual(
-        Rview(
-          lenses.node({localNodeName: 'anything'}), 
-          {
-            higher: 987, 
-          }
-        ),
-        {val: 123}
-      );
-      assert.deepEqual(
-        Rset(
-          lenses.node({localNodeName: 'anything'}), 
-          {val: 456}, 
-          {
-            higher: 987, 
-          }
-        ),
-        {
-          higher: 987, 
-          'for the handler': {val: 456}
-        }
-      );
-
-    });
-
-  });
-
-  describe('initial context', () => {
-    const {handlers, lenses} = makeHandlers({
-      node: {
-        initCtx: {a: 123, b: 456},
-        method: ({ctx}) => ctx
-      }
-    }, mockGraph(['node']));
-
-    it('allows to set an initial context if the context is empty', () => {
-      // the handler itself doesn't modify the context
-      assert.deepEqual(handlers.node({
-        method: 'method',
-        node: {},
-        params: [],
-        ctx: {},
-      }), {
-        res: {},
-        arrows: [[[null, null]]],
-        ctx: {}
-      });
-      assert.deepEqual(
-        Rview(
-          lenses.node({localNodeName: 'anything'}), 
-          {}
-        ),
-        {a: 123, b: 456}
-      );
-      assert.deepEqual(
-        Rset(
-          lenses.node({localNodeName: 'anything'}), 
-          {a: 123, b: 456}, 
-          {}
-        ),
-        {a: 123, b: 456}
-      );
-    });
-
-    it('does NOT use the initial context if there is already some context', () => {
-      assert.deepEqual(handlers.node({
-        method: 'method',
-        node: {},
-        params: [],
-        ctx: {c: 987},
-      }), {
-        res: {c: 987},
-        arrows: [[[null, null]]],
-        ctx: {c: 987}
-      });
-      assert.deepEqual(
-        Rview(
-          lenses.node({localNodeName: 'anything'}), 
-          {c: 987}
-        ),
-        {c: 987}
-      );
-      assert.deepEqual(
-        Rset(
-          lenses.node({localNodeName: 'anything'}), 
-          {c: 987}, 
-          {c: 987}
-        ),
-        {c: 987}
-      );
-    });
-
-  });
-
   describe('alter result', () => {
     it('allows to alter the result of a method call', () => {
 
@@ -315,48 +156,6 @@ describe('handlers', () => {
       });
 
     });
-  });
-
-  describe('renaming methods', () => {
-
-    it('allows to rename methods', () => {
-
-      const {handlers, lenses} = makeHandlers({
-        node: {
-          methodMap: {
-            x: 'a',
-            y: 'c'
-          },
-          a: () => 'a res',
-          b: () => 'b res',
-          c: () => 'c res',
-        }
-      }, mockGraph(['node']));
-
-      assertIdentityLens(lenses.node);
-
-      const assertRes = ({method, expectedRes}) => assert.deepEqual(
-        handlers.node({
-          method,
-          node: {},
-          params: [{param: 123}],
-          ctx: {whole: 'ctx'},
-          model: {},
-          child: () => {}
-        }), 
-        {
-          res: expectedRes,
-          arrows: [[[null, null]]],
-          ctx: {whole: 'ctx'}
-        }
-      );
-
-      assertRes({method: 'x', expectedRes: 'a res'});
-      assertRes({method: 'b', expectedRes: 'b res'});
-      assertRes({method: 'y', expectedRes: 'c res'});
-
-    });
-
   });
 
   describe('leaf', () => {
@@ -485,122 +284,6 @@ describe('handlers', () => {
         ctx: {init: 123},
         arrows: [[[null, 'x']]]
       });
-    });
-
-  });
-
-  describe('calling particular node (and its children)', () => {
-
-    it('allows to call just one child of a composite', () => {
-
-      const model = {};
-
-      const child = () => {
-        return {
-          res: 'childRes',
-          arrows: [[[null, 'childArrow']]],
-          ctx: {child: 'ctx'}
-        };
-      };
-
-      const {handlers, lenses} = makeHandlers({
-        target: {
-          myMethod: (opts) => {
-            return {
-              res: 'targetResult',
-              arrow: 'targetArrow',
-              ctx: {target: 'ctx'}
-            }
-          }
-        }
-      }, mockGraph(['target']));
-
-      assertIdentityLens(lenses.target);
-
-      // this call is meant to be received by this handler
-      assert.deepEqual(
-        handlers.target({
-          method: 'myMethod',
-          node: {instanceID: 'abc', ID: 'main:A:B'},
-          params: [{a: 2, b: 3}, {
-            targetNode: 'main:A:B'
-          }],
-          ctx: {whole: 'ctx'},
-          model,
-          child
-        }), 
-        {
-          res: 'targetResult',
-          arrows: [[[null, 'targetArrow']]],
-          ctx: {target: 'ctx'}
-        }
-      );
-
-      // the target node may be a parent node as well
-      assert.deepEqual(
-        handlers.target({
-          method: 'myMethod',
-          node: {instanceID: 'abc', ID: 'main:A:B'},
-          params: [{a: 2, b: 3}, {
-            targetNode: 'main:A'
-          }],
-          ctx: {whole: 'ctx'},
-          model,
-          child
-        }), 
-        {
-          res: 'targetResult',
-          arrows: [[[null, 'targetArrow']]],
-          ctx: {target: 'ctx'}
-        }
-      );
-
-      // this call is not meant to be received by the handler
-      assert.deepEqual(
-        handlers.target({
-          method: 'myMethod',
-          node: {instanceID: 'abc', ID: 'main:B'},
-          params: [{a: 2, b: 3}, {
-            targetNode: 'main:A:B'
-          }],
-          ctx: {whole: 'ctx'},
-          model,
-          child
-        }), 
-        {
-          res: 'childRes',
-          arrows: [[[null, 'childArrow']]],
-          ctx: {child: 'ctx'}
-        }
-      );
-    });
-
-    it('passes thisModelNode object to every handler', () => {
-
-      const {handlers} = makeHandlers({
-        node: {
-          getthisModelNode: ({thisModelNode}) => ({res: thisModelNode})
-        }
-      }, mockGraph(['node']));
-
-      const model = {
-        modelMethod: function () { return {passedToModel: [...arguments]}; }
-      };
-
-      const thisModelNode = handlers.node({
-        method: 'getthisModelNode',
-        node: {instanceID: 'abc', ID: 'main:B'},
-        params: [],
-        ctx: {},
-        model,
-        child: () => {}
-      }).res;
-
-      assert.deepEqual(
-        {passedToModel: [{paramA: 123, paramB: 456}, {targetNode: 'main:B'}]},
-        thisModelNode.modelMethod({paramA: 123, paramB: 456})
-      );
-
     });
 
   });
