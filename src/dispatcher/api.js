@@ -42,9 +42,8 @@ const dispatch = ({
     ...callRes,
     ctx: Rset(nodeLens, callRes.ctx, rawCtx)
   });
-  const handler = opts => callbackize(
-    () => (handlers[node] || defaultParentHandler)(opts),
-    mapReturnedCtx
+  const handler = opts => mapReturnedCtx(
+    (handlers[node] || defaultParentHandler)(opts)
   );
   const nodeType = graph[node].type;
   const nodeData = {ID: node};
@@ -59,19 +58,19 @@ const dispatch = ({
   });
 
   if (nodeType === 'leaf') {
-    const leafRes = () => handler({
+    const leafRes = handler({
       action, 
       ctx, 
       child: dummyChildFn, 
       node: nodeData
     });
-    return callbackize(leafRes, (leafRes) => ({
+    return {
       arrows: leafRes.arrows
         ? [[[node, leafRes.arrows[0][0][1]]]]
         : [[[node, undefined]]],
       ctx: leafRes.ctx,
       res: leafRes.res
-    }));
+    };
   }
 
   if (nodeType === 'composite') {
