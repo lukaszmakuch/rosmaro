@@ -78,51 +78,37 @@ const dispatch = ({
 
     const childFn = ({action}) => {
 
-      const compNodesRes = extractPromises(composedNodes.reduce((allRes, childNode) => {
+      const compNodesRes = composedNodes.reduce((allRes, childNode) => {
         const addNode = rawRes => ({
           node: childNode,
           callRes: rawRes
         });
-        const rawRes = () => callDispatch({
+        const callRes = addNode(callDispatch({
           node: childNode,
           ctx,
           action
-        });
-        const callRes = callbackize(rawRes, addNode);
+        }));
         return [...allRes, callRes];
-      }, []));
-
-      const withCompNodeRes = (resolvedCompNodeRes) => {
-        const allCompNodeRes = [
-          ...resolvedCompNodeRes, 
-          ...compNodesRes.notPromises
-        ]
-        .map(compNodeRes => ({
-          ...compNodeRes.callRes,
-          node: compNodeRes.node
-        }))
-        // merge composite results together (except the context)
-        .reduce((soFar, nodeRes) => {
-          // if the parent is like a:b, the child like a:b:c, then this is c
-          const relativeChildNode = nodeRes.node.substr(node.length + 1);
-          return {
-            arrows: [...soFar.arrows, ...nodeRes.arrows],
-            ctxs: [...soFar.ctxs, nodeRes.ctx],
-            res: {...soFar.res, [relativeChildNode]: nodeRes.res}
-          };
-        }, {arrows: [], ctxs: [], res: {}});
+      }, [])
+      .map(res => ({
+        ...res.callRes,
+        node: res.node
+      }))
+      // merge composite results together (except the context)
+      .reduce((soFar, nodeRes) => {
+        // if the parent is like a:b, the child like a:b:c, then this is c
+        const relativeChildNode = nodeRes.node.substr(node.length + 1);
         return {
-          arrows: addNodeToArrows(node, allCompNodeRes.arrows),
-          res: allCompNodeRes.res,
-          ctx: mergeCtxs(ctx, allCompNodeRes.ctxs)
-        }
-      };
-
-      // there are some promises waiting to be resolved
-      if (compNodesRes.promises.length > 0) {
-        return Promise.all(compNodesRes.promises).then(withCompNodeRes);
-      } else {
-        return withCompNodeRes([]);
+          arrows: [...soFar.arrows, ...nodeRes.arrows],
+          ctxs: [...soFar.ctxs, nodeRes.ctx],
+          res: {...soFar.res, [relativeChildNode]: nodeRes.res}
+        };
+      }, {arrows: [], ctxs: [], res: {}});
+      
+      return {
+        arrows: addNodeToArrows(node, compNodesRes.arrows),
+        res: compNodesRes.res,
+        ctx: mergeCtxs(ctx, compNodesRes.ctxs)
       }
 
     };
@@ -133,17 +119,16 @@ const dispatch = ({
   if (nodeType === 'graph') {
     const activeChild = FSMState[node];
     const childFn = ({action}) => {
-      const childRes = () => callDispatch({
+      const childRes = callDispatch({
         node: activeChild,
         ctx,
         action
       });
-
-      return callbackize(childRes, childRes => ({
+      return {
         ...childRes,
         arrows: addNodeToArrows(node, childRes.arrows)
-      }));
-    }
+      };
+    };
 
     return handler({action, ctx, child: childFn, node: nodeData});
   }
