@@ -1,10 +1,9 @@
 import buildGraph from './../graphBuilder/api';
 import makeHandlers from './../handlers/api';
 import fsm from './../fsm/api';
-import chain from './operationChain';
-import {callbackize, mergeErrors, nonEmptyArrow} from './../utils';
+import {callbackize, nonEmptyArrow} from './../utils';
 import dispatch from './../dispatcher/api';
-import extendModelData, {generateInstanceID} from './modelData';
+import extendModelData from './modelData';
 
 const hasAnyArrowBeenFollowed = arrows => arrows.some(nonEmptyArrow);
 
@@ -127,7 +126,6 @@ export default ({
       anyArrowFollowed,
       res: dispatchRes.res
     };
-
 
   };
 

@@ -36,11 +36,6 @@ export const callbackize = (block, resCb, errCb = err => {throw err}) => {
   return resCb(res);
 };
 
-export const mergeErrors = (recent, previous) => {
-  recent.previous = previous;
-  return recent;
-};
-
 export const extractPromises = maybePromises => maybePromises.reduce(
   (grouped, maybePromise) => {
     return maybePromise.then
