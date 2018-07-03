@@ -33,6 +33,13 @@ You may want to use Rosmaro to build rich user interfaces, safe back-end service
 - [About drawing Rosmaro graphs](https://rosmaro.js.org/doc/#graphs)
 - [About writing Rosmaro code](https://rosmaro.js.org/doc/#handlers)
 
+## Coming soon
+The next release (which is currently developed in the v0.8 branch) will bring:
+- model composition
+- fully functional approach
+- smaller core
+- better integration with existing tooling and libraries like redux
+
 ## Utilities
 - [Rosmaro-React](https://github.com/lukaszmakuch/rosmaro-react) React integration
 
