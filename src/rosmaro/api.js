@@ -1,7 +1,7 @@
 import buildGraph from './../graphBuilder/api';
 import makeHandlers from './../handlers/api';
 import fsm from './../fsm/api';
-import {callbackize, nonEmptyArrow} from './../utils';
+import {nonEmptyArrow} from './../utils';
 import dispatch from './../dispatcher/api';
 import extendModelData from './modelData';
 

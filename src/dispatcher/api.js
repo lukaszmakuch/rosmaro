@@ -1,4 +1,3 @@
-import {callbackize, extractPromises} from './../utils';
 import defaultParentHandler from './../handlers/transparent';
 import {mergeCtxs} from './ctx';
 import {view as Rview, set as Rset} from 'ramda';
