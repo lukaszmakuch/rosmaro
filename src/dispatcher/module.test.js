@@ -165,7 +165,7 @@ describe("dispatcher", () => {
     }, callRes);
   });
 
-  xit('passes node IDs to handlers', () => {
+  it('passes node IDs to handlers', () => {
 
     const graph = {
       'main': {
@@ -224,7 +224,7 @@ describe("dispatcher", () => {
 
   });
 
-  xdescribe('adapting', () => {
+  describe('adapting', () => {
 
     it('allows to rename a graph leaving arrow', () => {
 
@@ -246,8 +246,8 @@ describe("dispatcher", () => {
 
       const handlers = {
 
-        'main:graph_with_leaving_a': ({method, ctx, params, child}) => {
-          const childRes = child({method, ctx, params});
+        'main:graph_with_leaving_a': ({action, ctx, child}) => {
+          const childRes = child({action});
           const arrows = mapArrows({a: 'b'}, childRes.arrows);
           return {
             arrows,
@@ -256,13 +256,12 @@ describe("dispatcher", () => {
           };
         },
 
-        'main:graph_with_leaving_a:a': ({method, ctx, params, child}) => {
-          child({});
-          if (method == "a") return {arrows: [[[null, 'a']]], ctx};
+        'main:graph_with_leaving_a:a': ({action, ctx, child}) => {
+          if (action.type == "a") return {arrows: [[[null, 'a']]], ctx};
         },
 
-        'main:graph_with_leaving_a:b': ({method, ctx, params}) => {
-          if (method == "a") return {arrows: [[[null, 'a']]], ctx};
+        'main:graph_with_leaving_a:b': ({action, ctx,}) => {
+          if (action.type == "a") return {arrows: [[[null, 'a']]], ctx};
         },
 
       };
@@ -279,8 +278,7 @@ describe("dispatcher", () => {
         FSMState,
         handlers,
         ctx: {},
-        method: "a",
-        params: [],
+        action: {type: "a"},
         lenses: {
           'main': identityLens,
           'main:target': identityLens,
@@ -294,7 +292,7 @@ describe("dispatcher", () => {
 
   });
 
-  xdescribe('merging the context', () => {
+  describe('merging the context', () => {
 
     it('allows parts to be removed', () => {
       const initCtx = {a: 2, b: 3};
