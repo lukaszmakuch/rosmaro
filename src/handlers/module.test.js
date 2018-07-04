@@ -61,7 +61,7 @@ describe('handler', () => {
   });
 });
 
-xdescribe('handlers', () => {
+describe('handlers', () => {
 
   it('always provides a complete list of lenses', () => {
     const {lenses} = makeHandlers({}, mockGraph(['A']));
@@ -74,7 +74,7 @@ xdescribe('handlers', () => {
       const {handlers, lenses} = makeHandlers({
         node: {
 
-          ctxLens: ({localNodeName}) => Rlens(
+          lens: ({localNodeName}) => Rlens(
             ctx => ({
               text: ctx.text + " " + localNodeName
             }),
@@ -88,17 +88,12 @@ xdescribe('handlers', () => {
       }, mockGraph(['node']));
 
       assert.deepEqual(
-        Rview(lenses.node({localNodeName: 'node'}), {}),
+        Rview(lenses['node']({localNodeName: 'node'}), {text: 'hello'}),
         {text: 'hello node'}
       );
       assert.deepEqual(
-        Rset(lenses.node({localNodeName: 'node'}), {text: 'hi node'}, {}),
-        {
-          sub: {
-            another: 123,
-            text: 'hi world'
-          }
-        }
+        Rset(lenses['node']({localNodeName: 'node'}), {text: 'hi node'}, {}),
+        {text: 'hi world'}
       );
 
     });
@@ -132,32 +127,6 @@ xdescribe('handlers', () => {
 
   });
 
-  describe('alter result', () => {
-    it('allows to alter the result of a method call', () => {
-
-      const {handlers, lenses} = makeHandlers({
-        node: {
-          method: () => 'result',
-          afterMethod: ({res}) => 'altered ' + res
-        }
-      }, mockGraph(['node']));
-
-      assertIdentityLens(lenses.node);
-
-      assert.deepEqual(handlers.node({
-        method: 'method',
-        node: {},
-        params: [],
-        ctx: {},
-      }), {
-        res: 'altered result',
-        arrows: [[[null, null]]],
-        ctx: {}
-      });
-
-    });
-  });
-
   describe('leaf', () => {
 
     it('associates functions with methods', () => {
@@ -168,66 +137,67 @@ xdescribe('handlers', () => {
 
       const {handlers, lenses} = makeHandlers({
         node: {
-          a({ctx, paramA, paramB, thisModel}) {
-            receivedByA = {ctx, paramA, paramB, thisModel};
-            return {
-              res: 'aRes',
-              ctx: {aCtx: 123},
-              arrow: 'aArrow'
-            };
-          },
-
-          b: ({ctx, param, thisModel}) => {
-            receivedByB = {ctx, thisModel};
-            return {
-              res: 'bRes',
-              ctx: {bCtx: 123},
-              arrow: 'bArrow'
-            };
+          handler: ({action, ctx}) => {
+            switch(action.type) {
+              case 'a':
+                return {
+                  res: {receivedByA: {ctx, action}},
+                  ctx,
+                  arrows: [[[null, 'aArrow']]],
+                };
+                break;
+              case 'b':
+                return {
+                  res: {receivedByB: {ctx, action}},
+                  ctx: {bCtx: 123},
+                  arrows: [[[null, 'bArrow']]],
+                };
+                break;
+              }
+            }
           }
-        }
-      }, mockGraph(['node', 'b']));
+        }, 
+        mockGraph(['node', 'b'])
+      );
 
-      assertIdentityLens(lenses.node);
+      assertIdentityLens(lenses['node']);
 
-      const aRes = handlers.node({
+      const aRes = handlers['node']({
         ctx: {whole: 'ctx'},
-        method: 'a',
-        params: [{paramA: 'a', paramB: 'b'}],
-        model
+        action: {type: 'a', paramA: 'a', paramB: 'b'},
       });
-      const bRes = handlers.node({
-        ctx: {whole: 'ctx'},
-        method: 'b',
-        params: [],
-        model
-      });
-
-      assert.deepEqual(receivedByA, {
-        ctx: {whole: 'ctx'},
-        paramA: 'a',
-        paramB: 'b',
-        thisModel: model
-      });
-      assert.deepEqual(aRes, {
-        arrows: [[[null, 'aArrow']]],
-        ctx: {aCtx: 123},
-        res: 'aRes'
-      });
-
-      assert.deepEqual(receivedByB, {
-        ctx: {whole: 'ctx'},
-        thisModel: model
-      });
-      assert.deepEqual(bRes, {
-        arrows: [[[null, 'bArrow']]],
-        ctx: {bCtx: 123},
-        res: 'bRes'
-      });
+      assert.deepEqual(
+        {
+          res: {receivedByA: {
+            ctx: {whole: 'ctx'},
+            action: {type: 'a', paramA: 'a', paramB: 'b'},
+          }},
+          ctx: {whole: 'ctx'},
+          arrows: [[[null, 'aArrow']]],
+        },
+        handlers['node']({
+          ctx: {whole: 'ctx'},
+          action: {type: 'a', paramA: 'a', paramB: 'b'},
+        })
+      );
+      assert.deepEqual(
+        {
+          res: {receivedByB: {
+            ctx: {whole: 'ctx'},
+            action: {type: 'b'},
+          }},
+          ctx: {bCtx: 123},
+          arrows: [[[null, 'bArrow']]],
+        },
+        handlers['node']({
+          ctx: {whole: 'ctx'},
+          action: {type: 'b'},
+        })
+      );
 
     });
 
-    it('does nothing when a method is not found', () => {
+    xit('does nothing when a method is not found', () => {
       const {handlers, lenses} = makeHandlers({
         otherNode: {
           a: () => ({res: 'aRes', arrow: 'x', ctx: {x: 987}})
@@ -246,7 +216,7 @@ xdescribe('handlers', () => {
       });
     });
 
-    it('may return just a result', () => {
+    xit('may return just a result', () => {
       const {handlers, lenses} = makeHandlers({
         node: {
           a: () => 'just this'
@@ -260,7 +230,7 @@ xdescribe('handlers', () => {
       });
     });
 
-    it('may return nothing', () => {
+    xit('may return nothing', () => {
       const {handlers, lenses} = makeHandlers({
         node: {
           a: () => {}
@@ -274,7 +244,7 @@ xdescribe('handlers', () => {
       });
     });
 
-    it('may return just an arrow', () => {
+    xit('may return just an arrow', () => {
       const {handlers, lenses} = makeHandlers({
         node: {a: () => ({arrow: 'x'})}
       }, mockGraph(['node']));
