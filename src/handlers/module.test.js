@@ -197,65 +197,6 @@ describe('handlers', () => {
 
     });
 
-    xit('does nothing when a method is not found', () => {
-      const {handlers, lenses} = makeHandlers({
-        otherNode: {
-          a: () => ({res: 'aRes', arrow: 'x', ctx: {x: 987}})
-        }
-      }, mockGraph(['a']));
-      assertIdentityLens(lenses.otherNode);
-      assert.deepEqual(handlers.otherNode({
-        method: 'x', 
-        ctx: {init: 123}, 
-        params: [], 
-        child: finalChild
-      }), {
-        res: undefined,
-        ctx: {init: 123},
-        arrows: [[[null, null]]]
-      });
-    });
-
-    xit('may return just a result', () => {
-      const {handlers, lenses} = makeHandlers({
-        node: {
-          a: () => 'just this'
-        }
-      }, mockGraph(['node']));
-      assertIdentityLens(lenses.node);
-      assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
-        res: 'just this',
-        ctx: {init: 123},
-        arrows: [[[null, null]]]
-      });
-    });
-
-    xit('may return nothing', () => {
-      const {handlers, lenses} = makeHandlers({
-        node: {
-          a: () => {}
-        }
-      }, mockGraph(['node']));
-      assertIdentityLens(lenses.node);
-      assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
-        res: undefined,
-        ctx: {init: 123},
-        arrows: [[[null, null]]]
-      });
-    });
-
-    xit('may return just an arrow', () => {
-      const {handlers, lenses} = makeHandlers({
-        node: {a: () => ({arrow: 'x'})}
-      }, mockGraph(['node']));
-      assertIdentityLens(lenses.node);
-      assert.deepEqual(handlers.node({method: 'a', ctx: {init: 123}, params: []}), {
-        res: undefined,
-        ctx: {init: 123},
-        arrows: [[[null, 'x']]]
-      });
-    });
-
   });
 
 });
