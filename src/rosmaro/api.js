@@ -82,7 +82,7 @@ export default ({
 
     // {FSMState, ctx, instanceID}
     const modelData = extendModelData({
-      state,
+      readModelData: state,
       graph: modelParts.graph
     });
 

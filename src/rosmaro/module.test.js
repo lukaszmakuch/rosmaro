@@ -2,6 +2,7 @@ import assert from 'assert';
 import rosmaro from '../index';
 import union from 'lodash/union';
 import without from 'lodash/without';
+import {isEmpty, lens as Rlens} from 'ramda';
 
 let logEntries = [];
 let lock, storage;
@@ -46,6 +47,20 @@ const graph = {
 
 };
 
+// TODO: this could be separated into it's own package
+const initCtxLens = initCtx => Rlens(
+  ctx => isEmpty(ctx) ? initCtx : ctx,
+  (returned, src) => returned,
+);
+
+const testSession = ({model, steps}) => {
+  steps.reduce((state, {call, expect = {}}) => {
+    const callRes = model({state, action: call});
+    if (expect.res) assert.deepEqual(callRes.res, expect.res);
+    return callRes.state;
+  }, undefined);
+}
+
 const expectedRes = {A: 'OrthogonalARes', B: 'OrthogonalBRes'};
 
 const loggingHandler = (nodeName, res) => ({
@@ -89,25 +104,7 @@ describe('rosmaro', () => {
     'GraphTarget': GraphTargetHandler
   };
 
-  xdescribe('with synchronous handlers', () => {
-
-    it('is fully synchronous if everything is synchronous', () => {
-      const model = rosmaro({
-        graph,
-        handlers: syncHandlers,
-        storage: storage,
-        lock: lock.fn
-      });
-
-      const aRes = model.method(1, 2);
-      const bRes = model.method(3, 4);
-
-      assert.deepEqual(expectedRes, aRes);
-    });
-
-  });
-
-  xdescribe('a dynamic composite', () => {
+  describe('a dynamic composite', () => {
 
     it('alters the graphs based on the context', () => {
 
@@ -121,23 +118,29 @@ describe('rosmaro', () => {
 
       const handlers = {
         'main': {
-          initCtx: {elems: ['A', 'B']},
+          lens: () => initCtxLens({elems: ['A', 'B']}),
           nodes: ({ctx: {elems}}) => elems
         },
         'leaf': {
-          sayHi: ({nodeInfo}) => `I'm ${nodeInfo.ID}.`
+          handler: ({action, ctx, node}) => {
+            return {
+              ctx,
+              arrows: [[[null, undefined]]],
+              res: (action.type === 'SAY_HI') 
+                ? `I'm ${node.ID}.` 
+                : undefined
+            };
+          }
         }
       };
 
-      const model = rosmaro({
-        graph,
-        handlers,
-        storage: storage,
-        lock: lock.fn
-      });
+      const model = rosmaro({graph, handlers});
 
       assert.deepEqual(
-        model.sayHi(),
+        model({
+          state: undefined,
+          action: {type: 'SAY_HI'},
+        }).res,
         {A: "I'm main:A.", B: "I'm main:B."}
       );
 
@@ -185,67 +188,91 @@ describe('rosmaro', () => {
         }
       };
 
-      const switchTpl = {
-        toggle: () => ({arrow: 'toggle'}),
-        addSwitch: ({number, ctx}) => ({ctx: {switches: union(ctx.switches, [number])}}),
-        removeSwitch: ({number, ctx}) => ({ctx: {switches: without(ctx.switches, number)}}),
+      const makeSwitchHandler = name => ({action, ctx}) => {
+        switch (action.type) {
+          case 'READ':
+            return {
+              arrows: [[[null, undefined]]],
+              res: name,
+              ctx: ctx,
+            }
+            break;
+          case 'TOGGLE':
+            return {
+              arrows: [[[null, 'toggle']]],
+              ctx: ctx,
+            };
+            break;
+          case 'ADD_SWITCH':
+            return {
+              arrows: [[[null, undefined]]],
+              ctx: {switches: union(ctx.switches, [action.number])}
+            };
+            break;
+          case 'REMOVE_SWITCH':
+            return {
+              arrows: [[[null, undefined]]],
+              ctx: {switches: without(ctx.switches, action.number)}
+            };
+            break;
+        }
       };
       
       const handlers = {
         main: {
-          initCtx: {switches: [1, 2]},
+          lens: () => initCtxLens({switches: [1, 2]}),
           nodes: ({ctx}) => ctx.switches,
         },
-        On: {'read': () => 'On', ...switchTpl},
-        Off: {'read': () => 'Off', ...switchTpl},
+        On: {handler: makeSwitchHandler('On')},
+        Off: {handler: makeSwitchHandler('Off')},
       };
 
       const model = rosmaro({
         graph,
-        handlers,
-        storage: storage,
-        lock: lock.fn
+        handlers
       });
 
-      assert.deepEqual(
-        model.read(),
-        {1: 'Off', 2: 'Off'}
-      );
-
-      model.toggle();
-
-      assert.deepEqual(
-        model.read(),
-        {1: 'On', 2: 'On'}
-      );
-
-      model.addSwitch({number: 3});
-
-      assert.deepEqual(
-        model.read(),
-        {1: 'On', 2: 'On', 3: 'Off'}
-      );
-
-      model.removeSwitch({number: 2});
-
-      assert.deepEqual(
-        model.read(),
-        {1: 'On', 3: 'Off'}
-      );
-
-      model.addSwitch({number: 2});
-
-      assert.deepEqual(
-        model.read(),
-        {1: 'On', 2: 'Off', 3: 'Off'}
-      );
-
-      model.toggle();
-
-      assert.deepEqual(
-        model.read(),
-        {1: 'Off', 2: 'On', 3: 'On'}
-      );
+      testSession({model, steps: [
+        {
+          call: {type: 'READ'},
+          expect: {res: {1: 'Off', 2: 'Off'}},
+        },
+        {
+          call: {type: 'TOGGLE'},
+        },
+        {
+          call: {type: 'READ'},
+          expect: {res: {1: 'On', 2: 'On'}},
+        },
+        {
+          call: {type: 'ADD_SWITCH', number: 3},
+        },
+        {
+          call: {type: 'READ'},
+          expect: {res: {1: 'On', 2: 'On', 3: 'Off'}},
+        },
+        {
+          call: {type: 'REMOVE_SWITCH', number: 2},
+        },
+        {
+          call: {type: 'READ'},
+          expect: {res: {1: 'On', 3: 'Off'}},
+        },
+        {
+          call: {type: 'ADD_SWITCH', number: 2},
+        },
+        {
+          call: {type: 'READ'},
+          expect: {res: {1: 'On', 2: 'Off', 3: 'Off'}},
+        },
+        {
+          call: {type: 'TOGGLE'},
+        },
+        {
+          call: {type: 'READ'},
+          expect: {res: {1: 'Off', 2: 'On', 3: 'On'}},
+        },
+      ]});
 
     });
 
@@ -292,25 +319,20 @@ describe('rosmaro', () => {
       handlers,
     });
 
-    const {state: secondState, res: firstRes} = model({
-      state: undefined, // this should create a blank, initial state
-      action: {type: 'FOLLOW_ARROW', which: 'x'}
-    });
-
-    assert.deepEqual(undefined, firstRes);
-
-    const {state: thirdState, res: secondRes} = model({
-      state: secondState,
-      action: {type: 'READ_NODE'}
-    });
-
-    assert.notDeepEqual(secondState, firstRes);
-    assert.notDeepEqual('B', secondRes);
-
-    assert.deepEqual(
-      undefined,
-      model({action: {type: 'NON-EXISTENT'}}).res
-    );
+    testSession({model, steps: [
+      {
+        call: {type: 'FOLLOW_ARROW', which: 'x'},
+        expect: {res: undefined},
+      },
+      {
+        call: {type: 'READ_NODE'},
+        expect: {res: 'B'},
+      },
+      {
+        call: {type: 'NON-EXISTENT'},
+        expect: {res: undefined},
+      },
+    ]});
 
   });
 
