@@ -1,7 +1,8 @@
 import assert from 'assert';
 import dispatch from './api';
 import {mapArrows} from './../utils';
-import {identity as Ridentity, lens as Rlens, lensPath as RlensPath} from 'ramda';
+import {transparentSingleChildHandler, mergeCtxs, mergeArrows} from './../handlerUtils';
+import {identity as Ridentity, lens as Rlens, prop, lensPath as RlensPath, head, values, map} from 'ramda';
 
 const identityLens = () => Rlens(Ridentity, Ridentity);
 
@@ -35,12 +36,17 @@ describe("dispatcher", () => {
 
     const handlers = {
 
-      'main:B:B': ({action, ctx, child}) => {
-        const childRes = child({action});
+      'main': transparentSingleChildHandler,
+
+      'main:B': transparentSingleChildHandler,
+
+      'main:B:B': ({action, ctx, children}) => {
+        const allResults = map(child => child({action}), children);
         return {
-          ...childRes,
-          res: childRes.res.A + "_" + childRes.res.B,
-        }
+          ctx: mergeCtxs(ctx, values(map(prop('ctx'), allResults))),
+          arrows: mergeArrows(map(prop('arrows'), values(allResults))),
+          res: allResults.A.res + "_" + allResults.B.res,
+        };
       },
 
       "main:B:B:A": ({action, ctx}) => {
@@ -102,15 +108,9 @@ describe("dispatcher", () => {
       'main': 'main:level1'
     };
     const handlers = {
-      'main': (opts) => opts.child({action: opts.action}),
-      'main:level1': (opts) => {
-        const childRes = opts.child({action: opts.action});
-        return {
-          ...childRes,
-          res: childRes.res['level2']
-        };
-      },
-      'main:level1:level2': ({ctx, child}) => {
+      'main': transparentSingleChildHandler,
+      'main:level1': transparentSingleChildHandler,
+      'main:level1:level2': ({ctx}) => {
         return {
           res: {gotCtx: ctx},
           ctx: {val: 'changed'},
@@ -192,15 +192,15 @@ describe("dispatcher", () => {
     const handlers = {
       'main': (opts) => {
         mainID = opts.node.ID;
-        return opts.child(opts);
+        return transparentSingleChildHandler(opts);
       },
       'main:A': (opts) => {
         mainAID = opts.node.ID;
-        return opts.child(opts);
+        return transparentSingleChildHandler(opts);
       },
       'main:A:A': (opts) => {
         mainAAID = opts.node.ID;
-        return {res: null, ctx: {}};
+        return {res: null, ctx: {}, arrows: [[[null, undefined]]]};
       }
     };
 
@@ -246,8 +246,10 @@ describe("dispatcher", () => {
 
       const handlers = {
 
-        'main:graph_with_leaving_a': ({action, ctx, child}) => {
-          const childRes = child({action});
+        'main': transparentSingleChildHandler,
+
+        'main:graph_with_leaving_a': ({action, ctx, children}) => {
+          const childRes = head(values(children))({action});
           const arrows = mapArrows({a: 'b'}, childRes.arrows);
           return {
             arrows,
@@ -317,123 +319,6 @@ describe("dispatcher", () => {
       });
       const expectedCtx = {a: 2};
       assert.deepEqual(expectedCtx, ctx);
-    });
-
-    describe('composites', () => {
-      const graph = {
-        'main': {type: 'composite', nodes: ['main:A', 'main:B']},
-        'main:A': {type: 'graph', nodes: ['main:A:A', 'main:A:B'], parent: 'main'},
-        'main:B': {type: 'graph', nodes: ['main:B:A', 'main:B:B'], parent: 'main'},
-        'main:A:A': {type: 'leaf', parent: 'main:A'},
-        'main:A:B': {type: 'leaf', parent: 'main:A'},
-        'main:B:A': {type: 'leaf', parent: 'main:B'},
-        'main:B:B': {type: 'leaf', parent: 'main:B'}
-      };
-      const FSMState = {
-        'main:A': 'main:A:A',
-        'main:B': 'main:B:A',
-      };
-      const lenses = {
-        'main': identityLens,
-        'main:A': identityLens,
-        'main:B': identityLens,
-        'main:A:A': identityLens,
-        'main:A:B': identityLens,
-        'main:B:A': identityLens,
-        'main:B:B': identityLens,
-      };
-
-      it('allows parts to be added', () => {
-        const initCtx = {a: "a", b: "b"};
-        const handlers = {
-          'main:A:A': ({method, ctx, params}) => {
-            return {arrows: [[[null, 'x']]], ctx: {a: "a", b: "b"}};
-          },
-          'main:B:A': ({method, ctx, params}) => {
-            return {arrows: [[[null, 'y']]], ctx: {a: "a", b: "b", c: "c"}};
-          }
-        };
-        const {ctx} = dispatch({
-          graph,
-          FSMState,
-          handlers,
-          ctx: initCtx,
-          method: "",
-          params: [],
-          lenses,
-        });
-        const expectedCtx = {a: "a", b: "b", c: "c"};
-        assert.deepEqual(expectedCtx, ctx);
-      });
-
-      it('is possible to remove parts of the context by a node', () => {
-        const initCtx = {arr: [{elem: "a"}, {elem: "b"}]};
-        const handlers = {
-          'main:A:A': ({method, ctx, params}) => {
-            return {arrows: [[[null, 'y']]], ctx: {arr: [{elem: "b"}]}};
-          },
-          'main:B:A': ({method, ctx, params}) => {
-            return {arrows: [[[null, 'x']]], ctx: {arr: [{elem: "a"}, {elem: "b"}]}};
-          }
-        };
-        const {ctx} = dispatch({
-          graph,
-          FSMState,
-          handlers,
-          ctx: initCtx,
-          method: "",
-          params: [],
-          lenses,
-        });
-        const expectedCtx = {arr: [{elem: "b"}]};
-        assert.deepEqual(expectedCtx, ctx);
-      });
-
-      it('merges only different parts', () => {
-        const initCtx = {a: "a", b: "b"};
-        const handlers = {
-          'main:A:A': ({method, ctx, params}) => {
-            return {arrows: [[[null, 'x']]], ctx: {a: "z", b: "b"}};
-          },
-          'main:B:A': ({method, ctx, params}) => {
-            return {arrows: [[[null, 'y']]], ctx: {a: "a", b: "x"}};
-          }
-        };
-        const {ctx} = dispatch({
-          graph,
-          FSMState,
-          handlers,
-          ctx: initCtx,
-          method: "",
-          params: [],
-          lenses,
-        });
-        const expectedCtx = {a: "z", b: "x"};
-        assert.deepEqual(expectedCtx, ctx);
-      });
-
-      it('merges the context in case of simultaneous transitions', () => {
-        const handlers = {
-          'main:A:A': ({method, ctx, params}) => {
-            return {arrows: [[[null, 'x']]], ctx: {a: 2}};
-          },
-          'main:B:A': ({method, ctx, params}) => {
-            return {arrows: [[[null, 'y']]], ctx: {b: 3}};
-          }
-        };
-        const {ctx} = dispatch({
-          graph,
-          FSMState,
-          handlers,
-          ctx: {},
-          method: "",
-          params: [],
-          lenses,
-        });
-        const expectedCtx = {a: 2, b: 3};
-        assert.deepEqual(expectedCtx, ctx);
-      })
-
     });
 
   });

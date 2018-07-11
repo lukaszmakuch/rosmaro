@@ -51,11 +51,13 @@ describe('handler', () => {
       method: 'x', 
       ctx: {init: 123}, 
       params: [], 
-      child: finalChild
+      children: {finalChild}
     }), {
-      res: undefined,
-      ctx: {type: 'finalChildCtx'},
-      arrows: [[[null, null]]]
+      finalChild: {
+        res: undefined,
+        ctx: {type: 'finalChildCtx'},
+        arrows: [[[null, null]]],
+      }
     });
 
   });

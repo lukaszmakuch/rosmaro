@@ -19,50 +19,6 @@ const removeUnusedFSMState = ({newFSMState, graph}) => {
   return minimalFSMState;
 };
 
-const handleManyPossibleMethodCalls = ({
-  model,
-  method,
-  parameters,
-  readModelData,
-  basedOnHandlersPlan,
-  graphPlan,
-  firstCall = true,
-  firstRes = undefined,
-  firstCallFollowedArrow = false
-}) => {
-
-  return callbackize(
-    () => handleMethodCall({
-      model,
-      method,
-      parameters,
-      readModelData,
-      basedOnHandlersPlan,
-      graphPlan
-    }),
-    ({newModelData, anyArrowFollowed, res}) => {
-      if (!anyArrowFollowed) return {
-        newModelData, 
-        anyArrowFollowed: firstCall ? anyArrowFollowed : firstCallFollowedArrow, 
-        res: firstCall ? res : firstRes
-      };
-
-      return handleManyPossibleMethodCalls({
-        model,
-        method: 'run',
-        parameters: [],
-        readModelData: newModelData,
-        basedOnHandlersPlan,
-        graphPlan,
-        firstCall: false,
-        firstRes: firstCall ? res : firstRes,
-        firstCallFollowedArrow: firstCall ? anyArrowFollowed : firstCallFollowedArrow
-      });
-    }
-  );
-
-};
-
 export default ({
   graph: graphPlan,
   handlers: handlersPlan

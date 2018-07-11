@@ -1,8 +1,9 @@
 import assert from 'assert';
 import rosmaro from '../index';
+import {mergeCtxs, mergeArrows, transparentSingleChildHandler} from '../handlerUtils';
 import union from 'lodash/union';
 import without from 'lodash/without';
-import {isEmpty, lens as Rlens} from 'ramda';
+import {isEmpty, lens as Rlens, map, prop, head, concat, values} from 'ramda';
 
 let logEntries = [];
 let lock, storage;
@@ -79,31 +80,6 @@ describe('rosmaro', () => {
     logEntries = [];
   });
 
-  const mainHandler = loggingHandler('main');
-  const OrthogonalAHandler = loggingHandler('OrthogonalA', {
-    res: 'OrthogonalARes',
-    arrow: 'y',
-    ctx: {fromA: 123}
-  });  
-  const OrthogonalBHandler = loggingHandler('OrthogonalB', {
-    res: 'OrthogonalBRes',
-    arrow: 'x',
-    ctx: {fromB: 456}
-  });
-  const CompositeHandler = loggingHandler('Composite');
-  const GraphHandler = loggingHandler('Graph');
-  const CompositeTargetHandler = loggingHandler('CompositeTarget', {ctx: {}});
-  const GraphTargetHandler = loggingHandler('GraphTarget', {ctx: {}});
-  const syncHandlers = {
-    'main': mainHandler,
-    'OrthogonalA': OrthogonalAHandler,
-    'OrthogonalB': OrthogonalBHandler,
-    'Composite': CompositeHandler,
-    'Graph': GraphHandler,
-    'CompositeTarget': CompositeTargetHandler,
-    'GraphTarget': GraphTargetHandler
-  };
-
   describe('a dynamic composite', () => {
 
     it('alters the graphs based on the context', () => {
@@ -119,7 +95,15 @@ describe('rosmaro', () => {
       const handlers = {
         'main': {
           lens: () => initCtxLens({elems: ['A', 'B']}),
-          nodes: ({ctx: {elems}}) => elems
+          nodes: ({ctx: {elems}}) => elems,
+          handler: ({action, ctx, children}) => {
+            const allResults = map(child => child({action}), children);
+            return {
+              ctx: head(values(allResults)).ctx,
+              arrows: concat(...map(prop('arrows'), values(allResults))),
+              res: map(prop('res'), allResults)
+            }
+          }
         },
         'leaf': {
           handler: ({action, ctx, node}) => {
@@ -188,7 +172,7 @@ describe('rosmaro', () => {
         }
       };
 
-      const makeSwitchHandler = name => ({action, ctx}) => {
+      const makeSwitchHandler = name => ({action, ctx, node}) => {
         switch (action.type) {
           case 'READ':
             return {
@@ -222,6 +206,19 @@ describe('rosmaro', () => {
         main: {
           lens: () => initCtxLens({switches: [1, 2]}),
           nodes: ({ctx}) => ctx.switches,
+          handler: ({action, ctx, children}) => {
+            const allResults = map(child => child({action}), children);
+            return {
+              ctx: mergeCtxs(ctx, values(map(prop('ctx'), allResults))),
+              arrows: mergeArrows(map(prop('arrows'), values(allResults))),
+              res: map(prop('res'), allResults)
+            }
+          }
+        },
+        Switch: {
+          lens: () => initCtxLens({switches: [1, 2]}),
+          nodes: ({ctx}) => ctx.switches,
+          handler: transparentSingleChildHandler,
         },
         On: {handler: makeSwitchHandler('On')},
         Off: {handler: makeSwitchHandler('Off')},
@@ -294,6 +291,9 @@ describe('rosmaro', () => {
     };
 
     const handlers = {
+      'main': {
+        handler: transparentSingleChildHandler,
+      },
       'A': {
         handler: ({action, ctx}) => {
           const arrow = action.type == 'FOLLOW_ARROW' ? action.which : undefined;

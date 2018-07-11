@@ -60,7 +60,7 @@ const dispatch = ({
     const leafRes = handler({
       action, 
       ctx, 
-      child: dummyChildFn, 
+      children: {}, 
       node: nodeData
     });
     return {
@@ -75,44 +75,59 @@ const dispatch = ({
   if (nodeType === 'composite') {
     const composedNodes = graph[node].nodes;
 
-    const childFn = ({action}) => {
+    // const childFn = ({action}) => {
 
-      const compNodesRes = composedNodes.reduce((allRes, childNode) => {
-        const addNode = rawRes => ({
-          node: childNode,
-          callRes: rawRes
-        });
-        const callRes = addNode(callDispatch({
+    //   const compNodesRes = composedNodes.reduce((allRes, childNode) => {
+    //     const addNode = rawRes => ({
+    //       node: childNode,
+    //       callRes: rawRes
+    //     });
+    //     const callRes = addNode(callDispatch({
+    //       node: childNode,
+    //       ctx,
+    //       action
+    //     }));
+    //     return [...allRes, callRes];
+    //   }, [])
+    //   .map(res => ({
+    //     ...res.callRes,
+    //     node: res.node
+    //   }))
+    //   // merge composite results together (except the context)
+    //   .reduce((soFar, nodeRes) => {
+    //     // if the parent is like a:b, the child like a:b:c, then this is c
+    //     const relativeChildNode = nodeRes.node.substr(node.length + 1);
+    //     return {
+    //       arrows: [...soFar.arrows, ...nodeRes.arrows],
+    //       ctxs: [...soFar.ctxs, nodeRes.ctx],
+    //       res: {...soFar.res, [relativeChildNode]: nodeRes.res}
+    //     };
+    //   }, {arrows: [], ctxs: [], res: {}});
+      
+    //   return {
+    //     arrows: addNodeToArrows(node, compNodesRes.arrows),
+    //     res: compNodesRes.res,
+    //     ctx: mergeCtxs(ctx, compNodesRes.ctxs)
+    //   }
+
+    // };
+
+    const childrenFns = composedNodes.reduce((soFar, childNode) => ({
+      ...soFar,
+      [extractLocalNodeName(childNode)]: ({action}) => {
+        const childRes = callDispatch({
           node: childNode,
           ctx,
           action
-        }));
-        return [...allRes, callRes];
-      }, [])
-      .map(res => ({
-        ...res.callRes,
-        node: res.node
-      }))
-      // merge composite results together (except the context)
-      .reduce((soFar, nodeRes) => {
-        // if the parent is like a:b, the child like a:b:c, then this is c
-        const relativeChildNode = nodeRes.node.substr(node.length + 1);
+        });
         return {
-          arrows: [...soFar.arrows, ...nodeRes.arrows],
-          ctxs: [...soFar.ctxs, nodeRes.ctx],
-          res: {...soFar.res, [relativeChildNode]: nodeRes.res}
+          ...childRes,
+          arrows: addNodeToArrows(node, childRes.arrows)
         };
-      }, {arrows: [], ctxs: [], res: {}});
-      
-      return {
-        arrows: addNodeToArrows(node, compNodesRes.arrows),
-        res: compNodesRes.res,
-        ctx: mergeCtxs(ctx, compNodesRes.ctxs)
       }
+    }), {});
 
-    };
-
-    return handler({action, ctx, child: childFn, node: nodeData});
+    return handler({action, ctx, children: childrenFns, node: nodeData});
   }
 
   if (nodeType === 'graph') {
@@ -128,8 +143,10 @@ const dispatch = ({
         arrows: addNodeToArrows(node, childRes.arrows)
       };
     };
-
-    return handler({action, ctx, child: childFn, node: nodeData});
+    const childrenFns = {
+      [extractLocalNodeName(activeChild)]: childFn
+    };
+    return handler({action, ctx, children: childrenFns, node: nodeData});
   }
 };
 
