@@ -2,7 +2,7 @@ import assert from 'assert';
 import dispatch from './api';
 import {mapArrows} from './../utils';
 import {transparentSingleChildHandler, mergeCtxs, mergeArrows} from './../handlerUtils';
-import {identity as Ridentity, lens as Rlens, prop, lensPath as RlensPath, head, values, map} from 'ramda';
+import {identity as Ridentity, lens as Rlens, dissoc, prop, keys, lensPath as RlensPath, head, values, map} from 'ramda';
 
 const identityLens = () => Rlens(Ridentity, Ridentity);
 
@@ -91,78 +91,199 @@ describe("dispatcher", () => {
     assert.deepEqual(expectedCallRes, callRes);
   });
 
-  it('uses lenses', () => {
-    const ctx = {
-      raw: {
-        part: {
-          val: 'initial'
-        }
-      }
-    };
-    const graph = {
-      'main': {type: 'graph', nodes: ['main:level1']},
-      'main:level1': {type: 'composite', parent: 'main', nodes: ['main:level1:level2']},
-      'main:level1:level2': {type: 'leaf', parent: 'main:level1'}
-    };
-    const FSMState = {
-      'main': 'main:level1'
-    };
-    const handlers = {
-      'main': transparentSingleChildHandler,
-      'main:level1': transparentSingleChildHandler,
-      'main:level1:level2': ({ctx}) => {
-        return {
-          res: {gotCtx: ctx},
-          ctx: {val: 'changed'},
-          arrows: [[[null, 'x']]]
-        };
-      },
-    };
-    const lenses = {
-      // simple map {raw} => {forMain}
-      'main': () => Rlens(
-          ctx => ({forMain: ctx.raw}),
-          (returned, src) => ({raw: returned.forMain})
-        ),
-      // slice {forMain: part: x} => {'level2': x}
-      'main:level1': () => Rlens(
-          ctx => {
-            return ({'level2': ctx.forMain.part})
-          },
-          (returned, src) => ({
-            ...src, 
-            forMain: {
-              ...src.forMain,
-              part: returned['level2']
-            }
-          })
-        ),
-      // slice {'level2': x} => x 
-      'main:level1:level2': ({localNodeName}) => RlensPath([localNodeName])
-    };
-    const callRes = dispatch({
-      graph,
-      FSMState,
-      handlers,
-      ctx,
-      action: {type: 'ANYTHING'},
-      lenses
-    });
-    assert.deepEqual({
-      arrows: [
-        [['main:level1:level2', 'x'], ['main:level1', 'x']]
-      ],
-      ctx: {
+  describe('lenses', () => {
+
+    it('composes lenses', () => {
+      const ctx = {
         raw: {
           part: {
-            val: 'changed'
+            val: 'initial'
           }
         }
-      },
-      res: {
-        gotCtx: {val: 'initial'}
-      }
-    }, callRes);
+      };
+      const graph = {
+        'main': {type: 'graph', nodes: ['main:level1']},
+        'main:level1': {type: 'composite', parent: 'main', nodes: ['main:level1:level2']},
+        'main:level1:level2': {type: 'leaf', parent: 'main:level1'}
+      };
+      const FSMState = {
+        'main': 'main:level1'
+      };
+      const handlers = {
+        'main': transparentSingleChildHandler,
+        'main:level1': transparentSingleChildHandler,
+        'main:level1:level2': ({ctx}) => {
+          return {
+            res: {gotCtx: ctx},
+            ctx: {val: 'changed'},
+            arrows: [[[null, 'x']]]
+          };
+        },
+      };
+      const lenses = {
+        // simple map {raw} => {forMain}
+        'main': () => Rlens(
+            ctx => ({forMain: ctx.raw}),
+            (returned, src) => ({raw: returned.forMain})
+          ),
+        // slice {forMain: part: x} => {'level2': x}
+        'main:level1': () => Rlens(
+            ctx => {
+              return ({'level2': ctx.forMain.part})
+            },
+            (returned, src) => ({
+              ...src, 
+              forMain: {
+                ...src.forMain,
+                part: returned['level2']
+              }
+            })
+          ),
+        // slice {'level2': x} => x 
+        'main:level1:level2': ({localNodeName}) => RlensPath([localNodeName])
+      };
+      const callRes = dispatch({
+        graph,
+        FSMState,
+        handlers,
+        ctx,
+        action: {type: 'ANYTHING'},
+        lenses
+      });
+      assert.deepEqual({
+        arrows: [
+          [['main:level1:level2', 'x'], ['main:level1', 'x']]
+        ],
+        ctx: {
+          raw: {
+            part: {
+              val: 'changed'
+            }
+          }
+        },
+        res: {
+          gotCtx: {val: 'initial'}
+        }
+      }, callRes);
+    });
+
+    it("applies proper lenses for children's handlers", () => {
+      const graph = {
+        "main": {
+          "type": "graph",
+          "nodes": {
+            "B": "B"
+          },
+          "arrows": {},
+          "entryPoints": {
+            "start": {
+              "target": "B",
+              "entryPoint": "start"
+            }
+          }
+        },
+        "B": {
+          "type": "graph",
+          "nodes": {
+            "C": "C"
+          },
+          "arrows": {},
+          "entryPoints": {
+            "start": {
+              "target": "C",
+              "entryPoint": "start"
+            }
+          }
+        },
+        "C": {
+          "type": "leaf"
+        }
+      };
+
+      const FSMState = {
+        'main': 'B',
+        'B': 'C',
+      };
+
+      const renamePropLensF = (oldPropName, newPropName) => () => Rlens(
+        (inObj) => keys(inObj).reduce((outObj, key) => ({
+          ...outObj,
+          [key === oldPropName ? newPropName : key]: inObj[key],
+        }), {}),
+        (outObj, inObj) => keys(outObj).reduce((newInObj, key) => ({
+          ...newInObj,
+          [key === newPropName ? oldPropName : key]: outObj[key],
+        }), {})
+      );
+
+      const lenses = {
+        'main': renamePropLensF('d', 'c'),
+        'B': renamePropLensF('c', 'b'),
+        'C': renamePropLensF('b', 'a'),
+      };
+
+      const firstCtx = {
+        d: 120,
+      };
+
+      const incrementProp = (propName, obj) => ({
+        ...obj,
+        [propName]: obj[propName] + 1
+      });
+
+      const handlers = {
+        'main': ({action, ctx, children}) => {
+          const childRes = children['B']({action});
+          return {
+            ...childRes,
+            ctx: incrementProp('c', childRes.ctx),
+            res: {
+              ctxGotByMain: ctx,
+              ctxReturnedByMainChild: childRes.ctx,
+              ...childRes.res,
+            }
+          };
+        },
+        'B': ({action, ctx, children}) => {
+          const childRes = children['C']({action});
+          return {
+            ...childRes,
+            ctx: incrementProp('b', childRes.ctx),
+            res: {
+              ctxGotByB: ctx,
+              ctxReturnedByBChild: childRes.ctx,
+              ...childRes.res,
+            }
+          };
+        },
+        'C': ({action, ctx, children}) => {
+          return {
+            ctx: incrementProp('a', ctx),
+            res: {
+              ctxGotByC: ctx
+            }
+          };
+        },
+      };
+
+      const {res: callRes, ctx: newCtx} = dispatch({
+        graph,
+        FSMState,
+        handlers,
+        ctx: firstCtx,
+        action: {type: 'ANYTHING'},
+        lenses
+      });
+
+      assert.deepEqual({d: 123}, newCtx);
+      assert.deepEqual({
+        ctxGotByMain: {c: 120},
+        ctxReturnedByMainChild: {c: 122},
+        ctxGotByB: {b: 120},
+        ctxReturnedByBChild: {b: 121},
+        ctxGotByC: {a: 120},
+      }, callRes);
+    });
   });
 
   it('passes node IDs to handlers', () => {
