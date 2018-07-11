@@ -1,17 +1,6 @@
 import defaultParentHandler from './../handlers/transparent';
 import {view as Rview, set as Rset} from 'ramda';
 
-// arrows like [ [['a:a:a', 'x']] [['a:a:b', 'x']] ]
-// node like 'a:a'
-// res like [ [['a:a:a', 'x'], ['a:a', 'x']] [['a:a:b', 'x'], ['a:a', 'x']] ]
-const addNodeToArrows = (node, arrows) => arrows.map(arrow => node === 'main'
-  ? arrow
-  : [
-    ...arrow,
-    [node, arrow[arrow.length - 1][1]]
-  ]
-);
-
 const dummyChildFn = ({ctx}) => ({
   arrows: [[[null, undefined]]],
   ctx: ctx,
@@ -44,7 +33,7 @@ const dispatch = ({
     (handlers[node] || defaultParentHandler)(opts)
   );
   const nodeType = graph[node].type;
-  const nodeData = {ID: node};
+  const nodeData = {id: node};
   const callDispatch = ({node, ctx, action}) => dispatch({
     graph,
     node,
@@ -56,19 +45,12 @@ const dispatch = ({
   });
 
   if (nodeType === 'leaf') {
-    const leafRes = handler({
+    return handler({
       action, 
       ctx, 
       children: {}, 
       node: nodeData
     });
-    return {
-      arrows: leafRes.arrows
-        ? [[[node, leafRes.arrows[0][0][1]]]]
-        : [[[node, undefined]]],
-      ctx: leafRes.ctx,
-      res: leafRes.res
-    };
   }
 
   if (nodeType === 'composite') {
@@ -77,15 +59,11 @@ const dispatch = ({
     const childrenFns = composedNodes.reduce((soFar, childNode) => ({
       ...soFar,
       [extractLocalNodeName(childNode)]: ({action}) => {
-        const childRes = callDispatch({
+        return callDispatch({
           node: childNode,
           ctx,
           action
         });
-        return {
-          ...childRes,
-          arrows: addNodeToArrows(node, childRes.arrows)
-        };
       }
     }), {});
 
@@ -95,15 +73,11 @@ const dispatch = ({
   if (nodeType === 'graph') {
     const activeChild = FSMState[node];
     const childFn = ({action}) => {
-      const childRes = callDispatch({
+      return callDispatch({
         node: activeChild,
         ctx,
         action
       });
-      return {
-        ...childRes,
-        arrows: addNodeToArrows(node, childRes.arrows)
-      };
     };
     const childrenFns = {
       [extractLocalNodeName(activeChild)]: childFn

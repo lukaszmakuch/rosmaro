@@ -111,7 +111,7 @@ describe('rosmaro', () => {
               ctx,
               arrows: [[[null, undefined]]],
               res: (action.type === 'SAY_HI') 
-                ? `I'm ${node.ID}.` 
+                ? `I'm ${node.id}.` 
                 : undefined
             };
           }
@@ -176,26 +176,26 @@ describe('rosmaro', () => {
         switch (action.type) {
           case 'READ':
             return {
-              arrows: [[[null, undefined]]],
+              arrows: [[[node.id, undefined]]],
               res: name,
               ctx: ctx,
             }
             break;
           case 'TOGGLE':
             return {
-              arrows: [[[null, 'toggle']]],
+              arrows: [[[node.id, 'toggle']]],
               ctx: ctx,
             };
             break;
           case 'ADD_SWITCH':
             return {
-              arrows: [[[null, undefined]]],
+              arrows: [[[node.id, undefined]]],
               ctx: {switches: union(ctx.switches, [action.number])}
             };
             break;
           case 'REMOVE_SWITCH':
             return {
-              arrows: [[[null, undefined]]],
+              arrows: [[[node.id, undefined]]],
               ctx: {switches: without(ctx.switches, action.number)}
             };
             break;
@@ -295,20 +295,20 @@ describe('rosmaro', () => {
         handler: transparentSingleChildHandler,
       },
       'A': {
-        handler: ({action, ctx}) => {
+        handler: ({action, ctx, node}) => {
           const arrow = action.type == 'FOLLOW_ARROW' ? action.which : undefined;
           return {
             ctx,
-            arrows: [[[null, arrow]]]
+            arrows: [[[node.id, arrow]]]
           };
         }
       },
       'B': {
-        handler: ({action, ctx}) => {
+        handler: ({action, ctx, node}) => {
           return {
             res: action.type == 'READ_NODE' ? 'B' : undefined,
             ctx,
-            arrows: [[[null, undefined]]]
+            arrows: [[[node.id, undefined]]]
           };
         }
       }

@@ -1,7 +1,12 @@
 import assert from 'assert';
 import dispatch from './api';
 import {mapArrows} from './../utils';
-import {transparentSingleChildHandler, mergeCtxs, mergeArrows} from './../handlerUtils';
+import {
+  transparentSingleChildHandler, 
+  mergeCtxs, 
+  mergeArrows,
+  addNodeToArrows
+} from './../handlerUtils';
 import {identity as Ridentity, lens as Rlens, dissoc, prop, keys, lensPath as RlensPath, head, values, map} from 'ramda';
 
 const identityLens = () => Rlens(Ridentity, Ridentity);
@@ -40,27 +45,27 @@ describe("dispatcher", () => {
 
       'main:B': transparentSingleChildHandler,
 
-      'main:B:B': ({action, ctx, children}) => {
+      'main:B:B': ({action, ctx, children, node}) => {
         const allResults = map(child => child({action}), children);
         return {
           ctx: mergeCtxs(ctx, values(map(prop('ctx'), allResults))),
-          arrows: mergeArrows(map(prop('arrows'), values(allResults))),
+          arrows: addNodeToArrows(node.id, mergeArrows(map(prop('arrows'), values(allResults)))),
           res: allResults.A.res + "_" + allResults.B.res,
         };
       },
 
-      "main:B:B:A": ({action, ctx}) => {
+      "main:B:B:A": ({action, ctx, node}) => {
         switch (action.type) {
           case 'FOLLOW_ARROWS': 
-            return {arrows: [[[null, 'x']]], ctx, res: 'ARes'};
+            return {arrows: [[[node.id, 'x']]], ctx, res: 'ARes'};
             break;
         }
       },
 
-      "main:B:B:B": ({action, ctx}) => {
+      "main:B:B:B": ({action, ctx, node}) => {
         switch (action.type) {
           case 'FOLLOW_ARROWS': 
-            return {arrows: [[[null, 'y']]], ctx, res: 'BRes'};
+            return {arrows: [[[node.id, 'y']]], ctx, res: 'BRes'};
             break;
         }
       }
@@ -112,11 +117,11 @@ describe("dispatcher", () => {
       const handlers = {
         'main': transparentSingleChildHandler,
         'main:level1': transparentSingleChildHandler,
-        'main:level1:level2': ({ctx}) => {
+        'main:level1:level2': ({ctx, node}) => {
           return {
             res: {gotCtx: ctx},
             ctx: {val: 'changed'},
-            arrows: [[[null, 'x']]]
+            arrows: [[[node.id, 'x']]]
           };
         },
       };
@@ -312,16 +317,16 @@ describe("dispatcher", () => {
 
     const handlers = {
       'main': (opts) => {
-        mainID = opts.node.ID;
+        mainID = opts.node.id;
         return transparentSingleChildHandler(opts);
       },
       'main:A': (opts) => {
-        mainAID = opts.node.ID;
+        mainAID = opts.node.id;
         return transparentSingleChildHandler(opts);
       },
-      'main:A:A': (opts) => {
-        mainAAID = opts.node.ID;
-        return {res: null, ctx: {}, arrows: [[[null, undefined]]]};
+      'main:A:A': (opts, node) => {
+        mainAAID = opts.node.id;
+        return {res: null, ctx: {}, arrows: [[[opts.node.id, undefined]]]};
       }
     };
 
@@ -369,9 +374,9 @@ describe("dispatcher", () => {
 
         'main': transparentSingleChildHandler,
 
-        'main:graph_with_leaving_a': ({action, ctx, children}) => {
+        'main:graph_with_leaving_a': ({action, ctx, node, children}) => {
           const childRes = head(values(children))({action});
-          const arrows = mapArrows({a: 'b'}, childRes.arrows);
+          const arrows = mapArrows({a: 'b'}, addNodeToArrows(node.id, childRes.arrows));
           return {
             arrows,
             ctx: childRes.ctx,
@@ -379,12 +384,12 @@ describe("dispatcher", () => {
           };
         },
 
-        'main:graph_with_leaving_a:a': ({action, ctx, child}) => {
-          if (action.type == "a") return {arrows: [[[null, 'a']]], ctx};
+        'main:graph_with_leaving_a:a': ({action, ctx, node, child}) => {
+          if (action.type == "a") return {arrows: [[[node.id, 'a']]], ctx};
         },
 
         'main:graph_with_leaving_a:b': ({action, ctx,}) => {
-          if (action.type == "a") return {arrows: [[[null, 'a']]], ctx};
+          if (action.type == "a") return {arrows: [[[node.id, 'a']]], ctx};
         },
 
       };
