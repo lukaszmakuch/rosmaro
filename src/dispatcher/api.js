@@ -1,5 +1,4 @@
 import defaultParentHandler from './../handlers/transparent';
-import {mergeCtxs} from './ctx';
 import {view as Rview, set as Rset} from 'ramda';
 
 // arrows like [ [['a:a:a', 'x']] [['a:a:b', 'x']] ]
@@ -74,43 +73,6 @@ const dispatch = ({
 
   if (nodeType === 'composite') {
     const composedNodes = graph[node].nodes;
-
-    // const childFn = ({action}) => {
-
-    //   const compNodesRes = composedNodes.reduce((allRes, childNode) => {
-    //     const addNode = rawRes => ({
-    //       node: childNode,
-    //       callRes: rawRes
-    //     });
-    //     const callRes = addNode(callDispatch({
-    //       node: childNode,
-    //       ctx,
-    //       action
-    //     }));
-    //     return [...allRes, callRes];
-    //   }, [])
-    //   .map(res => ({
-    //     ...res.callRes,
-    //     node: res.node
-    //   }))
-    //   // merge composite results together (except the context)
-    //   .reduce((soFar, nodeRes) => {
-    //     // if the parent is like a:b, the child like a:b:c, then this is c
-    //     const relativeChildNode = nodeRes.node.substr(node.length + 1);
-    //     return {
-    //       arrows: [...soFar.arrows, ...nodeRes.arrows],
-    //       ctxs: [...soFar.ctxs, nodeRes.ctx],
-    //       res: {...soFar.res, [relativeChildNode]: nodeRes.res}
-    //     };
-    //   }, {arrows: [], ctxs: [], res: {}});
-      
-    //   return {
-    //     arrows: addNodeToArrows(node, compNodesRes.arrows),
-    //     res: compNodesRes.res,
-    //     ctx: mergeCtxs(ctx, compNodesRes.ctxs)
-    //   }
-
-    // };
 
     const childrenFns = composedNodes.reduce((soFar, childNode) => ({
       ...soFar,
