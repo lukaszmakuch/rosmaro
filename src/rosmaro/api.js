@@ -23,10 +23,12 @@ export default ({
   graph: graphPlan,
   handlers: handlersPlan
 }) => {
+  
+  // {handlers, lenses, nodes}
+  const basedOnHandlersPlan = makeHandlers(handlersPlan, graphPlan);
 
   return ({state, action}) => {
-    // {handlers, lenses, nodes}
-    const basedOnHandlersPlan = makeHandlers(handlersPlan, graphPlan);
+    console.log(require('util').inspect({graphPlan, handlersPlan}, false, 20));
 
     // {graph, handlers, lenses}
     const modelParts = buildGraph({
@@ -36,7 +38,7 @@ export default ({
       ctx: state ? state.ctx : {}
     });
 
-    // {FSMState, ctx, instanceID}
+    // {FSMState, ctx}
     const modelData = extendModelData({
       readModelData: state,
       graph: modelParts.graph

@@ -64,6 +64,10 @@ const testSession = ({model, steps}) => {
 
 const expectedRes = {A: 'OrthogonalARes', B: 'OrthogonalBRes'};
 
+const arrowFollowingHandler = (expectedActionType, arrowToFollow) => ({action, node}) => ({
+  arrows: action.type === expectedActionType ? [[[node.id, arrowToFollow]]] : []
+});
+
 const loggingHandler = (nodeName, res) => ({
   afterMethod({res}) {
     log(nodeName);
@@ -272,6 +276,126 @@ describe('rosmaro', () => {
       ]});
 
     });
+
+  });
+
+  describe('external model', () => {
+
+    const subModel = {
+      graph: {
+        "main": {
+          "type": "graph",
+          "nodes": {
+            "A": "A",
+            "B": "B"
+          },
+          "arrows": {
+            "A": {
+              "x": {
+                "target": "B",
+                "entryPoint": "start"
+              }
+            }
+          },
+          "entryPoints": {
+            "start": {
+              "target": "A",
+              "entryPoint": "start"
+            }
+          }
+        },
+        "A": {
+          "type": "leaf"
+        },
+        "B": {
+          "type": "leaf"
+        }
+      },
+      handlers: {
+        'main': {
+          handler: transparentSingleChildHandler,
+        },
+        'A': {
+          handler: ({action, node, ctx}) => {
+            return arrowFollowingHandler('FOLLOW_ARROW', 'x');
+          }
+        },
+        'B': {
+          handler: ({action, node, ctx}) => {
+            return arrowFollowingHandler('FOLLOW_ARROW', 'x');
+          }
+        }
+      }
+    };
+
+    const mainModel = {
+      graph: {
+        "main": {
+          "type": "graph",
+          "nodes": {
+            "A": "A",
+            "B": "B"
+          },
+          "arrows": {
+            "A": {
+              "x": {
+                "target": "B",
+                "entryPoint": "start"
+              }
+            }
+          },
+          "entryPoints": {
+            "start": {
+              "target": "A",
+              "entryPoint": "start"
+            }
+          }
+        },
+        "A": {
+          "type": "external"
+        },
+        "B": {
+          "type": "leaf"
+        }
+      },
+      handlers: {
+        'main': {
+          handler: transparentSingleChildHandler,
+        },
+        'A': subModel,
+        'B': {
+          handler: ({action, ctx, node}) => {
+            switch (action.type) {
+              case 'COMPLETED':
+                return {
+                  arrows: [],
+                  res: true,
+                  ctx,
+                };
+              break;
+            }
+          }
+        }
+      }
+    };
+
+    testSession({model: rosmaro(mainModel), steps: [
+      // Going from main:A:A to main:A:B
+      {
+        call: {type: 'FOLLOW_ARROW'},
+        expect: {res: undefined},
+      },
+      // Going from main:A to main:B
+      {
+        call: {type: 'READ_NODE'},
+        expect: {res: 'B'},
+      },
+      // At main:B
+      {
+        call: {type: 'COMPLETED'},
+        expect: {res: true},
+      },
+    ]});
 
   });
 
