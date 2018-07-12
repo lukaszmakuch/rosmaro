@@ -15,16 +15,23 @@ const consolidate = ({
   nodeFromPlan = 'main',
   newNodeName = 'main'
 }) => {
-
   const parent = nodePrefix || null;
   const graphPlanDescription = graphPlan[nodeFromPlan];
   const handlersPlanDescription = handlersPlan[nodeFromPlan];
-
   const prefixNode = node => addPrefixToNode(nodePrefix, node);
-  
   const prefixChildNode = child => addPrefixToNode(addPrefixToNode(nodePrefix, newNodeName), child);
-
-  // graph specific
+  const currentNodeFullName = prefixNode(newNodeName);
+  const currentNodeHandlers = {
+    [currentNodeFullName]: handlersPlan[nodeFromPlan]
+  };
+  const singleNode = node => ({
+    graph: {
+      [currentNodeFullName]: node
+    },
+    handlers: {
+      [currentNodeFullName]: handlersPlan[nodeFromPlan]
+    }
+  })
   const prefixArrow = ({target, entryPoint}) => ({
     target: prefixChildNode(target),
     entryPoint
@@ -44,21 +51,14 @@ const consolidate = ({
 
     case 'dynamicComposite':
       return mergeDeepLeft( 
-        {
-          graph: {
-            [prefixNode(newNodeName)]: {
-              type: 'dynamicComposite',
-              parent,
-            }
-          },
-          handlers: {
-            [prefixNode(newNodeName)]: handlersPlan[nodeFromPlan]
-          }
-        },
+        singleNode({
+          type: 'dynamicComposite',
+          parent,
+        }),
         consolidate({
           graph: graphPlan,
           handlers: handlersPlan,
-          nodePrefix: prefixNode(newNodeName),
+          nodePrefix: currentNodeFullName,
           nodeFromPlan: graphPlanDescription.nodeTemplate,
           newNodeName: 'template',
         })
@@ -67,23 +67,16 @@ const consolidate = ({
 
     case 'composite':
       return reduce(
-        mergeDeepLeft, 
-        {
-          graph: {
-            [prefixNode(newNodeName)]: {
-              type: 'composite',
-              parent,
-              nodes: map(prefixChildNode, keys(graphPlanDescription.nodes)),
-            }
-          },
-          handlers: {
-            [prefixNode(newNodeName)]: handlersPlan[nodeFromPlan]
-          }
-        },
+        mergeDeepLeft,
+        singleNode({
+          type: 'composite',
+          parent,
+          nodes: map(prefixChildNode, keys(graphPlanDescription.nodes)),
+        }),
         keys(graphPlanDescription.nodes).map(child => consolidate({
           graph: graphPlan,
           handlers: handlersPlan,
-          nodePrefix: prefixNode(newNodeName),
+          nodePrefix: currentNodeFullName,
           nodeFromPlan: graphPlanDescription.nodes[child],
           newNodeName: child
         }))
@@ -91,44 +84,26 @@ const consolidate = ({
     break;
 
     case 'leaf': 
-      return {
-        graph: {
-          [prefixNode(newNodeName)]: {
-            type: 'leaf',
-            parent
-          }
-        },
-        handlers: {
-          [prefixNode(newNodeName)]: handlersPlan[nodeFromPlan]
-        }
-      };
+    return singleNode({type: 'leaf', parent});
     break;
 
     case 'graph':
       return reduce(
         mergeDeepLeft, 
-        {
-          graph: {
-            [prefixNode(newNodeName)]: {
-              type: 'graph',
-              parent,
-              nodes: map(prefixChildNode, keys(graphPlanDescription.nodes)),
-              arrows: keys(graphPlanDescription.nodes).reduce((builtArrows, srcNode) => ({
-                ...builtArrows,
-                // TODO: consider removing the duplication of prefixChildNode(srcNode)
-                [prefixChildNode(srcNode)]: map(prefixArrow, (graphPlanDescription.arrows[srcNode] || {}))
-              }), {}),
-              entryPoints: map(prefixArrow, graphPlanDescription.entryPoints)
-            }
-          },
-          handlers: {
-            [prefixNode(newNodeName)]: handlersPlan[nodeFromPlan]
-          }
-        },
+        singleNode({
+          type: 'graph',
+          parent,
+          nodes: map(prefixChildNode, keys(graphPlanDescription.nodes)),
+          arrows: keys(graphPlanDescription.nodes).reduce((builtArrows, srcNode) => ({
+            ...builtArrows,
+            [prefixChildNode(srcNode)]: map(prefixArrow, (graphPlanDescription.arrows[srcNode] || {}))
+          }), {}),
+          entryPoints: map(prefixArrow, graphPlanDescription.entryPoints)
+        }),
         keys(graphPlanDescription.nodes).map(child => consolidate({
           graph: graphPlan,
           handlers: handlersPlan,
-          nodePrefix: prefixNode(newNodeName),
+          nodePrefix: currentNodeFullName,
           nodeFromPlan: graphPlanDescription.nodes[child],
           newNodeName: child
         }))
