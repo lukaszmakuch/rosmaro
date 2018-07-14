@@ -1,6 +1,6 @@
 import assert from 'assert';
 import dispatch from './api';
-import {mapArrows} from './../utils';
+import {mapArrows, identityLens} from './../utils/all';
 import {
   transparentSingleChildHandler, 
   mergeCtxs, 
@@ -8,8 +8,6 @@ import {
   addNodeToArrows
 } from './../handlerUtils';
 import {identity as Ridentity, lens as Rlens, dissoc, prop, keys, lensPath as RlensPath, head, values, map} from 'ramda';
-
-const identityLens = () => Rlens(Ridentity, Ridentity);
 
 describe("dispatcher", () => {
 

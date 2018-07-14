@@ -1,161 +1,152 @@
-import {glueNodeName} from './nodeNames';
-import omit from 'lodash/omit';
-import transparentHandler from './../handlers/transparent';
-import {view as Rview} from 'ramda';
+import {mergeDeepLeft, reduce, view, map} from 'ramda';
+import {identityLens, addPrefixToNode, extractLocalNodeName, mapArrowTarget, mapArrows} from './../utils/all'
 
-const build = ({
-  plan, 
-  lenses,
-  nodes,
-  handlers,
+const expand = ({
+  plan: {
+    graph: graphPlan,
+    handlers: handlersPlan,
+  },
   ctx: rawCtx,
   planNode = 'main',
-  builtNode = 'main',
-  parent = null
+  expandedParent = null,
+  newLocalNodeName = 'main',
 }) => {
-  const nodeLens = lenses[planNode];
-  const ctx = Rview(nodeLens({localNodeName: planNode}), rawCtx);
-  const nodePlan = plan[planNode];
-  const type = nodePlan.type;
-  const handler = handlers[planNode];
+  const type = graphPlan[planNode].type;
+  const lens = (handlersPlan[planNode].lens || (() => identityLens));
+  const newFullNodeName = addPrefixToNode(expandedParent, newLocalNodeName);
+  const ctx = view(lens({localNodeName: newLocalNodeName}), rawCtx);
+  const updateParentNode = parent => node => addPrefixToNode(
+    parent, 
+    extractLocalNodeName(node)
+  );
+  const updateArrow = parent => mapArrowTarget(updateParentNode(parent));
+  const isDynamicComposite = type === 'dynamicComposite';
+  const getGraphChildrenList = () => map(updateParentNode(newFullNodeName), graphPlan[planNode].nodes);
+  const getCompositeChildrenList = getGraphChildrenList;
+  const getDynamicCompositeChildrenList = () => map (
+    child => addPrefixToNode(newFullNodeName, child),
+    (handlersPlan[planNode].nodes || (() => []))(ctx)
+  );
 
-  if (type === 'leaf') {
-    return {
-      graph: {
-        [builtNode]: {
-          type: 'leaf',
-          parent
-        }
+  const expandGraphChildren = () => map(
+    planNode => expand({
+      plan: {
+        graph: graphPlan,
+        handlers: handlersPlan,
       },
-      handlers: {
-        [builtNode]: handler
-      },
-      lenses: {
-        [builtNode]: nodeLens
-      }
-    };
-  }
+      ctx,
+      planNode,
+      expandedParent: newFullNodeName,
+      newLocalNodeName: extractLocalNodeName(planNode),
+    }),
+    graphPlan[planNode].nodes
+  );
 
-  //TODO: this is ugly. It should be replaced with a function without IFs.
-  if (['composite', 'dynamicComposite'].includes(type)) {
-    const regularComposite = type === 'composite';
-    const childNames = regularComposite ? Object.keys(nodePlan.nodes) : nodes[planNode]({ctx})
-    const childRes = childNames.reduce((soFar, planName) => {
-      const builtName = glueNodeName(builtNode, planName);
-      const childPlanNode = regularComposite  ? nodePlan.nodes[planName] : nodePlan.nodeTemplate;
-      const built = build({
-        plan, 
-        lenses,
-        nodes,
-        handlers,
-        ctx,
-        planNode:  childPlanNode,
-        builtNode: builtName,
-        parent: builtNode
-      });
+  const expandCompositeChildren = expandGraphChildren;
+
+  const expandDynamicCompositeChildren = () => map(
+    newLocalNodeName => expand({
+      plan: {
+        graph: graphPlan,
+        handlers: handlersPlan,
+      },
+      ctx,
+      planNode: addPrefixToNode(planNode, 'template'),
+      expandedParent: newFullNodeName,
+      newLocalNodeName,
+    }),
+    (handlersPlan[planNode].nodes || (() => []))(ctx)
+  );
+
+  switch (type) {
+
+    case 'leaf':
       return {
-        nodes: [...soFar.nodes, builtName],
-        graph: {...soFar.graph, ...built.graph},
-        handlers: {...soFar.handlers, ...built.handlers},
-        lenses: {...soFar.lenses, ...built.lenses}
-      };
-    }, {nodes: [], graph: {}, handlers: {}, lenses: {}});
-
-    return {
-      graph: {
-        [builtNode]: {
-          nodes: childRes.nodes,
-          type: 'composite',
-          parent
-        },
-        ...childRes.graph
-      },
-      handlers: {
-        [builtNode]: handler,
-        ...childRes.handlers
-      },
-      lenses: {
-        [builtNode]: nodeLens,
-        ...childRes.lenses
-      },
-    };
-  }
-
-  if (type === 'graph') {
-    const childRes = Object.keys(nodePlan.nodes).reduce((soFar, planName) => {
-      const builtName = glueNodeName(builtNode, planName);
-      const built = build({
-        plan, 
-        lenses,
-        nodes,
-        handlers,
-        ctx,
-        planNode: nodePlan.nodes[planName],
-        builtNode: builtName,
-        parent: builtNode
-      });
-      return {
-        nodes: [...soFar.nodes, builtName],
-        graph: {...soFar.graph, ...built.graph},
-        handlers: {...soFar.handlers, ...built.handlers},
-        lenses: {...soFar.lenses, ...built.lenses},
-      };
-    }, {nodes: [], graph: {}, handlers: {}, lenses: {}});
-
-    const emptyArrows = childRes.nodes.reduce((soFar, node) => ({
-      ...soFar,
-      [node]: {}
-    }), {});
-
-    const arrows = Object.keys(nodePlan.arrows).reduce((allArrows, srcNode) => {
-      const nodeArrowsPlan = nodePlan.arrows[srcNode];
-      const nodeArrows = Object.keys(nodeArrowsPlan).reduce((nodeArrows, arrow) => {
-        const arrowPlan = nodeArrowsPlan[arrow];
-        return {
-          ...nodeArrows,
-          [arrow]: {
-            target: glueNodeName(builtNode, arrowPlan.target),
-            entryPoint: arrowPlan.entryPoint
+        graph: {
+          [newFullNodeName]: {
+            type: 'leaf',
+            parent: expandedParent,
           }
-        }
-      }, {});
-      return {
-        ...allArrows,
-        [glueNodeName(builtNode, srcNode)]: nodeArrows
-      };
-    }, {});
-    const entryPoints = Object.keys(nodePlan.entryPoints).reduce((entryPoints, point) => {
-      return {
-        ...entryPoints,
-        [point]: {
-          target: glueNodeName(builtNode, nodePlan.entryPoints[point].target),
-          entryPoint: nodePlan.entryPoints[point].entryPoint
-        }
-      };
-    }, {});
-
-    return {
-      graph: {
-        [builtNode]: {
-          type: 'graph',
-          parent,
-          arrows: {...emptyArrows, ...arrows},
-          entryPoints,
-          nodes: childRes.nodes
         },
-        ...childRes.graph
-      },
-      handlers: {
-        [builtNode]: handler,
-        ...childRes.handlers
-      },
-      lenses: {
-        [builtNode]: nodeLens,
-        ...childRes.lenses
-      },
-    };
+        handlers: {
+          [newFullNodeName]: handlersPlan[planNode].handler
+        },
+        lenses: {
+          [newFullNodeName]: lens,
+        },
+      };
+    break;
+
+    case 'graph':
+      return reduce(
+        mergeDeepLeft,
+        {
+          graph: {
+            [newFullNodeName]: {
+              type: 'graph',
+              parent: expandedParent,
+              nodes: getGraphChildrenList(),
+              entryPoints: map(updateArrow(newFullNodeName), graphPlan[planNode].entryPoints),
+              arrows: mapArrows(updateParentNode(newFullNodeName))(updateArrow(newFullNodeName))(graphPlan[planNode].arrows),
+            }
+          },
+          handlers: {
+            [newFullNodeName]: handlersPlan[planNode].handler
+          },
+          lenses: {
+            [newFullNodeName]: lens,
+          },
+        },
+        expandGraphChildren()
+      );
+    break;
+
+    case 'composite':
+      return reduce(
+        mergeDeepLeft,
+        {
+          graph: {
+            [newFullNodeName]: {
+              type: 'composite',
+              parent: expandedParent,
+              nodes: getCompositeChildrenList()
+            }
+          },
+          handlers: {
+            [newFullNodeName]: handlersPlan[planNode].handler
+          },
+          lenses: {
+            [newFullNodeName]: lens,
+          },
+        },
+        expandCompositeChildren()
+      );
+    break;
+
+    case 'dynamicComposite':
+      return reduce(
+        mergeDeepLeft,
+        {
+          graph: {
+            [newFullNodeName]: {
+              type: 'composite',
+              parent: expandedParent,
+              nodes: getDynamicCompositeChildrenList()
+            }
+          },
+          handlers: {
+            [newFullNodeName]: handlersPlan[planNode].handler
+          },
+          lenses: {
+            [newFullNodeName]: lens,
+          },
+        },
+        expandDynamicCompositeChildren()
+      );
+    break;
+
   }
 
 };
 
-export default build;
+export default expand;

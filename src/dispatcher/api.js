@@ -1,17 +1,12 @@
 import defaultParentHandler from './../handlers/transparent';
 import {view as Rview, set as Rset} from 'ramda';
+import {extractLocalNodeName} from './../utils/all';
 
 const dummyChildFn = ({ctx}) => ({
   arrows: [[[null, undefined]]],
   ctx: ctx,
   res: undefined
 });
-
-const extractLocalNodeName = fullNodeName => {
-  const lastSeparator = fullNodeName.lastIndexOf(':');
-  if (lastSeparator === -1) return fullNodeName;
-  return fullNodeName.substr(lastSeparator + 1);
-};
 
 const dispatch = ({
   graph, 

@@ -1,121 +1,38 @@
 import assert from 'assert';
-import build, {mapMain} from './api';
-import {identity as Ridentity, lens as Rlens, lensPath as RlensPath} from 'ramda';
+import {view, set, lensProp} from 'ramda';
+import expand from './api';
 
-const buildHandler = plan => ({built: plan});
+const testLens = ({
+  lens, 
+  zoomInInput, 
+  zoomInOutput,
+  zoomOutInput,
+  zoomOutOutput,
+}) => {
+  assert.deepEqual(
+    zoomInOutput,
+    view(lens, zoomInInput)
+  );
+  assert.deepEqual(
+    zoomOutOutput,
+    set(lens, zoomOutInput, zoomInInput)
+  );
+};
 
-describe('graph builder', () => {
+// TODO: move this to some kind of a test utilities library
+const assertIdentityLens = lens => testLens({
+  lens, 
+  zoomInInput: {a: 123, b: 456}, 
+  zoomInOutput: {a: 123, b: 456},
+  zoomOutInput: {z: 456, x: 678},
+  zoomOutOutput: {z: 456, x: 678},
+});
 
-  it('builds a graph with handlers', () => {
+// TODO: rename this test suite
+describe('the new graph builder', () => {
 
-    const ctx = {
-      'main': {
-        'A': {elems: ['elemA', 'elemB']}
-      }
-    };
-
-    const localNodeLens = ({localNodeName}) => RlensPath([localNodeName]);
-    const identityLens = () => Rlens(Ridentity, Ridentity);
-
-    const lenses = {
-      'main': localNodeLens,
-      'A': localNodeLens,
-      'AGraph': identityLens,
-      'ASubA': identityLens,
-      'B': identityLens,
-      'BSub': identityLens,
-      'BSubA': identityLens,
-      'BSubB': identityLens,
-    };
-
-    const emptyNodes = () => [];
-    const nodesFromElems = ({ctx}) => ctx.elems;
-
-    const nodes = {
-      'main': emptyNodes,
-      'A': nodesFromElems,
-      'AGraph': emptyNodes,
-      'ASubA': emptyNodes,
-      'B': emptyNodes,
-      'BSub': emptyNodes,
-      'BSubA': emptyNodes,
-      'BSubB': emptyNodes,
-    };
-
-    const handlers = {
-      'main': () => {},
-      'A': () => {},
-      'AGraph': () => {},
-      'ASubA': () => {},
-      'B': () => {},
-      'BSub': () => {},
-      'BSubA': () => {},
-      'BSubB': () => {},
-    };
-
-    const graphPlan = {
-      'main': {
-        type: 'graph',
-        nodes: {'A': 'A', 'B': 'B'},
-        arrows: {
-          'A': {
-            x: {target: 'B', entryPoint: 'p'}
-          }
-        },
-        entryPoints: {
-          start: {target: 'A', entryPoint: 'start'}
-        }
-      },
-
-      'A': {
-        type: 'dynamicComposite',
-        nodeTemplate: 'AGraph'
-      },
-
-      'AGraph': {
-        type: 'graph',
-        nodes: {A: 'ASubA'},
-        arrows: {
-          A: {x: {target: 'A', entryPoint: 'start'}},
-        },
-        entryPoints: {
-          start: {target: 'A', entryPoint: 'start'}
-        }
-      },
-
-      'ASubA': {type: 'leaf'},
-
-      'B': {
-        type: 'composite',
-        nodes: {
-          'A': 'BSub',
-          'B': 'BSub'
-        }
-      },
-
-      'BSub': {
-        type: 'graph',
-        nodes: {
-          A: 'BSubA',
-          B: 'BSubB'
-        },
-        arrows: {
-          A: {
-            x: {target: 'B', entryPoint: 'start'}
-          }
-        }, 
-        entryPoints: {
-          start: {target: 'A', entryPoint: 'start'},
-          p: {target: 'B', entryPoint: 'start'}
-        }
-      },
-
-      'BSubA': {type: 'leaf'},
-      'BSubB': {type: 'leaf'}
-    };
-
-    const expected = {
-
+  it('expands dynamic composites and segregates graphs, handlers, nodes and lenses', () => {
+    const modelDescription = {
       graph: {
 
         'main': {
@@ -124,142 +41,254 @@ describe('graph builder', () => {
           parent: null,
           arrows: {
             'main:A': {
-              x: {target: 'main:B', entryPoint: 'p'}
+              'x': {target: 'main:B', entryPoint: 'start'},
             },
-            'main:B': {}
+            'main:B': {},
           },
           entryPoints: {
-            start: {target: 'main:A', entryPoint: 'start'}
-          }
+            start: {target: 'main:A', entryPoint: 'start'},
+          },
         },
 
         'main:A': {
-          type: 'composite',
-          nodes: ['main:A:elemA', 'main:A:elemB'],
+          type: 'graph',
+          nodes: ['main:A:A', 'main:A:B'],
           parent: 'main',
-        },
-
-        'main:A:elemA': {
-          type: 'graph',
-          nodes: ['main:A:elemA:A'],
-          parent: 'main:A',
           arrows: {
-            'main:A:elemA:A': {
-              x: {target: 'main:A:elemA:A', entryPoint: 'start'}
-            }
+            'main:A:A': {
+              'x': {target: 'main:A:B', entryPoint: 'start'},
+            },
+            'main:A:B': {},
           },
           entryPoints: {
-            start: {target: 'main:A:elemA:A', entryPoint: 'start'}
+            start: {target: 'main:A:A', entryPoint: 'start'},
           },
         },
 
-        'main:A:elemA:A': {type: 'leaf', parent: 'main:A:elemA'},
-
-        'main:A:elemB': {
-          type: 'graph',
-          nodes: ['main:A:elemB:A'],
-          parent: 'main:A',
-          arrows: {
-            'main:A:elemB:A': {
-              x: {target: 'main:A:elemB:A', entryPoint: 'start'}
-            }
-          },
-          entryPoints: {
-            start: {target: 'main:A:elemB:A', entryPoint: 'start'}
-          },
-        },
-
-        'main:A:elemB:A': {type: 'leaf', parent: 'main:A:elemB'},
+        'main:A:A': {type: 'leaf', parent: 'main:A'},
+        'main:A:B': {type: 'leaf', parent: 'main:A'},
 
         'main:B': {
-          type: 'composite',
-          nodes: ['main:B:A', 'main:B:B'],
-          parent: 'main'
+          type: 'composite', 
+          parent: 'main',
+          nodes: ['main:B:OrthogonalA', 'main:B:OrthogonalB']
         },
 
-        'main:B:A': {
-          type: 'graph',
-          nodes: ['main:B:A:A', 'main:B:A:B'],
+        'main:B:OrthogonalA': {type: 'leaf', parent: 'main:B'},
+
+        'main:B:OrthogonalB': {
+          type: 'dynamicComposite', 
           parent: 'main:B',
+        },
+
+        'main:B:OrthogonalB:template': {
+          type: 'graph',
+          nodes: ['main:B:OrthogonalB:template:A'],
+          parent: 'main:B:OrthogonalB',
           arrows: {
-            'main:B:A:A': {
-              x: {target: 'main:B:A:B', entryPoint: 'start'}
+            'main:B:OrthogonalB:template:A': {
+              'loop': {target: 'main:B:OrthogonalB:template:A', entryPoint: 'start'},
             },
-            'main:B:A:B': {}
           },
           entryPoints: {
-            start: {target: 'main:B:A:A', entryPoint: 'start'},
-            p: {target: 'main:B:A:B', entryPoint: 'start'}
-          }
-        },
-
-        'main:B:B': {
-          type: 'graph',
-          nodes: ['main:B:B:A', 'main:B:B:B'],
-          parent: 'main:B',
-          arrows: {
-            'main:B:B:A': {
-              x: {target: 'main:B:B:B', entryPoint: 'start'}
-            },
-            'main:B:B:B': {}
-          },
-          entryPoints: {
-            start: {target: 'main:B:B:A', entryPoint: 'start'},
-            p: {target: 'main:B:B:B', entryPoint: 'start'}
+            start: {target: 'main:B:OrthogonalB:template:A', entryPoint: 'start'},
           },
         },
 
-        'main:B:B:A': {type: 'leaf', parent: 'main:B:B'},
-        'main:B:B:B': {type: 'leaf', parent: 'main:B:B'},
-        'main:B:A:A': {type: 'leaf', parent: 'main:B:A'},
-        'main:B:A:B': {type: 'leaf', parent: 'main:B:A'}
+        'main:B:OrthogonalB:template:A': {
+          type: 'leaf',
+          parent: 'main:B:OrthogonalB:template',
+        }
 
       },
 
       handlers: {
-        'main': handlers.main,
-        'main:A': handlers.A,
-        'main:A:elemA': handlers.AGraph,
-        'main:A:elemA:A': handlers.ASubA,
-        'main:A:elemB': handlers.AGraph,
-        'main:A:elemB:A': handlers.ASubA,
-        'main:B': handlers.B,
-        'main:B:A': handlers.BSub,
-        'main:B:B': handlers.BSub,
-        'main:B:B:A': handlers.BSubA,
-        'main:B:B:B': handlers.BSubB,
-        'main:B:A:A': handlers.BSubA,
-        'main:B:A:B': handlers.BSubB,
+        'main': {
+          lens: () => lensProp('first'),
+          handler: function () {},
+        },
+        'main:A': {
+          handler: function () {},
+        },
+        'main:A:A': {
+          handler: function () {},
+        },
+        'main:A:B': {
+          handler: function () {},
+        },
+        'main:B': {
+          lens: ({localNodeName}) => lensProp(localNodeName),
+          handler: function () {},
+        },
+        'main:B:OrthogonalA': {
+          handler: function () {},
+        },
+        'main:B:OrthogonalB': {
+          lens: ({localNodeName}) => lensProp(localNodeName),
+          nodes: (ctx) => ctx['main:B:OrthogonalB nodes'],
+          handler: function () {},
+        },
+        'main:B:OrthogonalB:template': {
+          handler: function () {},
+        },
+        'main:B:OrthogonalB:template:A': {
+          handler: function () {},
+        },
       },
-
-      lenses: {
-        'main': lenses.main,
-        'main:A': lenses.A,
-        'main:A:elemA': lenses.AGraph,
-        'main:A:elemA:A': lenses.ASubA,
-        'main:A:elemB': lenses.AGraph,
-        'main:A:elemB:A': lenses.ASubA,
-        'main:B': lenses.B,
-        'main:B:A': lenses.BSub,
-        'main:B:B': lenses.BSub,
-        'main:B:B:A': lenses.BSubA,
-        'main:B:B:B': lenses.BSubB,
-        'main:B:A:A': lenses.BSubA,
-        'main:B:A:B': lenses.BSubB,
-      }
 
     };
 
-    const built = build({
-      plan: graphPlan,
-      lenses,
-      nodes,
-      handlers,
-      ctx,
+    const ctx = {
+      first: {
+        B: {
+          OrthogonalB: {
+            'main:B:OrthogonalB nodes': ['DynamicChildA', 'DynamicChildB']
+          }
+        }
+      }
+    };
+
+    const expectedGraphExpansion = {
+        'main': {
+          type: 'graph',
+          nodes: ['main:A', 'main:B'],
+          parent: null,
+          arrows: {
+            'main:A': {
+              'x': {target: 'main:B', entryPoint: 'start'},
+            },
+            'main:B': {},
+          },
+          entryPoints: {
+            start: {target: 'main:A', entryPoint: 'start'},
+          },
+        },
+
+        'main:A': {
+          type: 'graph',
+          nodes: ['main:A:A', 'main:A:B'],
+          parent: 'main',
+          arrows: {
+            'main:A:A': {
+              'x': {target: 'main:A:B', entryPoint: 'start'},
+            },
+            'main:A:B': {},
+          },
+          entryPoints: {
+            start: {target: 'main:A:A', entryPoint: 'start'},
+          },
+        },
+
+        'main:A:A': {type: 'leaf', parent: 'main:A'},
+        'main:A:B': {type: 'leaf', parent: 'main:A'},
+
+        'main:B': {
+          type: 'composite', 
+          parent: 'main',
+          nodes: ['main:B:OrthogonalA', 'main:B:OrthogonalB']
+        },
+
+        'main:B:OrthogonalA': {type: 'leaf', parent: 'main:B'},
+
+        'main:B:OrthogonalB': {
+          type: 'composite',
+          nodes: [
+            'main:B:OrthogonalB:DynamicChildA', 
+            'main:B:OrthogonalB:DynamicChildB',
+          ],
+          parent: 'main:B',
+        },
+
+        'main:B:OrthogonalB:DynamicChildA': {
+          type: 'graph',
+          nodes: ['main:B:OrthogonalB:DynamicChildA:A'],
+          parent: 'main:B:OrthogonalB',
+          arrows: {
+            'main:B:OrthogonalB:DynamicChildA:A': {
+              'loop': {target: 'main:B:OrthogonalB:DynamicChildA:A', entryPoint: 'start'},
+            },
+          },
+          entryPoints: {
+            start: {target: 'main:B:OrthogonalB:DynamicChildA:A', entryPoint: 'start'},
+          },
+        },
+
+        'main:B:OrthogonalB:DynamicChildA:A': {
+          type: 'leaf',
+          parent: 'main:B:OrthogonalB:DynamicChildA',
+        },
+
+        'main:B:OrthogonalB:DynamicChildB': {
+          type: 'graph',
+          nodes: ['main:B:OrthogonalB:DynamicChildB:A'],
+          parent: 'main:B:OrthogonalB',
+          arrows: {
+            'main:B:OrthogonalB:DynamicChildB:A': {
+              'loop': {target: 'main:B:OrthogonalB:DynamicChildB:A', entryPoint: 'start'},
+            },
+          },
+          entryPoints: {
+            start: {target: 'main:B:OrthogonalB:DynamicChildB:A', entryPoint: 'start'},
+          },
+        },
+
+        'main:B:OrthogonalB:DynamicChildB:A': {
+          type: 'leaf',
+          parent: 'main:B:OrthogonalB:DynamicChildB',
+        },
+    };
+
+    const expectedHandlersExpansion = {
+      'main': modelDescription.handlers['main'].handler,
+      'main:A': modelDescription.handlers['main:A'].handler,
+      'main:A:A': modelDescription.handlers['main:A:A'].handler,
+      'main:A:B': modelDescription.handlers['main:A:B'].handler,
+      'main:B': modelDescription.handlers['main:B'].handler,
+      'main:B:OrthogonalA': modelDescription.handlers['main:B:OrthogonalA'].handler,
+      'main:B:OrthogonalB': modelDescription.handlers['main:B:OrthogonalB'].handler,
+      'main:B:OrthogonalB:DynamicChildA': modelDescription.handlers['main:B:OrthogonalB:template'].handler,
+      'main:B:OrthogonalB:DynamicChildA:A': modelDescription.handlers['main:B:OrthogonalB:template:A'].handler,
+      'main:B:OrthogonalB:DynamicChildB': modelDescription.handlers['main:B:OrthogonalB:template'].handler,
+      'main:B:OrthogonalB:DynamicChildB:A': modelDescription.handlers['main:B:OrthogonalB:template:A'].handler,
+    };
+
+    const expanded = expand({plan: modelDescription, ctx});
+    assert.deepEqual(expanded.handlers, expectedHandlersExpansion);
+    assert.deepEqual(expanded.graph, expectedGraphExpansion);
+
+    testLens({
+      lens: expanded.lenses['main'](), 
+      zoomInInput: {a: 42, first: 7}, 
+      zoomInOutput: 7,
+      zoomOutInput: 9,
+      zoomOutOutput: {a: 42, first: 9},
     });
 
-    assert.deepEqual(built, expected);
+    testLens({
+      lens: expanded.lenses['main:B']({localNodeName: 'b'}), 
+      zoomInInput: {a: 42, b: 7}, 
+      zoomInOutput: 7,
+      zoomOutInput: 9,
+      zoomOutOutput: {a: 42, b: 9},
+    });
+
+    testLens({
+      lens: expanded.lenses['main:B:OrthogonalB']({localNodeName: 'c'}), 
+      zoomInInput: {a: 42, c: 7}, 
+      zoomInOutput: 7,
+      zoomOutInput: 9,
+      zoomOutOutput: {a: 42, c: 9},
+    });
+
+    assertIdentityLens(expanded.lenses['main:A']());
+    assertIdentityLens(expanded.lenses['main:A:A']());
+    assertIdentityLens(expanded.lenses['main:A:B']());
+    assertIdentityLens(expanded.lenses['main:B:OrthogonalA']());
+    assertIdentityLens(expanded.lenses['main:B:OrthogonalB:DynamicChildA']());
+    assertIdentityLens(expanded.lenses['main:B:OrthogonalB:DynamicChildA:A']());
+    assertIdentityLens(expanded.lenses['main:B:OrthogonalB:DynamicChildB']());
+    assertIdentityLens(expanded.lenses['main:B:OrthogonalB:DynamicChildB:A']());
+
   });
 
 });
-

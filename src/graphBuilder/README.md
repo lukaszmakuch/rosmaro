@@ -1,18 +1,18 @@
 # Graph builder
 
-Takes:
-1. graph plan, 
-2. context transforming functions,
-3. functions which return lists of nodes when they are given the context,
-4. method handlers,
+Given the context and a structure like this (which may contain dynamic composites):
+```
+{
+  graph: {A: ..., B...},
+  handlers: {A: {...}, B: {...}}
+}
+```
 
-Gives:
-1. a ready to use (by the dispatcher and FSM modules) graph structure 
-(static, built based on the context)
-2. ready to use (by the dispatcher module) handler functions 
-3. ready to use context transforming functions
-
-IMPORTANT: Due to dynamic composites, the built graph may differ depending on the context. That's why it shouldn't be cached.
-
-## Related test files
-- test/graphBuilder.js
+gives a structure like this (which contains only regular composites):
+```
+{
+  graph: {A: ..., B...},
+  handlers: {A: ..., B...},
+  lenses: {A: ..., B...},
+}
+```

@@ -1,12 +1,5 @@
 import {map, keys, mergeDeepLeft, reduce} from 'ramda';
-
-// prefix: a, node: x => a:x
-// prefix: '', node: x => x
-const addPrefixToNode = (prefix, node) => {
-  return prefix
-    ? prefix + ":" + node
-    : node;
-};
+import {addPrefixToNode, mapArrowTarget} from './../utils/all';
 
 const consolidate = ({
   graph: graphPlan,
@@ -32,10 +25,7 @@ const consolidate = ({
       [currentNodeFullName]: handlersPlan[nodeFromPlan]
     }
   })
-  const prefixArrow = ({target, entryPoint}) => ({
-    target: prefixChildNode(target),
-    entryPoint
-  });
+  const prefixArrow = mapArrowTarget(prefixChildNode);
 
   switch (graphPlanDescription.type) {
 
@@ -84,7 +74,7 @@ const consolidate = ({
     break;
 
     case 'leaf': 
-    return singleNode({type: 'leaf', parent});
+      return singleNode({type: 'leaf', parent});
     break;
 
     case 'graph':
@@ -94,10 +84,7 @@ const consolidate = ({
           type: 'graph',
           parent,
           nodes: map(prefixChildNode, keys(graphPlanDescription.nodes)),
-          arrows: keys(graphPlanDescription.nodes).reduce((builtArrows, srcNode) => ({
-            ...builtArrows,
-            [prefixChildNode(srcNode)]: map(prefixArrow, (graphPlanDescription.arrows[srcNode] || {}))
-          }), {}),
+          arrows: mapArrows(prefixChildNode)(prefixArrow)(graphPlanDescription.arrows),
           entryPoints: map(prefixArrow, graphPlanDescription.entryPoints)
         }),
         keys(graphPlanDescription.nodes).map(child => consolidate({
