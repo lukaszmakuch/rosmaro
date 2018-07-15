@@ -91,7 +91,7 @@ describe('rosmaro', () => {
       const graph = {
         'main': {
           type: 'dynamicComposite',
-          nodeTemplate: 'leaf'
+          child: 'leaf'
         },
         'leaf': {type: 'leaf'}
       };
@@ -139,7 +139,7 @@ describe('rosmaro', () => {
       const graph = {
         "main": {
           "type": "dynamicComposite",
-          "nodeTemplate": "Switch"
+          "child": "Switch"
         },
         "Switch": {
           "type": "graph",

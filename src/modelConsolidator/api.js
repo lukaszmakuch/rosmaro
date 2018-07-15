@@ -49,8 +49,8 @@ const consolidate = ({
           graph: graphPlan,
           handlers: handlersPlan,
           nodePrefix: currentNodeFullName,
-          nodeFromPlan: graphPlanDescription.nodeTemplate,
-          newNodeName: 'template',
+          nodeFromPlan: graphPlanDescription.child,
+          newNodeName: 'child',
         })
       );
     break;

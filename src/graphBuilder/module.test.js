@@ -81,23 +81,23 @@ describe('the new graph builder', () => {
           parent: 'main:B',
         },
 
-        'main:B:OrthogonalB:template': {
+        'main:B:OrthogonalB:child': {
           type: 'graph',
-          nodes: ['main:B:OrthogonalB:template:A'],
+          nodes: ['main:B:OrthogonalB:child:A'],
           parent: 'main:B:OrthogonalB',
           arrows: {
-            'main:B:OrthogonalB:template:A': {
-              'loop': {target: 'main:B:OrthogonalB:template:A', entryPoint: 'start'},
+            'main:B:OrthogonalB:child:A': {
+              'loop': {target: 'main:B:OrthogonalB:child:A', entryPoint: 'start'},
             },
           },
           entryPoints: {
-            start: {target: 'main:B:OrthogonalB:template:A', entryPoint: 'start'},
+            start: {target: 'main:B:OrthogonalB:child:A', entryPoint: 'start'},
           },
         },
 
-        'main:B:OrthogonalB:template:A': {
+        'main:B:OrthogonalB:child:A': {
           type: 'leaf',
-          parent: 'main:B:OrthogonalB:template',
+          parent: 'main:B:OrthogonalB:child',
         }
 
       },
@@ -128,10 +128,10 @@ describe('the new graph builder', () => {
           nodes: ({ctx}) => ctx['main:B:OrthogonalB nodes'],
           handler: function () {},
         },
-        'main:B:OrthogonalB:template': {
+        'main:B:OrthogonalB:child': {
           handler: function () {},
         },
-        'main:B:OrthogonalB:template:A': {
+        'main:B:OrthogonalB:child:A': {
           handler: function () {},
         },
       },
@@ -246,10 +246,10 @@ describe('the new graph builder', () => {
       'main:B': modelDescription.handlers['main:B'].handler,
       'main:B:OrthogonalA': modelDescription.handlers['main:B:OrthogonalA'].handler,
       'main:B:OrthogonalB': modelDescription.handlers['main:B:OrthogonalB'].handler,
-      'main:B:OrthogonalB:DynamicChildA': modelDescription.handlers['main:B:OrthogonalB:template'].handler,
-      'main:B:OrthogonalB:DynamicChildA:A': modelDescription.handlers['main:B:OrthogonalB:template:A'].handler,
-      'main:B:OrthogonalB:DynamicChildB': modelDescription.handlers['main:B:OrthogonalB:template'].handler,
-      'main:B:OrthogonalB:DynamicChildB:A': modelDescription.handlers['main:B:OrthogonalB:template:A'].handler,
+      'main:B:OrthogonalB:DynamicChildA': modelDescription.handlers['main:B:OrthogonalB:child'].handler,
+      'main:B:OrthogonalB:DynamicChildA:A': modelDescription.handlers['main:B:OrthogonalB:child:A'].handler,
+      'main:B:OrthogonalB:DynamicChildB': modelDescription.handlers['main:B:OrthogonalB:child'].handler,
+      'main:B:OrthogonalB:DynamicChildB:A': modelDescription.handlers['main:B:OrthogonalB:child:A'].handler,
     };
 
     const expanded = expand({plan: modelDescription, ctx});

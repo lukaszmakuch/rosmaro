@@ -91,7 +91,7 @@ describe('model consolidator', () => {
         },
         "OrthogonalB": {
           "type": "dynamicComposite",
-          "nodeTemplate": "MultipliedB"
+          "child": "MultipliedB"
         },
         "MultipliedB": {
           "type": "graph",
@@ -177,23 +177,23 @@ describe('model consolidator', () => {
           parent: 'main:B',
         },
 
-        'main:B:OrthogonalB:template': {
+        'main:B:OrthogonalB:child': {
           type: 'graph',
-          nodes: ['main:B:OrthogonalB:template:A'],
+          nodes: ['main:B:OrthogonalB:child:A'],
           parent: 'main:B:OrthogonalB',
           arrows: {
-            'main:B:OrthogonalB:template:A': {
-              'loop': {target: 'main:B:OrthogonalB:template:A', entryPoint: 'start'},
+            'main:B:OrthogonalB:child:A': {
+              'loop': {target: 'main:B:OrthogonalB:child:A', entryPoint: 'start'},
             },
           },
           entryPoints: {
-            start: {target: 'main:B:OrthogonalB:template:A', entryPoint: 'start'},
+            start: {target: 'main:B:OrthogonalB:child:A', entryPoint: 'start'},
           },
         },
 
-        'main:B:OrthogonalB:template:A': {
+        'main:B:OrthogonalB:child:A': {
           type: 'leaf',
-          parent: 'main:B:OrthogonalB:template',
+          parent: 'main:B:OrthogonalB:child',
         }
 
       },
@@ -206,8 +206,8 @@ describe('model consolidator', () => {
         'main:B': providedHandlers.B,
         'main:B:OrthogonalA': providedHandlers.OrthogonalA,
         'main:B:OrthogonalB': providedHandlers.OrthogonalB,
-        'main:B:OrthogonalB:template': providedHandlers.MultipliedB,
-        'main:B:OrthogonalB:template:A': providedHandlers.MultipliedBChild,
+        'main:B:OrthogonalB:child': providedHandlers.MultipliedB,
+        'main:B:OrthogonalB:child:A': providedHandlers.MultipliedBChild,
       },
 
     };

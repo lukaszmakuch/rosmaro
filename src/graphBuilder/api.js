@@ -51,7 +51,7 @@ const expand = ({
         handlers: handlersPlan,
       },
       ctx,
-      planNode: addPrefixToNode(planNode, 'template'),
+      planNode: addPrefixToNode(planNode, 'child'),
       expandedParent: newFullNodeName,
       newLocalNodeName,
     }),
