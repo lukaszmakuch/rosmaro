@@ -1,12 +1,12 @@
-import defaultParentHandler from './../handlers/transparent';
 import {view as Rview, set as Rset} from 'ramda';
 import {extractLocalNodeName} from './../utils/all';
 
-const dummyChildFn = ({ctx}) => ({
-  arrows: [[[null, undefined]]],
-  ctx: ctx,
-  res: undefined
-});
+const defaultParentHandler = (opts) => {
+  return map(
+    (childFn) => childFn(opts.action),
+    opts.children
+  );
+};
 
 const dispatch = ({
   graph, 
