@@ -1,20 +1,16 @@
 /*
-When no model data is stored (we're working with a new model),
-the function exported from this file returns all the initial data:
-- FSM state
-- context
-Also, when the graph changed due to dynamic composites, 
-so there are some new nodes,
-they will be given initial state and IDs.
+If there's anything missing within the state, 
+like the context or some FSM state,
+it is given the default value.
 */
 import {initState} from './../fsm/api';
 
 const extendModelData = ({
-  readModelData = {ctx: {}, FSMState: {}}, 
+  state = {ctx: {}, FSMState: {}}, 
   graph}
 ) => ({
-  FSMState: {...initState(graph), ...readModelData.FSMState},
-  ctx: readModelData.ctx,
+  FSMState: {...initState(graph), ...state.FSMState},
+  ctx: state.ctx,
 });
 
 export default extendModelData;

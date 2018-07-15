@@ -33,7 +33,7 @@ export default (modelDescription) => {
 
     // {FSMState, ctx}
     const modelData = extendModelData({
-      readModelData: state,
+      state,
       graph: modelParts.graph
     });
 
