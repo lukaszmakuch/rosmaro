@@ -4,7 +4,7 @@ Given the context and a structure like this (which may contain dynamic composite
 ```
 {
   graph: {A: ..., B...},
-  handlers: {A: {...}, B: {...}}
+  bindings: {A: {...}, B: {...}}
 }
 ```
 

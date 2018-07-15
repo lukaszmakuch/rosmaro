@@ -4,7 +4,7 @@ import {identityLens, addPrefixToNode, extractLocalNodeName, mapArrowTarget, map
 const expand = ({
   plan: {
     graph: graphPlan,
-    handlers: handlersPlan,
+    bindings: bindingsPlan,
   },
   ctx: rawCtx,
   planNode = 'main',
@@ -12,7 +12,7 @@ const expand = ({
   newLocalNodeName = 'main',
 }) => {
   const type = graphPlan[planNode].type;
-  const lens = (handlersPlan[planNode].lens || (() => identityLens));
+  const lens = (bindingsPlan[planNode].lens || (() => identityLens));
   const newFullNodeName = addPrefixToNode(expandedParent, newLocalNodeName);
   const ctx = view(lens({localNodeName: newLocalNodeName}), rawCtx);
   const updateParentNode = parent => node => addPrefixToNode(
@@ -25,14 +25,14 @@ const expand = ({
   const getCompositeChildrenList = getGraphChildrenList;
   const getDynamicCompositeChildrenList = () => map (
     child => addPrefixToNode(newFullNodeName, child),
-    (handlersPlan[planNode].nodes || (() => []))({ctx})
+    (bindingsPlan[planNode].nodes || (() => []))({ctx})
   );
 
   const expandGraphChildren = () => map(
     planNode => expand({
       plan: {
         graph: graphPlan,
-        handlers: handlersPlan,
+        bindings: bindingsPlan,
       },
       ctx,
       planNode,
@@ -48,14 +48,14 @@ const expand = ({
     newLocalNodeName => expand({
       plan: {
         graph: graphPlan,
-        handlers: handlersPlan,
+        bindings: bindingsPlan,
       },
       ctx,
       planNode: addPrefixToNode(planNode, 'child'),
       expandedParent: newFullNodeName,
       newLocalNodeName,
     }),
-    (handlersPlan[planNode].nodes || (() => []))({ctx})
+    (bindingsPlan[planNode].nodes || (() => []))({ctx})
   );
 
   switch (type) {
@@ -69,7 +69,7 @@ const expand = ({
           }
         },
         handlers: {
-          [newFullNodeName]: handlersPlan[planNode].handler
+          [newFullNodeName]: bindingsPlan[planNode].handler
         },
         lenses: {
           [newFullNodeName]: lens,
@@ -91,7 +91,7 @@ const expand = ({
             }
           },
           handlers: {
-            [newFullNodeName]: handlersPlan[planNode].handler
+            [newFullNodeName]: bindingsPlan[planNode].handler
           },
           lenses: {
             [newFullNodeName]: lens,
@@ -113,7 +113,7 @@ const expand = ({
             }
           },
           handlers: {
-            [newFullNodeName]: handlersPlan[planNode].handler
+            [newFullNodeName]: bindingsPlan[planNode].handler
           },
           lenses: {
             [newFullNodeName]: lens,
@@ -135,7 +135,7 @@ const expand = ({
             }
           },
           handlers: {
-            [newFullNodeName]: handlersPlan[planNode].handler
+            [newFullNodeName]: bindingsPlan[planNode].handler
           },
           lenses: {
             [newFullNodeName]: lens,

@@ -68,16 +68,6 @@ const arrowFollowingHandler = (expectedActionType, arrowToFollow) => ({action, n
   arrows: action.type === expectedActionType ? [[[node.id, arrowToFollow]]] : []
 });
 
-const loggingHandler = (nodeName, res) => ({
-  afterMethod({res}) {
-    log(nodeName);
-    return res;
-  },
-  ...(res ? {method: () => {
-    return res;
-  }} : {})
-});
-
 describe('rosmaro', () => {
 
   beforeEach(() => {
@@ -96,7 +86,7 @@ describe('rosmaro', () => {
         'leaf': {type: 'leaf'}
       };
 
-      const handlers = {
+      const bindings = {
         'main': {
           lens: () => initCtxLens({elems: ['A', 'B']}),
           nodes: ({ctx: {elems}}) => elems,
@@ -122,7 +112,7 @@ describe('rosmaro', () => {
         }
       };
 
-      const model = rosmaro({graph, handlers});
+      const model = rosmaro({graph, bindings});
 
       assert.deepEqual(
         model({
@@ -206,7 +196,7 @@ describe('rosmaro', () => {
         }
       };
       
-      const handlers = {
+      const bindings = {
         main: {
           lens: () => initCtxLens({switches: [1, 2]}),
           nodes: ({ctx}) => ctx.switches,
@@ -230,7 +220,7 @@ describe('rosmaro', () => {
 
       const model = rosmaro({
         graph,
-        handlers
+        bindings
       });
 
       testSession({model, steps: [
@@ -311,7 +301,7 @@ describe('rosmaro', () => {
           "type": "leaf"
         }
       },
-      handlers: {
+      bindings: {
         'main': {
           handler: transparentSingleChildHandler,
         },
@@ -358,7 +348,7 @@ describe('rosmaro', () => {
           "type": "leaf"
         }
       },
-      handlers: {
+      bindings: {
         'main': {
           handler: transparentSingleChildHandler,
         },
@@ -414,7 +404,7 @@ describe('rosmaro', () => {
       'B': {type: 'leaf'},
     };
 
-    const handlers = {
+    const bindings = {
       'main': {
         handler: transparentSingleChildHandler,
       },
@@ -440,7 +430,7 @@ describe('rosmaro', () => {
 
     const model = rosmaro({
       graph,
-      handlers,
+      bindings,
     });
 
     testSession({model, steps: [

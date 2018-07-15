@@ -19,7 +19,7 @@ const removeUnusedFSMState = ({newFSMState, graph}) => {
   return minimalFSMState;
 };
 
-// {graph, handlers}
+// {graph, bindings}
 export default (modelDescription) => {
 
   const consolidatedModel = consolidateModels(modelDescription);

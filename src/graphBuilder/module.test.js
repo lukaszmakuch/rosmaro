@@ -102,7 +102,7 @@ describe('the new graph builder', () => {
 
       },
 
-      handlers: {
+      bindings: {
         'main': {
           lens: () => lensProp('first'),
           handler: function () {},
@@ -239,17 +239,17 @@ describe('the new graph builder', () => {
     };
 
     const expectedHandlersExpansion = {
-      'main': modelDescription.handlers['main'].handler,
-      'main:A': modelDescription.handlers['main:A'].handler,
-      'main:A:A': modelDescription.handlers['main:A:A'].handler,
-      'main:A:B': modelDescription.handlers['main:A:B'].handler,
-      'main:B': modelDescription.handlers['main:B'].handler,
-      'main:B:OrthogonalA': modelDescription.handlers['main:B:OrthogonalA'].handler,
-      'main:B:OrthogonalB': modelDescription.handlers['main:B:OrthogonalB'].handler,
-      'main:B:OrthogonalB:DynamicChildA': modelDescription.handlers['main:B:OrthogonalB:child'].handler,
-      'main:B:OrthogonalB:DynamicChildA:A': modelDescription.handlers['main:B:OrthogonalB:child:A'].handler,
-      'main:B:OrthogonalB:DynamicChildB': modelDescription.handlers['main:B:OrthogonalB:child'].handler,
-      'main:B:OrthogonalB:DynamicChildB:A': modelDescription.handlers['main:B:OrthogonalB:child:A'].handler,
+      'main': modelDescription.bindings['main'].handler,
+      'main:A': modelDescription.bindings['main:A'].handler,
+      'main:A:A': modelDescription.bindings['main:A:A'].handler,
+      'main:A:B': modelDescription.bindings['main:A:B'].handler,
+      'main:B': modelDescription.bindings['main:B'].handler,
+      'main:B:OrthogonalA': modelDescription.bindings['main:B:OrthogonalA'].handler,
+      'main:B:OrthogonalB': modelDescription.bindings['main:B:OrthogonalB'].handler,
+      'main:B:OrthogonalB:DynamicChildA': modelDescription.bindings['main:B:OrthogonalB:child'].handler,
+      'main:B:OrthogonalB:DynamicChildA:A': modelDescription.bindings['main:B:OrthogonalB:child:A'].handler,
+      'main:B:OrthogonalB:DynamicChildB': modelDescription.bindings['main:B:OrthogonalB:child'].handler,
+      'main:B:OrthogonalB:DynamicChildB:A': modelDescription.bindings['main:B:OrthogonalB:child:A'].handler,
     };
 
     const expanded = expand({plan: modelDescription, ctx});

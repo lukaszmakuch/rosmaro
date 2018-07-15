@@ -3,26 +3,23 @@ import {addPrefixToNode, mapArrowTarget, mapArrows} from './../utils/all';
 
 const consolidate = ({
   graph: graphPlan,
-  handlers: handlersPlan,
+  bindings: bindingsPlan,
   nodePrefix = '',
   nodeFromPlan = 'main',
   newNodeName = 'main'
 }) => {
   const parent = nodePrefix || null;
   const graphPlanDescription = graphPlan[nodeFromPlan];
-  const handlersPlanDescription = handlersPlan[nodeFromPlan];
+  const bindingsPlanDescription = bindingsPlan[nodeFromPlan];
   const prefixNode = node => addPrefixToNode(nodePrefix, node);
   const prefixChildNode = child => addPrefixToNode(addPrefixToNode(nodePrefix, newNodeName), child);
   const currentNodeFullName = prefixNode(newNodeName);
-  const currentNodeHandlers = {
-    [currentNodeFullName]: handlersPlan[nodeFromPlan]
-  };
   const singleNode = node => ({
     graph: {
       [currentNodeFullName]: node
     },
-    handlers: {
-      [currentNodeFullName]: handlersPlan[nodeFromPlan]
+    bindings: {
+      [currentNodeFullName]: bindingsPlan[nodeFromPlan]
     }
   })
   const prefixArrow = mapArrowTarget(prefixChildNode);
@@ -31,8 +28,8 @@ const consolidate = ({
 
     case 'external':
       return consolidate({
-        graph: handlersPlanDescription.graph,
-        handlers: handlersPlanDescription.handlers,
+        graph: bindingsPlanDescription.graph,
+        bindings: bindingsPlanDescription.bindings,
         nodePrefix: nodePrefix,
         nodeFromPlan: 'main',
         newNodeName: newNodeName,
@@ -47,7 +44,7 @@ const consolidate = ({
         }),
         consolidate({
           graph: graphPlan,
-          handlers: handlersPlan,
+          bindings: bindingsPlan,
           nodePrefix: currentNodeFullName,
           nodeFromPlan: graphPlanDescription.child,
           newNodeName: 'child',
@@ -65,7 +62,7 @@ const consolidate = ({
         }),
         keys(graphPlanDescription.nodes).map(child => consolidate({
           graph: graphPlan,
-          handlers: handlersPlan,
+          bindings: bindingsPlan,
           nodePrefix: currentNodeFullName,
           nodeFromPlan: graphPlanDescription.nodes[child],
           newNodeName: child
@@ -89,7 +86,7 @@ const consolidate = ({
         }),
         keys(graphPlanDescription.nodes).map(child => consolidate({
           graph: graphPlan,
-          handlers: handlersPlan,
+          bindings: bindingsPlan,
           nodePrefix: currentNodeFullName,
           nodeFromPlan: graphPlanDescription.nodes[child],
           newNodeName: child
