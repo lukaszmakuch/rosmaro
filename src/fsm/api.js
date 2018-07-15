@@ -1,6 +1,6 @@
 import map from 'lodash/map';
 import {initState, mergeNewFSMStates} from './state';
-import {nonEmptyArrow} from './../utils';
+import {nonEmptyArrow} from './../utils/all';
 export {initState};
 
 // res {newFSMState: {}, target: 'a:b:c', entryPoint: 'p'}

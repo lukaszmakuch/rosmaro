@@ -2,7 +2,7 @@ import consolidateModels from './../modelConsolidator/api';
 import expandGraph from './../graphBuilder/api';
 import makeHandlers from './../handlers/api';
 import fsm from './../fsm/api';
-import {nonEmptyArrow} from './../utils';
+import {nonEmptyArrow} from './../utils/all';
 import dispatch from './../dispatcher/api';
 import extendModelData from './modelData';
 

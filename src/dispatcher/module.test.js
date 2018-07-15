@@ -1,12 +1,12 @@
 import assert from 'assert';
 import dispatch from './api';
 import {identityLens} from './../utils/all';
-import {renameArrows} from '../utils';
 import {
   transparentSingleChildHandler, 
   mergeCtxs, 
   mergeArrows,
-  addNodeToArrows
+  addNodeToArrows,
+  renameArrows,
 } from './../handlerUtils';
 import {identity as Ridentity, lens as Rlens, dissoc, prop, keys, lensPath as RlensPath, head, values, map} from 'ramda';
 
