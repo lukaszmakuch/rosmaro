@@ -42,7 +42,6 @@ export default (modelDescription) => {
       graph: modelParts.graph,
       FSMState: modelData.FSMState,
       handlers: modelParts.handlers,
-      instanceID: modelData.instanceID,
       ctx: modelData.ctx,
       action,
       lenses: modelParts.lenses,
@@ -69,7 +68,6 @@ export default (modelDescription) => {
           newFSMState, 
           graph: newModelParts.graph
         }),
-        instanceID: {},
         ctx: dispatchRes.ctx,
       },
       anyArrowFollowed,

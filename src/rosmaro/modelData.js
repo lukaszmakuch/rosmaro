@@ -8,10 +8,9 @@ so there are some new nodes,
 they will be given initial state and IDs.
 */
 import {initState} from './../fsm/api';
-import newID from 'uuid/v1';
 
 const extendModelData = ({
-  readModelData = {ctx: {}, FSMState: {}, instanceID: {}}, 
+  readModelData = {ctx: {}, FSMState: {}}, 
   graph}
 ) => ({
   FSMState: {...initState(graph), ...readModelData.FSMState},
