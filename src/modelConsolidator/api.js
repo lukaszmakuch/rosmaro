@@ -1,5 +1,5 @@
 import {map, keys, mergeDeepLeft, reduce} from 'ramda';
-import {addPrefixToNode, mapArrowTarget} from './../utils/all';
+import {addPrefixToNode, mapArrowTarget, mapArrows} from './../utils/all';
 
 const consolidate = ({
   graph: graphPlan,
@@ -84,7 +84,7 @@ const consolidate = ({
           type: 'graph',
           parent,
           nodes: map(prefixChildNode, keys(graphPlanDescription.nodes)),
-          arrows: mapArrows(prefixChildNode)(prefixArrow)(graphPlanDescription.arrows),
+          arrows: mapArrows(prefixChildNode)(prefixArrow)(graphPlanDescription.arrows)(keys(graphPlanDescription.nodes)),
           entryPoints: map(prefixArrow, graphPlanDescription.entryPoints)
         }),
         keys(graphPlanDescription.nodes).map(child => consolidate({

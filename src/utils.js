@@ -9,7 +9,7 @@ res like [
     ...
 ]
 */
-export const mapArrows = (map, arrows) => arrows.map(arrow => {
+export const renameArrows = (map, arrows) => arrows.map(arrow => {
   const previousOnes = arrow.slice(0, -1);
   const lastOne = arrow[arrow.length - 1];
   const newLastOne = map[lastOne[1]]

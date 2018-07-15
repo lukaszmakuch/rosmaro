@@ -25,7 +25,7 @@ const expand = ({
   const getCompositeChildrenList = getGraphChildrenList;
   const getDynamicCompositeChildrenList = () => map (
     child => addPrefixToNode(newFullNodeName, child),
-    (handlersPlan[planNode].nodes || (() => []))(ctx)
+    (handlersPlan[planNode].nodes || (() => []))({ctx})
   );
 
   const expandGraphChildren = () => map(
@@ -55,7 +55,7 @@ const expand = ({
       expandedParent: newFullNodeName,
       newLocalNodeName,
     }),
-    (handlersPlan[planNode].nodes || (() => []))(ctx)
+    (handlersPlan[planNode].nodes || (() => []))({ctx})
   );
 
   switch (type) {
@@ -87,7 +87,7 @@ const expand = ({
               parent: expandedParent,
               nodes: getGraphChildrenList(),
               entryPoints: map(updateArrow(newFullNodeName), graphPlan[planNode].entryPoints),
-              arrows: mapArrows(updateParentNode(newFullNodeName))(updateArrow(newFullNodeName))(graphPlan[planNode].arrows),
+              arrows: mapArrows(updateParentNode(newFullNodeName))(updateArrow(newFullNodeName))(graphPlan[planNode].arrows)(graphPlan[planNode].nodes),
             }
           },
           handlers: {

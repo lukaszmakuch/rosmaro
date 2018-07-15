@@ -317,12 +317,12 @@ describe('rosmaro', () => {
         },
         'A': {
           handler: ({action, node, ctx}) => {
-            return arrowFollowingHandler('FOLLOW_ARROW', 'x');
+            return arrowFollowingHandler('FOLLOW_ARROW', 'x')({action, node, ctx});
           }
         },
         'B': {
           handler: ({action, node, ctx}) => {
-            return arrowFollowingHandler('FOLLOW_ARROW', 'x');
+            return arrowFollowingHandler('FOLLOW_ARROW', 'x')({action, node, ctx});
           }
         }
       }
@@ -368,7 +368,7 @@ describe('rosmaro', () => {
             switch (action.type) {
               case 'COMPLETED':
                 return {
-                  arrows: [],
+                  arrows: [[[node.id, undefined]]],
                   res: true,
                   ctx,
                 };
@@ -385,10 +385,10 @@ describe('rosmaro', () => {
         call: {type: 'FOLLOW_ARROW'},
         expect: {res: undefined},
       },
-      // Going from main:A to main:B
+      // Going from main:A:B to main:B
       {
-        call: {type: 'READ_NODE'},
-        expect: {res: 'B'},
+        call: {type: 'FOLLOW_ARROW'},
+        expect: {res: undefined},
       },
       // At main:B
       {

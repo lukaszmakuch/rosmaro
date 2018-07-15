@@ -125,7 +125,7 @@ describe('the new graph builder', () => {
         },
         'main:B:OrthogonalB': {
           lens: ({localNodeName}) => lensProp(localNodeName),
-          nodes: (ctx) => ctx['main:B:OrthogonalB nodes'],
+          nodes: ({ctx}) => ctx['main:B:OrthogonalB nodes'],
           handler: function () {},
         },
         'main:B:OrthogonalB:template': {

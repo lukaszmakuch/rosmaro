@@ -1,4 +1,5 @@
-import buildGraph from './../graphBuilder/api';
+import consolidateModels from './../modelConsolidator/api';
+import expandGraph from './../graphBuilder/api';
 import makeHandlers from './../handlers/api';
 import fsm from './../fsm/api';
 import {nonEmptyArrow} from './../utils';
@@ -19,22 +20,15 @@ const removeUnusedFSMState = ({newFSMState, graph}) => {
   return minimalFSMState;
 };
 
-export default ({
-  graph: graphPlan,
-  handlers: handlersPlan
-}) => {
+// {graph, handlers}
+export default (modelDescription) => {
+
+  const consolidatedModel = consolidateModels(modelDescription);
   
-  // {handlers, lenses, nodes}
-  const basedOnHandlersPlan = makeHandlers(handlersPlan, graphPlan);
-
   return ({state, action}) => {
-    console.log(require('util').inspect({graphPlan, handlersPlan}, false, 20));
-
     // {graph, handlers, lenses}
-    const modelParts = buildGraph({
-      plan: graphPlan,
-      //{lenses, nodes, handlers}
-      ...basedOnHandlersPlan,
+    const modelParts = expandGraph({
+      plan: consolidatedModel, 
       ctx: state ? state.ctx : {}
     });
 
@@ -65,10 +59,8 @@ export default ({
     const anyArrowFollowed = hasAnyArrowBeenFollowed(dispatchRes.arrows);
 
     // adds newModelParts (so we know the new graph)
-    const newModelParts = buildGraph({
-      plan: graphPlan,
-      //{lenses, nodes, handlers}
-      ...basedOnHandlersPlan,
+    const newModelParts = expandGraph({
+      plan: consolidatedModel, 
       ctx: dispatchRes.ctx
     });
 

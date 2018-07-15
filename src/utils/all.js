@@ -19,10 +19,10 @@ export const mapArrowTarget = mapFn => ({target, entryPoint}) => ({
   entryPoint
 });
 
-export const mapArrows = srcNodeMapFn => arrowMapFn => arrows => 
-  keys(arrows).reduce((builtArrows, srcNode) => ({
-    ...builtArrows,
-    [srcNodeMapFn(srcNode)]: map(arrowMapFn, (arrows[srcNode]))
+export const mapArrows = srcNodeMapFn => arrowMapFn => existingArrows => allNodes => 
+  allNodes.reduce((builtexistingArrows, srcNode) => ({
+    ...builtexistingArrows,
+    [srcNodeMapFn(srcNode)]: map(arrowMapFn, (existingArrows[srcNode] || {}))
   }), {});
 
   export const identityLens = lens(identity, identity);

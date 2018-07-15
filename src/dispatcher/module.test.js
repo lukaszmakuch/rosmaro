@@ -1,6 +1,7 @@
 import assert from 'assert';
 import dispatch from './api';
-import {mapArrows, identityLens} from './../utils/all';
+import {identityLens} from './../utils/all';
+import {renameArrows} from '../utils';
 import {
   transparentSingleChildHandler, 
   mergeCtxs, 
@@ -28,13 +29,13 @@ describe("dispatcher", () => {
     };
 
     const lenses = {
-      'main': identityLens,
-      'main:A': identityLens,
-      'main:B': identityLens,
-      'main:B:A': identityLens,
-      'main:B:B': identityLens,
-      'main:B:B:A': identityLens,
-      'main:B:B:B': identityLens,
+      'main': () => identityLens,
+      'main:A': () => identityLens,
+      'main:B': () => identityLens,
+      'main:B:A': () => identityLens,
+      'main:B:B': () => identityLens,
+      'main:B:B:A': () => identityLens,
+      'main:B:B:B': () => identityLens,
     };
 
     const handlers = {
@@ -336,9 +337,9 @@ describe("dispatcher", () => {
       method: "",
       params: [],
       lenses: {
-        'main': identityLens,
-        'main:A': identityLens,
-        'main:A:A': identityLens,
+        'main': () => identityLens,
+        'main:A': () => identityLens,
+        'main:A:A': () => identityLens,
       }
     });
 
@@ -353,11 +354,16 @@ describe("dispatcher", () => {
     it('allows to rename a graph leaving arrow', () => {
 
       const graph = {
-        'main': {type: 'graph', nodes: ['main:target', 'main:graph_with_leaving_a']},
+        'main': {
+          type: 'graph', 
+          nodes: ['main:target', 'main:graph_with_leaving_a'],
+          arrows: {}
+        },
         'main:target': {type: 'leaf', parent: 'main'},
         'main:graph_with_leaving_a': {
           type: 'graph', 
-          nodes: ['main:graph_with_leaving_a:a', 'main:graph_with_leaving_a:b']
+          nodes: ['main:graph_with_leaving_a:a', 'main:graph_with_leaving_a:b'],
+          arrows: {}
         },
         'main:graph_with_leaving_a:a': {type: 'leaf', parent: 'main:graph_with_leaving_a'},
         'main:graph_with_leaving_a:b': {type: 'leaf', parent: 'main:graph_with_leaving_a'}
@@ -374,7 +380,7 @@ describe("dispatcher", () => {
 
         'main:graph_with_leaving_a': ({action, ctx, node, children}) => {
           const childRes = head(values(children))({action});
-          const arrows = mapArrows({a: 'b'}, addNodeToArrows(node.id, childRes.arrows));
+          const arrows = renameArrows({a: 'b'}, addNodeToArrows(node.id, childRes.arrows));
           return {
             arrows,
             ctx: childRes.ctx,
@@ -392,6 +398,14 @@ describe("dispatcher", () => {
 
       };
 
+      const lenses = {
+        'main': () => identityLens,
+        'main:target': () => identityLens,
+        'main:graph_with_leaving_a': () => identityLens,
+        'main:graph_with_leaving_a:a': () => identityLens,
+        'main:graph_with_leaving_a:b': () => identityLens,
+      };
+
       // Following a by graph_with_leaving_a:a
       assert.deepEqual({
         arrows: [
@@ -405,13 +419,7 @@ describe("dispatcher", () => {
         handlers,
         ctx: {},
         action: {type: "a"},
-        lenses: {
-          'main': identityLens,
-          'main:target': identityLens,
-          'main:graph_with_leaving_a': identityLens,
-          'main:graph_with_leaving_a:a': identityLens,
-          'main:graph_with_leaving_a:b': identityLens,
-        }
+        lenses
       }));
 
     });
@@ -438,7 +446,7 @@ describe("dispatcher", () => {
         method: "",
         params: [],
         lenses: {
-          'main': identityLens,
+          'main': () => identityLens,
         },
       });
       const expectedCtx = {a: 2};
