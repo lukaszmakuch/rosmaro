@@ -4,16 +4,10 @@ import assert from 'assert';
 describe('model consolidator', () => {
   it('integrates external models', () => {
 
-    const providedBindings = {
+    const providedSubBindings = {
       "main": {},
-      "B": {},
-      "OrthogonalA": {},
-      "OrthogonalB": {},
-      "MultipliedB": {},
-      "MultipliedBChild": {},
-      "SubMain": {},
-      "SubA": {},
-      "SubB": {},
+      "main:A": {},
+      "main:B": {},
     };
 
     const subModel = {
@@ -46,11 +40,17 @@ describe('model consolidator', () => {
           "type": "leaf"
         }
       },
-      bindings: {
-        'main': providedBindings.SubMain,
-        'A': providedBindings.SubA,
-        'B': providedBindings.SubB,
-      }
+      bindings: providedSubBindings
+    };
+
+    const providedMainBindings = {
+      "main": {},
+      "main:A": subModel,
+      "main:B": {},
+      "main:B:OrthogonalA": {},
+      "main:B:OrthogonalB": {},
+      "main:B:OrthogonalB:child": {},
+      "main:B:OrthogonalB:child:A": {},
     };
 
     const mainModel = {
@@ -115,15 +115,7 @@ describe('model consolidator', () => {
         },
         "MultipliedBChild": {"type": "leaf"}
       },
-      bindings: {
-        "A": subModel,
-        "main": providedBindings.main,
-        "B": providedBindings.B,
-        "OrthogonalA": providedBindings.OrthogonalA,
-        "OrthogonalB": providedBindings.OrthogonalB,
-        "MultipliedB": providedBindings.MultipliedB,
-        "MultipliedBChild": providedBindings.MultipliedBChild,
-      }
+      bindings: providedMainBindings
     };
 
     const consolidatedMainModel = consolidateModel(mainModel);
@@ -199,15 +191,15 @@ describe('model consolidator', () => {
       },
 
       bindings: {
-        'main': providedBindings.main,
-        'main:A': providedBindings.SubMain,
-        'main:A:A': providedBindings.SubA,
-        'main:A:B': providedBindings.SubB,
-        'main:B': providedBindings.B,
-        'main:B:OrthogonalA': providedBindings.OrthogonalA,
-        'main:B:OrthogonalB': providedBindings.OrthogonalB,
-        'main:B:OrthogonalB:child': providedBindings.MultipliedB,
-        'main:B:OrthogonalB:child:A': providedBindings.MultipliedBChild,
+        "main": providedMainBindings["main"],
+        "main:A": providedSubBindings["main"],
+        "main:A:A": providedSubBindings["main:A"],
+        "main:A:B": providedSubBindings["main:B"],
+        "main:B": providedMainBindings["main:B"],
+        "main:B:OrthogonalA": providedMainBindings["main:B:OrthogonalA"],
+        "main:B:OrthogonalB": providedMainBindings["main:B:OrthogonalB"],
+        "main:B:OrthogonalB:child": providedMainBindings["main:B:OrthogonalB:child"],
+        "main:B:OrthogonalB:child:A": providedMainBindings["main:B:OrthogonalB:child:A"],
       },
 
     };

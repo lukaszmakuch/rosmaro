@@ -5,25 +5,25 @@ const consolidate = ({
   graph: graphPlan,
   bindings: bindingsPlan,
   nodePrefix = '',
+  fullPathToNodeFromPlan = 'main',
   nodeFromPlan = 'main',
   newNodeName = 'main'
 }) => {
   const parent = nodePrefix || null;
   const graphPlanDescription = graphPlan[nodeFromPlan];
-  const bindingsPlanDescription = bindingsPlan[nodeFromPlan];
   const prefixNode = node => addPrefixToNode(nodePrefix, node);
   const prefixChildNode = child => addPrefixToNode(addPrefixToNode(nodePrefix, newNodeName), child);
   const currentNodeFullName = prefixNode(newNodeName);
+  const bindingsPlanDescription = bindingsPlan[fullPathToNodeFromPlan];
   const singleNode = node => ({
     graph: {
       [currentNodeFullName]: node
     },
     bindings: {
-      [currentNodeFullName]: bindingsPlan[nodeFromPlan]
+      [currentNodeFullName]: bindingsPlan[fullPathToNodeFromPlan]
     }
   })
   const prefixArrow = mapArrowTarget(prefixChildNode);
-
   switch (graphPlanDescription.type) {
 
     case 'external':
@@ -33,11 +33,12 @@ const consolidate = ({
         nodePrefix: nodePrefix,
         nodeFromPlan: 'main',
         newNodeName: newNodeName,
+        fullPathToNodeFromPlan: 'main',
       })
     break;
 
     case 'dynamicComposite':
-      return mergeDeepLeft( 
+      return mergeDeepLeft(
         singleNode({
           type: 'dynamicComposite',
           parent,
@@ -48,6 +49,7 @@ const consolidate = ({
           nodePrefix: currentNodeFullName,
           nodeFromPlan: graphPlanDescription.child,
           newNodeName: 'child',
+          fullPathToNodeFromPlan: addPrefixToNode(fullPathToNodeFromPlan, 'child'),
         })
       );
     break;
@@ -65,7 +67,8 @@ const consolidate = ({
           bindings: bindingsPlan,
           nodePrefix: currentNodeFullName,
           nodeFromPlan: graphPlanDescription.nodes[child],
-          newNodeName: child
+          newNodeName: child,
+          fullPathToNodeFromPlan: addPrefixToNode(fullPathToNodeFromPlan, child),
         }))
       );
     break;
@@ -89,7 +92,8 @@ const consolidate = ({
           bindings: bindingsPlan,
           nodePrefix: currentNodeFullName,
           nodeFromPlan: graphPlanDescription.nodes[child],
-          newNodeName: child
+          newNodeName: child,
+          fullPathToNodeFromPlan: addPrefixToNode(fullPathToNodeFromPlan, child),
         }))
       );
     break;

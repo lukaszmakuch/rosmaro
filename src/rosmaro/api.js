@@ -21,9 +21,8 @@ const removeUnusedFSMState = ({newFSMState, graph}) => {
 
 // {graph, bindings}
 export default (modelDescription) => {
-
   const consolidatedModel = consolidateModels(modelDescription);
-  
+
   return ({state, action}) => {
     // {graph, handlers, lenses}
     const modelParts = expandGraph({

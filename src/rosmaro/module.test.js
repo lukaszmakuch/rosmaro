@@ -99,7 +99,7 @@ describe('rosmaro', () => {
             }
           }
         },
-        'leaf': {
+        'main:child': {
           handler: ({action, ctx, node}) => {
             return {
               ctx,
@@ -197,7 +197,7 @@ describe('rosmaro', () => {
       };
       
       const bindings = {
-        main: {
+        'main': {
           lens: () => initCtxLens({switches: [1, 2]}),
           nodes: ({ctx}) => ctx.switches,
           handler: ({action, ctx, children}) => {
@@ -209,13 +209,13 @@ describe('rosmaro', () => {
             }
           }
         },
-        Switch: {
+        'main:child': {
           lens: () => initCtxLens({switches: [1, 2]}),
           nodes: ({ctx}) => ctx.switches,
           handler: transparentSingleChildHandler,
         },
-        On: {handler: makeSwitchHandler('On')},
-        Off: {handler: makeSwitchHandler('Off')},
+        'main:child:On': {handler: makeSwitchHandler('On')},
+        'main:child:Off': {handler: makeSwitchHandler('Off')},
       };
 
       const model = rosmaro({
@@ -305,12 +305,12 @@ describe('rosmaro', () => {
         'main': {
           handler: transparentSingleChildHandler,
         },
-        'A': {
+        'main:A': {
           handler: ({action, node, ctx}) => {
             return arrowFollowingHandler('FOLLOW_ARROW', 'x')({action, node, ctx});
           }
         },
-        'B': {
+        'main:B': {
           handler: ({action, node, ctx}) => {
             return arrowFollowingHandler('FOLLOW_ARROW', 'x')({action, node, ctx});
           }
@@ -352,8 +352,8 @@ describe('rosmaro', () => {
         'main': {
           handler: transparentSingleChildHandler,
         },
-        'A': subModel,
-        'B': {
+        'main:A': subModel,
+        'main:B': {
           handler: ({action, ctx, node}) => {
             switch (action.type) {
               case 'COMPLETED':
@@ -408,7 +408,7 @@ describe('rosmaro', () => {
       'main': {
         handler: transparentSingleChildHandler,
       },
-      'A': {
+      'main:A': {
         handler: ({action, ctx, node}) => {
           const arrow = action.type == 'FOLLOW_ARROW' ? action.which : undefined;
           return {
@@ -417,7 +417,7 @@ describe('rosmaro', () => {
           };
         }
       },
-      'B': {
+      'main:B': {
         handler: ({action, ctx, node}) => {
           return {
             res: action.type == 'READ_NODE' ? 'B' : undefined,
