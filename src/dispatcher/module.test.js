@@ -3,7 +3,7 @@ import dispatch from './api';
 import {identityLens} from './../utils/all';
 import {
   transparentSingleChildHandler, 
-  mergeCtxs, 
+  mergeContexts, 
   mergeArrows,
   addNodeToArrows,
   renameArrows,
@@ -44,33 +44,33 @@ describe("dispatcher", () => {
 
       'main:B': transparentSingleChildHandler,
 
-      'main:B:B': ({action, ctx, children, node}) => {
+      'main:B:B': ({action, context, children, node}) => {
         const allResults = map(child => child({action}), children);
         return {
-          ctx: mergeCtxs(ctx, values(map(prop('ctx'), allResults))),
+          context: mergeContexts(context, values(map(prop('context'), allResults))),
           arrows: addNodeToArrows(node.id, mergeArrows(map(prop('arrows'), values(allResults)))),
           res: allResults.A.res + "_" + allResults.B.res,
         };
       },
 
-      "main:B:B:A": ({action, ctx, node}) => {
+      "main:B:B:A": ({action, context, node}) => {
         switch (action.type) {
           case 'FOLLOW_ARROWS': 
-            return {arrows: [[[node.id, 'x']]], ctx, res: 'ARes'};
+            return {arrows: [[[node.id, 'x']]], context, res: 'ARes'};
             break;
         }
       },
 
-      "main:B:B:B": ({action, ctx, node}) => {
+      "main:B:B:B": ({action, context, node}) => {
         switch (action.type) {
           case 'FOLLOW_ARROWS': 
-            return {arrows: [[[node.id, 'y']]], ctx, res: 'BRes'};
+            return {arrows: [[[node.id, 'y']]], context, res: 'BRes'};
             break;
         }
       }
     };
 
-    const ctx = {
+    const context = {
       a: 100, b: 200
     };
 
@@ -78,7 +78,7 @@ describe("dispatcher", () => {
       graph,
       FSMState,
       handlers,
-      ctx,
+      context,
       action: {type: 'FOLLOW_ARROWS'},
       lenses
     });
@@ -88,7 +88,7 @@ describe("dispatcher", () => {
         [['main:B:B:A', 'x'], ['main:B:B', 'x'], ['main:B', 'x']],
         [['main:B:B:B', 'y'], ['main:B:B', 'y'], ['main:B', 'y']]
       ],
-      ctx: {a: 100, b: 200},
+      context: {a: 100, b: 200},
       res: 'ARes_BRes'
     };
 
@@ -98,7 +98,7 @@ describe("dispatcher", () => {
   describe('lenses', () => {
 
     it('composes lenses', () => {
-      const ctx = {
+      const context = {
         raw: {
           part: {
             val: 'initial'
@@ -116,10 +116,10 @@ describe("dispatcher", () => {
       const handlers = {
         'main': transparentSingleChildHandler,
         'main:level1': transparentSingleChildHandler,
-        'main:level1:level2': ({ctx, node}) => {
+        'main:level1:level2': ({context, node}) => {
           return {
-            res: {gotCtx: ctx},
-            ctx: {val: 'changed'},
+            res: {gotContext: context},
+            context: {val: 'changed'},
             arrows: [[[node.id, 'x']]]
           };
         },
@@ -127,13 +127,13 @@ describe("dispatcher", () => {
       const lenses = {
         // simple map {raw} => {forMain}
         'main': () => Rlens(
-            ctx => ({forMain: ctx.raw}),
+            context => ({forMain: context.raw}),
             (returned, src) => ({raw: returned.forMain})
           ),
         // slice {forMain: part: x} => {'level2': x}
         'main:level1': () => Rlens(
-            ctx => {
-              return ({'level2': ctx.forMain.part})
+            context => {
+              return ({'level2': context.forMain.part})
             },
             (returned, src) => ({
               ...src, 
@@ -150,7 +150,7 @@ describe("dispatcher", () => {
         graph,
         FSMState,
         handlers,
-        ctx,
+        context,
         action: {type: 'ANYTHING'},
         lenses
       });
@@ -158,7 +158,7 @@ describe("dispatcher", () => {
         arrows: [
           [['main:level1:level2', 'x'], ['main:level1', 'x']]
         ],
-        ctx: {
+        context: {
           raw: {
             part: {
               val: 'changed'
@@ -166,7 +166,7 @@ describe("dispatcher", () => {
           }
         },
         res: {
-          gotCtx: {val: 'initial'}
+          gotContext: {val: 'initial'}
         }
       }, callRes);
     });
@@ -226,7 +226,7 @@ describe("dispatcher", () => {
         'C': renamePropLensF('b', 'a'),
       };
 
-      const firstCtx = {
+      const firstContext = {
         d: 120,
       };
 
@@ -236,56 +236,56 @@ describe("dispatcher", () => {
       });
 
       const handlers = {
-        'main': ({action, ctx, children}) => {
+        'main': ({action, context, children}) => {
           const childRes = children['B']({action});
           return {
             ...childRes,
-            ctx: incrementProp('c', childRes.ctx),
+            context: incrementProp('c', childRes.context),
             res: {
-              ctxGotByMain: ctx,
-              ctxReturnedByMainChild: childRes.ctx,
+              contextGotByMain: context,
+              contextReturnedByMainChild: childRes.context,
               ...childRes.res,
             }
           };
         },
-        'B': ({action, ctx, children}) => {
+        'B': ({action, context, children}) => {
           const childRes = children['C']({action});
           return {
             ...childRes,
-            ctx: incrementProp('b', childRes.ctx),
+            context: incrementProp('b', childRes.context),
             res: {
-              ctxGotByB: ctx,
-              ctxReturnedByBChild: childRes.ctx,
+              contextGotByB: context,
+              contextReturnedByBChild: childRes.context,
               ...childRes.res,
             }
           };
         },
-        'C': ({action, ctx, children}) => {
+        'C': ({action, context, children}) => {
           return {
-            ctx: incrementProp('a', ctx),
+            context: incrementProp('a', context),
             res: {
-              ctxGotByC: ctx
+              contextGotByC: context
             }
           };
         },
       };
 
-      const {res: callRes, ctx: newCtx} = dispatch({
+      const {res: callRes, context: newContext} = dispatch({
         graph,
         FSMState,
         handlers,
-        ctx: firstCtx,
+        context: firstContext,
         action: {type: 'ANYTHING'},
         lenses
       });
 
-      assert.deepEqual({d: 123}, newCtx);
+      assert.deepEqual({d: 123}, newContext);
       assert.deepEqual({
-        ctxGotByMain: {c: 120},
-        ctxReturnedByMainChild: {c: 122},
-        ctxGotByB: {b: 120},
-        ctxReturnedByBChild: {b: 121},
-        ctxGotByC: {a: 120},
+        contextGotByMain: {c: 120},
+        contextReturnedByMainChild: {c: 122},
+        contextGotByB: {b: 120},
+        contextReturnedByBChild: {b: 121},
+        contextGotByC: {a: 120},
       }, callRes);
     });
   });
@@ -325,7 +325,7 @@ describe("dispatcher", () => {
       },
       'main:A:A': (opts, node) => {
         mainAAID = opts.node.id;
-        return {res: null, ctx: {}, arrows: [[[opts.node.id, undefined]]]};
+        return {res: null, context: {}, arrows: [[[opts.node.id, undefined]]]};
       }
     };
 
@@ -333,7 +333,7 @@ describe("dispatcher", () => {
       graph,
       FSMState,
       handlers,
-      ctx: {},
+      context: {},
       method: "",
       params: [],
       lenses: {
@@ -378,22 +378,22 @@ describe("dispatcher", () => {
 
         'main': transparentSingleChildHandler,
 
-        'main:graph_with_leaving_a': ({action, ctx, node, children}) => {
+        'main:graph_with_leaving_a': ({action, context, node, children}) => {
           const childRes = head(values(children))({action});
           const arrows = renameArrows({a: 'b'}, addNodeToArrows(node.id, childRes.arrows));
           return {
             arrows,
-            ctx: childRes.ctx,
+            context: childRes.context,
             res: childRes.res
           };
         },
 
-        'main:graph_with_leaving_a:a': ({action, ctx, node, child}) => {
-          if (action.type == "a") return {arrows: [[[node.id, 'a']]], ctx};
+        'main:graph_with_leaving_a:a': ({action, context, node, child}) => {
+          if (action.type == "a") return {arrows: [[[node.id, 'a']]], context};
         },
 
-        'main:graph_with_leaving_a:b': ({action, ctx,}) => {
-          if (action.type == "a") return {arrows: [[[node.id, 'a']]], ctx};
+        'main:graph_with_leaving_a:b': ({action, context,}) => {
+          if (action.type == "a") return {arrows: [[[node.id, 'a']]], context};
         },
 
       };
@@ -411,13 +411,13 @@ describe("dispatcher", () => {
         arrows: [
           [['main:graph_with_leaving_a:a', 'a'], ['main:graph_with_leaving_a', 'b'],]
         ],
-        ctx: {},
+        context: {},
         res: undefined
       }, dispatch({
         graph,
         FSMState,
         handlers,
-        ctx: {},
+        context: {},
         action: {type: "a"},
         lenses
       }));
@@ -429,28 +429,28 @@ describe("dispatcher", () => {
   describe('merging the context', () => {
 
     it('allows parts to be removed', () => {
-      const initCtx = {a: 2, b: 3};
+      const initContext = {a: 2, b: 3};
       const graph = {
         'main': {type: 'leaf'}
       };
       const handlers = {
         'main': () => {
-          return {ctx: {a: 2}};
+          return {context: {a: 2}};
         },
       };
-      const {ctx} = dispatch({
+      const {context} = dispatch({
         graph,
         FSMState: {},
         handlers,
-        ctx: initCtx,
+        context: initContext,
         method: "",
         params: [],
         lenses: {
           'main': () => identityLens,
         },
       });
-      const expectedCtx = {a: 2};
-      assert.deepEqual(expectedCtx, ctx);
+      const expectedContext = {a: 2};
+      assert.deepEqual(expectedContext, context);
     });
 
   });

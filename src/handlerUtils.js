@@ -3,7 +3,7 @@ import {reduce, concat, head, values} from 'ramda';
 const diff = deep.diff
 const applyChange = deep.applyChange
 
-export const mergeCtxs = (original, newOnes) => {
+export const mergeContexts = (original, newOnes) => {
   if (newOnes.length == 1) return newOnes[0];
   
   let diffs = newOnes
@@ -20,7 +20,7 @@ export const mergeCtxs = (original, newOnes) => {
 
 export const mergeArrows = arrows => reduce(concat, [], arrows);
 
-export const transparentSingleChildHandler = ({action, ctx, node, children}) => {
+export const transparentSingleChildHandler = ({action, context, node, children}) => {
   const childRes = head(values(children))({action});
   return {
     ...childRes,

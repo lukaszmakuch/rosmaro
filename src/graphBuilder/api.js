@@ -6,7 +6,7 @@ const expand = ({
     graph: graphPlan,
     bindings: bindingsPlan,
   },
-  ctx: rawCtx,
+  context: rawContext,
   planNode = 'main',
   expandedParent = null,
   newLocalNodeName = 'main',
@@ -14,7 +14,7 @@ const expand = ({
   const type = graphPlan[planNode].type;
   const lens = (bindingsPlan[planNode].lens || (() => identityLens));
   const newFullNodeName = addPrefixToNode(expandedParent, newLocalNodeName);
-  const ctx = view(lens({localNodeName: newLocalNodeName}), rawCtx);
+  const context = view(lens({localNodeName: newLocalNodeName}), rawContext);
   const updateParentNode = parent => node => addPrefixToNode(
     parent, 
     extractLocalNodeName(node)
@@ -25,7 +25,7 @@ const expand = ({
   const getCompositeChildrenList = getGraphChildrenList;
   const getDynamicCompositeChildrenList = () => map (
     child => addPrefixToNode(newFullNodeName, child),
-    (bindingsPlan[planNode].nodes || (() => []))({ctx})
+    (bindingsPlan[planNode].nodes || (() => []))({context})
   );
 
   const expandGraphChildren = () => map(
@@ -34,7 +34,7 @@ const expand = ({
         graph: graphPlan,
         bindings: bindingsPlan,
       },
-      ctx,
+      context,
       planNode,
       expandedParent: newFullNodeName,
       newLocalNodeName: extractLocalNodeName(planNode),
@@ -50,12 +50,12 @@ const expand = ({
         graph: graphPlan,
         bindings: bindingsPlan,
       },
-      ctx,
+      context,
       planNode: addPrefixToNode(planNode, 'child'),
       expandedParent: newFullNodeName,
       newLocalNodeName,
     }),
-    (bindingsPlan[planNode].nodes || (() => []))({ctx})
+    (bindingsPlan[planNode].nodes || (() => []))({context})
   );
 
   switch (type) {

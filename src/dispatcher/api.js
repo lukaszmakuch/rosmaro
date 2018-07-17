@@ -13,28 +13,28 @@ const dispatch = ({
   node = 'main',
   FSMState, 
   handlers, 
-  ctx: rawCtx, 
+  context: rawContext, 
   action,
   lenses
 }) => {
   const localNodeName = extractLocalNodeName(node);
   const nodeLens = lenses[node]({localNodeName});
-  const ctx = Rview(nodeLens, rawCtx)
-  const mapReturnedCtx = callRes => ({
+  const context = Rview(nodeLens, rawContext)
+  const mapReturnedContext = callRes => ({
     ...callRes,
-    ctx: Rset(nodeLens, callRes.ctx, rawCtx)
+    context: Rset(nodeLens, callRes.context, rawContext)
   });
-  const handler = opts => mapReturnedCtx(
+  const handler = opts => mapReturnedContext(
     (handlers[node] || defaultParentHandler)(opts)
   );
   const nodeType = graph[node].type;
   const nodeData = {id: node};
-  const callDispatch = ({node, ctx, action}) => dispatch({
+  const callDispatch = ({node, context, action}) => dispatch({
     graph,
     node,
     FSMState,
     handlers,
-    ctx,
+    context,
     action,
     lenses
   });
@@ -42,7 +42,7 @@ const dispatch = ({
   if (nodeType === 'leaf') {
     return handler({
       action, 
-      ctx, 
+      context, 
       children: {}, 
       node: nodeData
     });
@@ -56,13 +56,13 @@ const dispatch = ({
       [extractLocalNodeName(childNode)]: ({action}) => {
         return callDispatch({
           node: childNode,
-          ctx,
+          context,
           action
         });
       }
     }), {});
 
-    return handler({action, ctx, children: childrenFns, node: nodeData});
+    return handler({action, context, children: childrenFns, node: nodeData});
   }
 
   if (nodeType === 'graph') {
@@ -70,14 +70,14 @@ const dispatch = ({
     const childFn = ({action}) => {
       return callDispatch({
         node: activeChild,
-        ctx,
+        context,
         action
       });
     };
     const childrenFns = {
       [extractLocalNodeName(activeChild)]: childFn
     };
-    return handler({action, ctx, children: childrenFns, node: nodeData});
+    return handler({action, context, children: childrenFns, node: nodeData});
   }
 };
 

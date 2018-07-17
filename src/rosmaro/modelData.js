@@ -6,11 +6,11 @@ it is given the default value.
 import {initState} from './../fsm/api';
 
 const extendModelData = ({
-  state = {ctx: {}, FSMState: {}}, 
+  state = {context: {}, FSMState: {}}, 
   graph}
 ) => ({
   FSMState: {...initState(graph), ...state.FSMState},
-  ctx: state.ctx,
+  context: state.context,
 });
 
 export default extendModelData;

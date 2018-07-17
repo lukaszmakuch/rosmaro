@@ -1,6 +1,6 @@
 import assert from 'assert';
 import rosmaro from '../index';
-import {mergeCtxs, mergeArrows, transparentSingleChildHandler} from '../handlerUtils';
+import {mergeContexts, mergeArrows, transparentSingleChildHandler} from '../handlerUtils';
 import union from 'lodash/union';
 import without from 'lodash/without';
 import {isEmpty, lens as Rlens, map, prop, head, concat, values} from 'ramda';
@@ -49,8 +49,8 @@ const graph = {
 };
 
 // TODO: this could be separated into it's own package
-const initCtxLens = initCtx => Rlens(
-  ctx => isEmpty(ctx) ? initCtx : ctx,
+const initContextLens = initContext => Rlens(
+  context => isEmpty(context) ? initContext : context,
   (returned, src) => returned,
 );
 
@@ -88,21 +88,21 @@ describe('rosmaro', () => {
 
       const bindings = {
         'main': {
-          lens: () => initCtxLens({elems: ['A', 'B']}),
-          nodes: ({ctx: {elems}}) => elems,
-          handler: ({action, ctx, children}) => {
+          lens: () => initContextLens({elems: ['A', 'B']}),
+          nodes: ({context: {elems}}) => elems,
+          handler: ({action, context, children}) => {
             const allResults = map(child => child({action}), children);
             return {
-              ctx: head(values(allResults)).ctx,
+              context: head(values(allResults)).context,
               arrows: concat(...map(prop('arrows'), values(allResults))),
               res: map(prop('res'), allResults)
             }
           }
         },
         'main:child': {
-          handler: ({action, ctx, node}) => {
+          handler: ({action, context, node}) => {
             return {
-              ctx,
+              context,
               arrows: [[[null, undefined]]],
               res: (action.type === 'SAY_HI') 
                 ? `I'm ${node.id}.` 
@@ -166,31 +166,31 @@ describe('rosmaro', () => {
         }
       };
 
-      const makeSwitchHandler = name => ({action, ctx, node}) => {
+      const makeSwitchHandler = name => ({action, context, node}) => {
         switch (action.type) {
           case 'READ':
             return {
               arrows: [[[node.id, undefined]]],
               res: name,
-              ctx: ctx,
+              context: context,
             }
             break;
           case 'TOGGLE':
             return {
               arrows: [[[node.id, 'toggle']]],
-              ctx: ctx,
+              context: context,
             };
             break;
           case 'ADD_SWITCH':
             return {
               arrows: [[[node.id, undefined]]],
-              ctx: {switches: union(ctx.switches, [action.number])}
+              context: {switches: union(context.switches, [action.number])}
             };
             break;
           case 'REMOVE_SWITCH':
             return {
               arrows: [[[node.id, undefined]]],
-              ctx: {switches: without(ctx.switches, action.number)}
+              context: {switches: without(context.switches, action.number)}
             };
             break;
         }
@@ -198,20 +198,20 @@ describe('rosmaro', () => {
       
       const bindings = {
         'main': {
-          lens: () => initCtxLens({switches: [1, 2]}),
-          nodes: ({ctx}) => ctx.switches,
-          handler: ({action, ctx, children}) => {
+          lens: () => initContextLens({switches: [1, 2]}),
+          nodes: ({context}) => context.switches,
+          handler: ({action, context, children}) => {
             const allResults = map(child => child({action}), children);
             return {
-              ctx: mergeCtxs(ctx, values(map(prop('ctx'), allResults))),
+              context: mergeContexts(context, values(map(prop('context'), allResults))),
               arrows: mergeArrows(map(prop('arrows'), values(allResults))),
               res: map(prop('res'), allResults)
             }
           }
         },
         'main:child': {
-          lens: () => initCtxLens({switches: [1, 2]}),
-          nodes: ({ctx}) => ctx.switches,
+          lens: () => initContextLens({switches: [1, 2]}),
+          nodes: ({context}) => context.switches,
           handler: transparentSingleChildHandler,
         },
         'main:child:On': {handler: makeSwitchHandler('On')},
@@ -306,13 +306,13 @@ describe('rosmaro', () => {
           handler: transparentSingleChildHandler,
         },
         'main:A': {
-          handler: ({action, node, ctx}) => {
-            return arrowFollowingHandler('FOLLOW_ARROW', 'x')({action, node, ctx});
+          handler: ({action, node, context}) => {
+            return arrowFollowingHandler('FOLLOW_ARROW', 'x')({action, node, context});
           }
         },
         'main:B': {
-          handler: ({action, node, ctx}) => {
-            return arrowFollowingHandler('FOLLOW_ARROW', 'x')({action, node, ctx});
+          handler: ({action, node, context}) => {
+            return arrowFollowingHandler('FOLLOW_ARROW', 'x')({action, node, context});
           }
         }
       }
@@ -354,13 +354,13 @@ describe('rosmaro', () => {
         },
         'main:A': subModel,
         'main:B': {
-          handler: ({action, ctx, node}) => {
+          handler: ({action, context, node}) => {
             switch (action.type) {
               case 'COMPLETED':
                 return {
                   arrows: [[[node.id, undefined]]],
                   res: true,
-                  ctx,
+                  context,
                 };
               break;
             }
@@ -409,19 +409,19 @@ describe('rosmaro', () => {
         handler: transparentSingleChildHandler,
       },
       'main:A': {
-        handler: ({action, ctx, node}) => {
+        handler: ({action, context, node}) => {
           const arrow = action.type == 'FOLLOW_ARROW' ? action.which : undefined;
           return {
-            ctx,
+            context,
             arrows: [[[node.id, arrow]]]
           };
         }
       },
       'main:B': {
-        handler: ({action, ctx, node}) => {
+        handler: ({action, context, node}) => {
           return {
             res: action.type == 'READ_NODE' ? 'B' : undefined,
-            ctx,
+            context,
             arrows: [[[node.id, undefined]]]
           };
         }

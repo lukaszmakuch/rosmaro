@@ -125,7 +125,7 @@ describe('the new graph builder', () => {
         },
         'main:B:OrthogonalB': {
           lens: ({localNodeName}) => lensProp(localNodeName),
-          nodes: ({ctx}) => ctx['main:B:OrthogonalB nodes'],
+          nodes: ({context}) => context['main:B:OrthogonalB nodes'],
           handler: function () {},
         },
         'main:B:OrthogonalB:child': {
@@ -138,7 +138,7 @@ describe('the new graph builder', () => {
 
     };
 
-    const ctx = {
+    const context = {
       first: {
         B: {
           OrthogonalB: {
@@ -252,7 +252,7 @@ describe('the new graph builder', () => {
       'main:B:OrthogonalB:DynamicChildB:A': modelDescription.bindings['main:B:OrthogonalB:child:A'].handler,
     };
 
-    const expanded = expand({plan: modelDescription, ctx});
+    const expanded = expand({plan: modelDescription, context});
     assert.deepEqual(expanded.handlers, expectedHandlersExpansion);
     assert.deepEqual(expanded.graph, expectedGraphExpansion);
 

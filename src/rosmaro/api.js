@@ -27,21 +27,21 @@ export default (modelDescription) => {
     // {graph, handlers, lenses}
     const modelParts = expandGraph({
       plan: consolidatedModel, 
-      ctx: state ? state.ctx : {}
+      context: state ? state.context : {}
     });
 
-    // {FSMState, ctx}
+    // {FSMState, context}
     const modelData = extendModelData({
       state,
       graph: modelParts.graph
     });
 
-    // {arrows, ctx, res}
+    // {arrows, context, res}
     const dispatchRes = dispatch({
       graph: modelParts.graph,
       FSMState: modelData.FSMState,
       handlers: modelParts.handlers,
-      ctx: modelData.ctx,
+      context: modelData.context,
       action,
       lenses: modelParts.lenses,
     });
@@ -58,7 +58,7 @@ export default (modelDescription) => {
     // adds newModelParts (so we know the new graph)
     const newModelParts = expandGraph({
       plan: consolidatedModel, 
-      ctx: dispatchRes.ctx
+      context: dispatchRes.context
     });
 
     return {
@@ -67,7 +67,7 @@ export default (modelDescription) => {
           newFSMState, 
           graph: newModelParts.graph
         }),
-        ctx: dispatchRes.ctx,
+        context: dispatchRes.context,
       },
       anyArrowFollowed,
       res: dispatchRes.res
