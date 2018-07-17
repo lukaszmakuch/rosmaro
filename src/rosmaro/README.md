@@ -1,7 +1,7 @@
 # Rosmaro
 
 ```
-(state, action) => ({state, res})
+(state, action) => ({state, result})
 ```
 
 ## Related test files

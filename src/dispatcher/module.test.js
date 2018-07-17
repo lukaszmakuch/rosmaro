@@ -49,14 +49,14 @@ describe("dispatcher", () => {
         return {
           context: mergeContexts(context, values(map(prop('context'), allResults))),
           arrows: addNodeToArrows(node.id, mergeArrows(map(prop('arrows'), values(allResults)))),
-          res: allResults.A.res + "_" + allResults.B.res,
+          result: allResults.A.result + "_" + allResults.B.result,
         };
       },
 
       "main:B:B:A": ({action, context, node}) => {
         switch (action.type) {
           case 'FOLLOW_ARROWS': 
-            return {arrows: [[[node.id, 'x']]], context, res: 'ARes'};
+            return {arrows: [[[node.id, 'x']]], context, result: 'ARes'};
             break;
         }
       },
@@ -64,7 +64,7 @@ describe("dispatcher", () => {
       "main:B:B:B": ({action, context, node}) => {
         switch (action.type) {
           case 'FOLLOW_ARROWS': 
-            return {arrows: [[[node.id, 'y']]], context, res: 'BRes'};
+            return {arrows: [[[node.id, 'y']]], context, result: 'BRes'};
             break;
         }
       }
@@ -89,7 +89,7 @@ describe("dispatcher", () => {
         [['main:B:B:B', 'y'], ['main:B:B', 'y'], ['main:B', 'y']]
       ],
       context: {a: 100, b: 200},
-      res: 'ARes_BRes'
+      result: 'ARes_BRes'
     };
 
     assert.deepEqual(expectedCallRes, callRes);
@@ -118,7 +118,7 @@ describe("dispatcher", () => {
         'main:level1': transparentSingleChildHandler,
         'main:level1:level2': ({context, node}) => {
           return {
-            res: {gotContext: context},
+            result: {gotContext: context},
             context: {val: 'changed'},
             arrows: [[[node.id, 'x']]]
           };
@@ -165,7 +165,7 @@ describe("dispatcher", () => {
             }
           }
         },
-        res: {
+        result: {
           gotContext: {val: 'initial'}
         }
       }, callRes);
@@ -241,10 +241,10 @@ describe("dispatcher", () => {
           return {
             ...childRes,
             context: incrementProp('c', childRes.context),
-            res: {
+            result: {
               contextGotByMain: context,
               contextReturnedByMainChild: childRes.context,
-              ...childRes.res,
+              ...childRes.result,
             }
           };
         },
@@ -253,24 +253,24 @@ describe("dispatcher", () => {
           return {
             ...childRes,
             context: incrementProp('b', childRes.context),
-            res: {
+            result: {
               contextGotByB: context,
               contextReturnedByBChild: childRes.context,
-              ...childRes.res,
+              ...childRes.result,
             }
           };
         },
         'C': ({action, context, children}) => {
           return {
             context: incrementProp('a', context),
-            res: {
+            result: {
               contextGotByC: context
             }
           };
         },
       };
 
-      const {res: callRes, context: newContext} = dispatch({
+      const {result: callRes, context: newContext} = dispatch({
         graph,
         FSMState,
         handlers,
@@ -325,7 +325,7 @@ describe("dispatcher", () => {
       },
       'main:A:A': (opts, node) => {
         mainAAID = opts.node.id;
-        return {res: null, context: {}, arrows: [[[opts.node.id, undefined]]]};
+        return {result: null, context: {}, arrows: [[[opts.node.id, undefined]]]};
       }
     };
 
@@ -384,7 +384,7 @@ describe("dispatcher", () => {
           return {
             arrows,
             context: childRes.context,
-            res: childRes.res
+            result: childRes.result
           };
         },
 
@@ -412,7 +412,7 @@ describe("dispatcher", () => {
           [['main:graph_with_leaving_a:a', 'a'], ['main:graph_with_leaving_a', 'b'],]
         ],
         context: {},
-        res: undefined
+        result: undefined
       }, dispatch({
         graph,
         FSMState,

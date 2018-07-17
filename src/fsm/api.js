@@ -3,7 +3,7 @@ import {initState, mergeNewFSMStates} from './state';
 import {nonEmptyArrow} from './../utils/all';
 export {initState};
 
-// res {newFSMState: {}, target: 'a:b:c', entryPoint: 'p'}
+// result {newFSMState: {}, target: 'a:b:c', entryPoint: 'p'}
 const followUp = ({arrow, graph}) => {
   const noArrowToFollow = arrow.length === 0;
   if (noArrowToFollow) throw new Error("unable to follow an arrow");
@@ -79,7 +79,7 @@ const followDown = ({FSMState, graph, target, entryPoint}) => {
 
 };
 
-// res: newFSMState
+// result: newFSMState
 export default ({
   graph, 
   FSMState, 

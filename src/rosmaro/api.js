@@ -36,7 +36,7 @@ export default (modelDescription) => {
       graph: modelParts.graph
     });
 
-    // {arrows, context, res}
+    // {arrows, context, result}
     const dispatchRes = dispatch({
       graph: modelParts.graph,
       FSMState: modelData.FSMState,
@@ -70,7 +70,7 @@ export default (modelDescription) => {
         context: dispatchRes.context,
       },
       anyArrowFollowed,
-      res: dispatchRes.res
+      result: dispatchRes.result
     };
 
   };

@@ -57,7 +57,7 @@ const initContextLens = initContext => Rlens(
 const testSession = ({model, steps}) => {
   steps.reduce((state, {call, expect = {}}) => {
     const callRes = model({state, action: call});
-    if (expect.res) assert.deepEqual(callRes.res, expect.res);
+    if (expect.result) assert.deepEqual(callRes.result, expect.result);
     return callRes.state;
   }, undefined);
 }
@@ -95,7 +95,7 @@ describe('rosmaro', () => {
             return {
               context: head(values(allResults)).context,
               arrows: concat(...map(prop('arrows'), values(allResults))),
-              res: map(prop('res'), allResults)
+              result: map(prop('result'), allResults)
             }
           }
         },
@@ -104,7 +104,7 @@ describe('rosmaro', () => {
             return {
               context,
               arrows: [[[null, undefined]]],
-              res: (action.type === 'SAY_HI') 
+              result: (action.type === 'SAY_HI') 
                 ? `I'm ${node.id}.` 
                 : undefined
             };
@@ -118,7 +118,7 @@ describe('rosmaro', () => {
         model({
           state: undefined,
           action: {type: 'SAY_HI'},
-        }).res,
+        }).result,
         {A: "I'm main:A.", B: "I'm main:B."}
       );
 
@@ -171,7 +171,7 @@ describe('rosmaro', () => {
           case 'READ':
             return {
               arrows: [[[node.id, undefined]]],
-              res: name,
+              result: name,
               context: context,
             }
             break;
@@ -205,7 +205,7 @@ describe('rosmaro', () => {
             return {
               context: mergeContexts(context, values(map(prop('context'), allResults))),
               arrows: mergeArrows(map(prop('arrows'), values(allResults))),
-              res: map(prop('res'), allResults)
+              result: map(prop('result'), allResults)
             }
           }
         },
@@ -226,42 +226,42 @@ describe('rosmaro', () => {
       testSession({model, steps: [
         {
           call: {type: 'READ'},
-          expect: {res: {1: 'Off', 2: 'Off'}},
+          expect: {result: {1: 'Off', 2: 'Off'}},
         },
         {
           call: {type: 'TOGGLE'},
         },
         {
           call: {type: 'READ'},
-          expect: {res: {1: 'On', 2: 'On'}},
+          expect: {result: {1: 'On', 2: 'On'}},
         },
         {
           call: {type: 'ADD_SWITCH', number: 3},
         },
         {
           call: {type: 'READ'},
-          expect: {res: {1: 'On', 2: 'On', 3: 'Off'}},
+          expect: {result: {1: 'On', 2: 'On', 3: 'Off'}},
         },
         {
           call: {type: 'REMOVE_SWITCH', number: 2},
         },
         {
           call: {type: 'READ'},
-          expect: {res: {1: 'On', 3: 'Off'}},
+          expect: {result: {1: 'On', 3: 'Off'}},
         },
         {
           call: {type: 'ADD_SWITCH', number: 2},
         },
         {
           call: {type: 'READ'},
-          expect: {res: {1: 'On', 2: 'Off', 3: 'Off'}},
+          expect: {result: {1: 'On', 2: 'Off', 3: 'Off'}},
         },
         {
           call: {type: 'TOGGLE'},
         },
         {
           call: {type: 'READ'},
-          expect: {res: {1: 'Off', 2: 'On', 3: 'On'}},
+          expect: {result: {1: 'Off', 2: 'On', 3: 'On'}},
         },
       ]});
 
@@ -359,7 +359,7 @@ describe('rosmaro', () => {
               case 'COMPLETED':
                 return {
                   arrows: [[[node.id, undefined]]],
-                  res: true,
+                  result: true,
                   context,
                 };
               break;
@@ -373,17 +373,17 @@ describe('rosmaro', () => {
       // Going from main:A:A to main:A:B
       {
         call: {type: 'FOLLOW_ARROW'},
-        expect: {res: undefined},
+        expect: {result: undefined},
       },
       // Going from main:A:B to main:B
       {
         call: {type: 'FOLLOW_ARROW'},
-        expect: {res: undefined},
+        expect: {result: undefined},
       },
       // At main:B
       {
         call: {type: 'COMPLETED'},
-        expect: {res: true},
+        expect: {result: true},
       },
     ]});
 
@@ -420,7 +420,7 @@ describe('rosmaro', () => {
       'main:B': {
         handler: ({action, context, node}) => {
           return {
-            res: action.type == 'READ_NODE' ? 'B' : undefined,
+            result: action.type == 'READ_NODE' ? 'B' : undefined,
             context,
             arrows: [[[node.id, undefined]]]
           };
@@ -436,15 +436,15 @@ describe('rosmaro', () => {
     testSession({model, steps: [
       {
         call: {type: 'FOLLOW_ARROW', which: 'x'},
-        expect: {res: undefined},
+        expect: {result: undefined},
       },
       {
         call: {type: 'READ_NODE'},
-        expect: {res: 'B'},
+        expect: {result: 'B'},
       },
       {
         call: {type: 'NON-EXISTENT'},
-        expect: {res: undefined},
+        expect: {result: undefined},
       },
     ]});
 
