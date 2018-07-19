@@ -1,13 +1,6 @@
 import {view as Rview, set as Rset} from 'ramda';
 import {extractLocalNodeName} from './../utils/all';
 
-const defaultParentHandler = (opts) => {
-  return map(
-    (childFn) => childFn(opts.action),
-    opts.children
-  );
-};
-
 const dispatch = ({
   graph, 
   node = 'main',
@@ -25,7 +18,7 @@ const dispatch = ({
     context: Rset(nodeLens, callRes.context, rawContext)
   });
   const handler = opts => mapReturnedContext(
-    (handlers[node] || defaultParentHandler)(opts)
+    handlers[node](opts)
   );
   const nodeType = graph[node].type;
   const nodeData = {id: node};
