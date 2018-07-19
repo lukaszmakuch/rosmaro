@@ -5,8 +5,6 @@ import {nonEmptyArrow} from './../utils/all';
 import dispatch from './../dispatcher/api';
 import extendModelData from './modelData';
 
-const hasAnyArrowBeenFollowed = arrows => arrows.some(nonEmptyArrow);
-
 const removeUnusedFSMState = ({newFSMState, graph}) => {
   const minimalFSMState = Object.keys(graph).reduce((FSMState, node) => {
     const existingState = newFSMState[node];
@@ -53,13 +51,13 @@ export default (modelDescription) => {
       arrows: dispatchRes.arrows
     });
 
-    const anyArrowFollowed = hasAnyArrowBeenFollowed(dispatchRes.arrows);
-
     // adds newModelParts (so we know the new graph)
     const newModelParts = expandGraph({
       plan: consolidatedModel, 
       context: dispatchRes.context
     });
+
+    const anyArrowFollowed = dispatchRes.arrows.some(nonEmptyArrow);
 
     return {
       state: {

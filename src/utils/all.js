@@ -27,5 +27,6 @@ export const mapArrows = srcNodeMapFn => arrowMapFn => existingArrows => allNode
 
   export const identityLens = lens(identity, identity);
 
-  // falsey for [['a', 'b'], ['c', undefined]]
-  export const nonEmptyArrow = arrow => arrow[arrow.length - 1][1];
+  // falsey for [['a', undefined], ['c', undefined]]
+  // truthy for [['a', 'x'], ['c', undefined]]
+  export const nonEmptyArrow = arrow => arrow.some(([source, name]) => name != undefined)
