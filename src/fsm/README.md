@@ -6,9 +6,3 @@ Exposes pure functions which handle FSM transitions and provide the initial stat
 default: {graph, FSMState, arrows} => newFSMState
 initState: graph => {parent: 'active child', anotherParent: 'active child', ... }
 ```
-
-graphDiff.js is an important file which contains a function comparing two different FSMStates and returns entered and left nodes.
-
-# Related test files
-- test/fsm.js
-- test/graphDiff.js

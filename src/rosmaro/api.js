@@ -1,21 +1,9 @@
 import consolidateModels from './../modelConsolidator/api';
 import expandGraph from './../graphBuilder/api';
 import fsm from './../fsm/api';
-import {nonEmptyArrow} from './../utils/all';
+import {nonEmptyArrow, removeUnusedFSMState} from './../utils/all';
 import dispatch from './../dispatcher/api';
 import extendModelData from './modelData';
-
-const removeUnusedFSMState = ({newFSMState, graph}) => {
-  const minimalFSMState = Object.keys(graph).reduce((FSMState, node) => {
-    const existingState = newFSMState[node];
-    if (!existingState) return FSMState;
-    return {
-      ...FSMState,
-      [node]: newFSMState[node]
-    };
-  }, {});
-  return minimalFSMState;
-};
 
 // {graph, bindings}
 export default (modelDescription) => {

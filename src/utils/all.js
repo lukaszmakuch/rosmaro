@@ -25,8 +25,21 @@ export const mapArrows = srcNodeMapFn => arrowMapFn => existingArrows => allNode
     [srcNodeMapFn(srcNode)]: map(arrowMapFn, (existingArrows[srcNode] || {}))
   }), {});
 
-  export const identityLens = lens(identity, identity);
+export const identityLens = lens(identity, identity);
 
-  // falsey for [['a', undefined], ['c', undefined]]
-  // truthy for [['a', 'x'], ['c', undefined]]
-  export const nonEmptyArrow = arrow => arrow.some(([source, name]) => name != undefined)
+// falsey for [['a', undefined], ['c', undefined]]
+// truthy for [['a', 'x'], ['c', undefined]]
+export const nonEmptyArrow = arrow => arrow.some(([source, name]) => name != undefined)
+
+
+export const removeUnusedFSMState = ({newFSMState, graph}) => {
+  const minimalFSMState = Object.keys(graph).reduce((FSMState, node) => {
+    const existingState = newFSMState[node];
+    if (!existingState) return FSMState;
+    return {
+      ...FSMState,
+      [node]: newFSMState[node]
+    };
+  }, {});
+  return minimalFSMState;
+};

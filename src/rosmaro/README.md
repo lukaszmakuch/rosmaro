@@ -1,8 +1,5 @@
-# Rosmaro
+# Main API
 
+```js
+({graph, bindings}) => ({state, action}) => ({state, result, anyArrowFollowed})
 ```
-(state, action) => ({state, result})
-```
-
-## Related test files
-- test/rosmaro.js
