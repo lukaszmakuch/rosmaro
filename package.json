@@ -12,10 +12,8 @@
   "version": "0.7.2",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
   "dependencies": {
-    "deep-diff": "^0.3.8",
     "lodash": "^4.17.4",
-    "ramda": "^0.25.0",
-    "uuid": "^3.0.1"
+    "ramda": "^0.25.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",

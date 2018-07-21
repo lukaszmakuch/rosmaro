@@ -3,7 +3,6 @@ import dispatch from './api';
 import {identityLens} from './../utils/all';
 import {
   transparentSingleChildHandler, 
-  mergeContexts, 
   mergeArrows,
   addNodeToArrows,
   renameArrows,
@@ -47,7 +46,7 @@ describe("dispatcher", () => {
       'main:B:B': ({action, context, children, node}) => {
         const allResults = map(child => child({action}), children);
         return {
-          context: mergeContexts(context, values(map(prop('context'), allResults))),
+          context: {...allResults.A.context, ...allResults.B.context},
           arrows: addNodeToArrows(node.id, mergeArrows(map(prop('arrows'), values(allResults)))),
           result: allResults.A.result + "_" + allResults.B.result,
         };

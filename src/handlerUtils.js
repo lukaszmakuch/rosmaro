@@ -1,22 +1,4 @@
-import deep from 'deep-diff';
 import {reduce, concat, head, values} from 'ramda';
-const diff = deep.diff
-const applyChange = deep.applyChange
-
-export const mergeContexts = (original, newOnes) => {
-  if (newOnes.length == 1) return newOnes[0];
-  
-  let diffs = newOnes
-    .map(c => diff(original, c))
-    .reduce((flat, arr) => [].concat(flat, arr), [])
-  let result = {...original};
-
-  diffs
-    .filter(a => a)
-    .forEach(d => applyChange(result, true, d))
-
-  return result
-};
 
 export const mergeArrows = arrows => reduce(concat, [], arrows);
 

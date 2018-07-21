@@ -1,6 +1,6 @@
 import assert from 'assert';
 import rosmaro from '../index';
-import {mergeContexts, mergeArrows, transparentSingleChildHandler} from '../handlerUtils';
+import {mergeArrows, transparentSingleChildHandler} from '../handlerUtils';
 import union from 'lodash/union';
 import without from 'lodash/without';
 import {isEmpty, lens as Rlens, map, prop, head, concat, values} from 'ramda';
@@ -199,18 +199,7 @@ describe('rosmaro', () => {
               context: context,
             };
             break;
-          case 'ADD_SWITCH':
-            return {
-              arrows: [[[node.id, undefined]]],
-              context: {switches: union(context.switches, [action.number])}
-            };
-            break;
-          case 'REMOVE_SWITCH':
-            return {
-              arrows: [[[node.id, undefined]]],
-              context: {switches: without(context.switches, action.number)}
-            };
-            break;
+
         }
       };
       
@@ -218,11 +207,26 @@ describe('rosmaro', () => {
         'main': {
           lens: () => initContextLens({switches: [1, 2]}),
           nodes: ({context}) => context.switches,
-          handler: ({action, context, children}) => {
+          handler: ({action, context, children, node}) => {
+            switch (action.type) {
+              case 'ADD_SWITCH':
+                return {
+                  arrows: [[[node.id, undefined]]],
+                  context: {switches: union(context.switches, [action.number])}
+                };
+                break;
+              case 'REMOVE_SWITCH':
+                return {
+                  arrows: [[[node.id, undefined]]],
+                  context: {switches: without(context.switches, action.number)}
+                };
+                break;
+            }
+
             const allResults = map(child => child({action}), children);
             return {
-              context: mergeContexts(context, values(map(prop('context'), allResults))),
-              arrows: mergeArrows(map(prop('arrows'), values(allResults))),
+              context: context,
+              arrows: mergeArrows(values(map(prop('arrows'), allResults))),
               result: map(prop('result'), allResults)
             }
           }
