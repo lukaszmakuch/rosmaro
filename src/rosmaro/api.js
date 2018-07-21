@@ -3,21 +3,23 @@ import expandGraph from './../graphBuilder/api';
 import fsm from './../fsm/api';
 import {nonEmptyArrow, removeUnusedFSMState} from './../utils/all';
 import dispatch from './../dispatcher/api';
-import extendModelData from './modelData';
+import extendFSMState from './FSMState';
 
 // {graph, bindings}
 export default (modelDescription) => {
   const consolidatedModel = consolidateModels(modelDescription);
 
   return ({state, action}) => {
+    const context = state ? state.context : undefined;
+
     // {graph, handlers, lenses}
     const modelParts = expandGraph({
       plan: consolidatedModel, 
-      context: state ? state.context : {}
+      context: context
     });
 
-    // {FSMState, context}
-    const modelData = extendModelData({
+    // FSMState
+    const FSMState = extendFSMState({
       state,
       graph: modelParts.graph
     });
@@ -25,9 +27,9 @@ export default (modelDescription) => {
     // {arrows, context, result}
     const dispatchRes = dispatch({
       graph: modelParts.graph,
-      FSMState: modelData.FSMState,
+      FSMState: FSMState,
       handlers: modelParts.handlers,
-      context: modelData.context,
+      context: context,
       action,
       lenses: modelParts.lenses,
     });
@@ -35,7 +37,7 @@ export default (modelDescription) => {
     // adds newFSMState
     const newFSMState = fsm({
       graph: modelParts.graph, 
-      FSMState: modelData.FSMState, 
+      FSMState: FSMState, 
       arrows: dispatchRes.arrows
     });
 

@@ -5,12 +5,9 @@ it is given the default value.
 */
 import {initState} from './../fsm/api';
 
-const extendModelData = ({
+const extendFSMState = ({
   state = {context: {}, FSMState: {}}, 
   graph}
-) => ({
-  FSMState: {...initState(graph), ...state.FSMState},
-  context: state.context,
-});
+) => ({...initState(graph), ...state.FSMState});
 
-export default extendModelData;
+export default extendFSMState;

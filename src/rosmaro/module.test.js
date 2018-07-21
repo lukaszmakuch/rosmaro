@@ -50,7 +50,7 @@ const graph = {
 
 // TODO: this could be separated into it's own package
 const initContextLens = initContext => Rlens(
-  context => isEmpty(context) ? initContext : context,
+  context => context === undefined ? initContext : context,
   (returned, src) => returned,
 );
 
@@ -70,8 +70,26 @@ const arrowFollowingHandler = (expectedActionType, arrowToFollow) => ({action, n
 
 describe('rosmaro', () => {
 
-  beforeEach(() => {
-    logEntries = [];
+  it ('sets the initial context to undefined', () => {
+    const graph = {
+      'main': {type: 'leaf'}
+    };
+    const bindings = {
+      'main': {
+        handler: ({action, context, node}) => {
+          return {
+            result: {gotContext: context},
+            context,
+            arrows: [[[node.id, undefined]]]
+          };
+        }
+      }
+    };
+    const model = rosmaro({
+      graph,
+      bindings,
+    });
+    expect(model({}).result).toEqual({gotContext: undefined});
   });
 
   describe('a dynamic composite', () => {

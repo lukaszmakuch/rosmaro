@@ -37,7 +37,6 @@ export const identityLens = lens(identity, identity);
 // truthy for [['a', 'x'], ['c', undefined]]
 export const nonEmptyArrow = arrow => arrow.some(([source, name]) => name != undefined)
 
-
 export const removeUnusedFSMState = ({newFSMState, graph}) => {
   const minimalFSMState = Object.keys(graph).reduce((FSMState, node) => {
     const existingState = newFSMState[node];
