@@ -1,6 +1,6 @@
 import assert from 'assert';
-import rosmaro, {initialValueLens} from '../index';
-import {mergeArrows, transparentSingleChildHandler} from '../testUtils';
+import rosmaro from '../index';
+import {mergeArrows, transparentSingleChildHandler, initialValueLens} from '../testUtils';
 import union from 'lodash/union';
 import without from 'lodash/without';
 import {isEmpty, lens as Rlens, map, prop, head, concat, values} from 'ramda';

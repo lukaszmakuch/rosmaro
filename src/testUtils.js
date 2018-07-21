@@ -1,4 +1,4 @@
-import {reduce, concat, head, values, view, set} from 'ramda';
+import {reduce, concat, head, values, view, set, lens} from 'ramda';
 
 export const mergeArrows = arrows => reduce(concat, [], arrows);
 
@@ -9,6 +9,11 @@ export const transparentSingleChildHandler = ({action, context, node, children})
     arrows: addNodeToArrows(node.id, childRes.arrows),
   };
 };
+
+export const initialValueLens = initialValue => lens(
+  context => context === undefined ? initialValue : context,
+  context => context,
+);
 
 // arrows like [ [['a:a:a', 'x']] [['a:a:b', 'x']] ]
 // node like 'a:a'
