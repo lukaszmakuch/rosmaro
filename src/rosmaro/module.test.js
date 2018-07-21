@@ -1,6 +1,6 @@
 import assert from 'assert';
-import rosmaro from '../index';
-import {mergeArrows, transparentSingleChildHandler} from '../handlerUtils';
+import rosmaro, {initialValueLens} from '../index';
+import {mergeArrows, transparentSingleChildHandler} from '../testUtils';
 import union from 'lodash/union';
 import without from 'lodash/without';
 import {isEmpty, lens as Rlens, map, prop, head, concat, values} from 'ramda';
@@ -47,12 +47,6 @@ const graph = {
   'GraphTarget': {type: 'leaf'}
 
 };
-
-// TODO: this could be separated into it's own package
-const initContextLens = initContext => Rlens(
-  context => context === undefined ? initContext : context,
-  (returned, src) => returned,
-);
 
 const testSession = ({model, steps}) => {
   steps.reduce((state, {call, expect = {}}) => {
@@ -106,7 +100,7 @@ describe('rosmaro', () => {
 
       const bindings = {
         'main': {
-          lens: () => initContextLens({elems: ['A', 'B']}),
+          lens: () => initialValueLens({elems: ['A', 'B']}),
           nodes: ({context: {elems}}) => elems,
           handler: ({action, context, children}) => {
             const allResults = map(child => child({action}), children);
@@ -205,7 +199,7 @@ describe('rosmaro', () => {
       
       const bindings = {
         'main': {
-          lens: () => initContextLens({switches: [1, 2]}),
+          lens: () => initialValueLens({switches: [1, 2]}),
           nodes: ({context}) => context.switches,
           handler: ({action, context, children, node}) => {
             switch (action.type) {
@@ -232,7 +226,7 @@ describe('rosmaro', () => {
           }
         },
         'main:child': {
-          lens: () => initContextLens({switches: [1, 2]}),
+          lens: () => initialValueLens({switches: [1, 2]}),
           nodes: ({context}) => context.switches,
           handler: transparentSingleChildHandler,
         },

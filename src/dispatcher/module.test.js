@@ -5,7 +5,7 @@ import {
   transparentSingleChildHandler, 
   mergeArrows,
   addNodeToArrows,
-} from './../handlerUtils';
+} from './../testUtils';
 import {identity as Ridentity, lens as Rlens, dissoc, prop, keys, lensPath as RlensPath, head, values, map} from 'ramda';
 
 describe("dispatcher", () => {

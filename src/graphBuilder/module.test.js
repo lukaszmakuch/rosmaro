@@ -1,32 +1,7 @@
 import assert from 'assert';
 import {view, set, lensProp} from 'ramda';
 import expand from './api';
-
-const testLens = ({
-  lens, 
-  zoomInInput, 
-  zoomInOutput,
-  zoomOutInput,
-  zoomOutOutput,
-}) => {
-  assert.deepEqual(
-    zoomInOutput,
-    view(lens, zoomInInput)
-  );
-  assert.deepEqual(
-    zoomOutOutput,
-    set(lens, zoomOutInput, zoomInInput)
-  );
-};
-
-// TODO: move this to some kind of a test utilities library
-const assertIdentityLens = lens => testLens({
-  lens, 
-  zoomInInput: {a: 123, b: 456}, 
-  zoomInOutput: {a: 123, b: 456},
-  zoomOutInput: {z: 456, x: 678},
-  zoomOutOutput: {z: 456, x: 678},
-});
+import {testLens, assertIdentityLens} from './../testUtils';
 
 describe('graph builder', () => {
 

@@ -1,4 +1,4 @@
-import {reduce, concat, head, values} from 'ramda';
+import {reduce, concat, head, values, view, set} from 'ramda';
 
 export const mergeArrows = arrows => reduce(concat, [], arrows);
 
@@ -21,5 +21,23 @@ export const addNodeToArrows = (node, arrows) => {
       [node, arrow[arrow.length - 1][1]]
     ]
   );
-}
+};
 
+export const testLens = ({
+  lens, 
+  zoomInInput, 
+  zoomInOutput,
+  zoomOutInput,
+  zoomOutOutput,
+}) => {
+  expect(zoomInOutput).toEqual(view(lens, zoomInInput));
+  expect(zoomOutOutput).toEqual(set(lens, zoomOutInput, zoomInInput));
+};
+
+export const assertIdentityLens = lens => testLens({
+  lens, 
+  zoomInInput: {a: 123, b: 456}, 
+  zoomInOutput: {a: 123, b: 456},
+  zoomOutInput: {z: 456, x: 678},
+  zoomOutOutput: {z: 456, x: 678},
+});
