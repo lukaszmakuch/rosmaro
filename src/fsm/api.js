@@ -1,6 +1,6 @@
-import map from 'lodash/map';
 import {initState, mergeNewFSMStates} from './state';
 import {nonEmptyArrow, extractParent} from './../utils/all';
+import {map, prop} from 'ramda';
 export {initState};
 
 // result {newFSMState: {}, target: 'a:b:c', entryPoint: 'p'}
@@ -73,7 +73,7 @@ const followDown = ({FSMState, graph, target, entryPoint}) => {
     const followedOrthogonal = targetNode.nodes
       .map(node => followDown({FSMState, graph, target: node, entryPoint}));
     return {
-      newFSMState: mergeNewFSMStates(map(followedOrthogonal, 'newFSMState'))
+      newFSMState: mergeNewFSMStates(map(prop('newFSMState'), followedOrthogonal))
     };
   }
 
@@ -93,8 +93,8 @@ export default ({
 
   const allFollowedDown = allFollowedUp.map(followTargetDown);
   const allNewFSMStates = [
-    ...map(allFollowedUp, 'newFSMState'),
-    ...map(allFollowedDown, 'newFSMState')
+    ...map(prop('newFSMState'), allFollowedUp),
+    ...map(prop('newFSMState'), allFollowedDown)
   ];
   const newFSMState = {...FSMState, ...mergeNewFSMStates(allNewFSMStates)};
   return newFSMState;

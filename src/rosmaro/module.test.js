@@ -1,9 +1,7 @@
 import assert from 'assert';
 import rosmaro from '../index';
 import {mergeArrows, transparentSingleChildHandler, initialValueLens} from '../testUtils';
-import union from 'lodash/union';
-import without from 'lodash/without';
-import {isEmpty, lens as Rlens, map, prop, head, concat, values} from 'ramda';
+import {isEmpty, lens as Rlens, map, prop, head, concat, values, union, without} from 'ramda';
 
 let logEntries = [];
 let lock, storage;
@@ -212,7 +210,7 @@ describe('rosmaro', () => {
               case 'REMOVE_SWITCH':
                 return {
                   arrows: [[[node.id, undefined]]],
-                  context: {switches: without(context.switches, action.number)}
+                  context: {switches: without([action.number], context.switches)}
                 };
                 break;
             }

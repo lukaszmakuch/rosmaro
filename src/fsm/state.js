@@ -1,10 +1,8 @@
-import toPairs from 'lodash/toPairs';
-import flatten from 'lodash/flatten';
-import difference from 'lodash/difference';
+import {reduce, concat, without, toPairs} from 'ramda';
 
 // [{'a': 'a:b'}, {'b': 'b:a'}] => {'a': 'a:b', 'b': 'b:a'}
 export const mergeNewFSMStates = FSMStates => {
-  const parts = flatten(FSMStates.map(state => toPairs(state)));
+  const parts = reduce(concat, [], FSMStates.map(state => toPairs(state)));
   return parts.reduce((merged, [parent, children]) => {
     if (merged[parent] && (merged[parent] !== children)) 
       throw new Error("entering an incorrect FSM state");
@@ -35,7 +33,7 @@ export const initState = (graph, node = 'main', entryPoint = 'start') => {
       activeChild.target, 
       activeChild.entryPoint
     );
-    const otherChildren = difference(graph[node].nodes, [activeChild.target]);
+    const otherChildren = without([activeChild.target], graph[node].nodes);
     const otherChildrenState = otherChildren.reduce((soFar, child) => ({
       ...soFar,
       ...initState(

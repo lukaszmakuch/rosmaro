@@ -12,7 +12,6 @@
   "version": "0.7.2",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
   "dependencies": {
-    "lodash": "^4.17.4",
     "ramda": "^0.25.0"
   },
   "devDependencies": {
