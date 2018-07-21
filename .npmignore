@@ -1,5 +1,5 @@
 src
-test
 .babelrc
 logo.png
 example-graph.png
+**/*.test.js
