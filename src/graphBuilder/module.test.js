@@ -28,8 +28,7 @@ const assertIdentityLens = lens => testLens({
   zoomOutOutput: {z: 456, x: 678},
 });
 
-// TODO: rename this test suite
-describe('the new graph builder', () => {
+describe('graph builder', () => {
 
   it('expands dynamic composites and segregates graphs, handlers, nodes and lenses', () => {
     const modelDescription = {
