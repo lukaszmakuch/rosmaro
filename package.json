@@ -4,10 +4,10 @@
   "description": "Visual automata-based programming",
   "keywords": [
     "fsm",
-    "dispatch",
     "visual programming",
     "finite state machine",
-    "automata-based programming"
+    "automata-based programming",
+    "functional programming"
   ],
   "version": "0.7.2",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
