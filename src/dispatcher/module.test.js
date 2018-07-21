@@ -5,7 +5,6 @@ import {
   transparentSingleChildHandler, 
   mergeArrows,
   addNodeToArrows,
-  renameArrows,
 } from './../handlerUtils';
 import {identity as Ridentity, lens as Rlens, dissoc, prop, keys, lensPath as RlensPath, head, values, map} from 'ramda';
 
@@ -377,7 +376,9 @@ describe("dispatcher", () => {
 
         'main:graph_with_leaving_a': ({action, context, node, children}) => {
           const childRes = head(values(children))({action});
-          const arrows = renameArrows({a: 'b'}, addNodeToArrows(node.id, childRes.arrows));
+          const arrows = [
+            [childRes.arrows[0][0], [node.id, 'b']]
+          ];
           return {
             arrows,
             context: childRes.context,

@@ -23,22 +23,3 @@ export const addNodeToArrows = (node, arrows) => {
   );
 }
 
-/*
-map like {x: 'y'}
-arrows like [
-  [['main:a:a:a', 'x'], ['main:a:a', 'x'], ['main:a', 'x']],
-  ...
-]
-result like [
-  [['main:a:a:a', 'x'], ['main:a:a', 'x'], ['main:a', 'y']],
-    ...
-]
-*/
-export const renameArrows = (map, arrows) => arrows.map(arrow => {
-  const previousOnes = arrow.slice(0, -1);
-  const lastOne = arrow[arrow.length - 1];
-  const newLastOne = map[lastOne[1]]
-    ? [lastOne[0], map[lastOne[1]]]
-    : lastOne;
-  return [...previousOnes, newLastOne];
-});
