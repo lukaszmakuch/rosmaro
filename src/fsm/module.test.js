@@ -68,7 +68,6 @@ describe('fsm', () => {
       'main': {
         type: 'graph',
         nodes: ['main:A', 'main:B'],
-        parent: null,
         arrows: {
           'main:A': {
             x: {target: 'main:B', entryPoint: 'start'}
@@ -78,8 +77,8 @@ describe('fsm', () => {
         entryPoints: {start: {target: 'main:A', entryPoint: 'start'}}
       },
 
-      'main:A': {type: 'leaf', parent: 'main'},
-      'main:B': {type: 'leaf', parent: 'main'},
+      'main:A': {type: 'leaf'},
+      'main:B': {type: 'leaf'},
 
     },
 
@@ -104,7 +103,6 @@ describe('fsm', () => {
           main: {
             type: 'graph',
             nodes: ['main:A', 'main:B', 'main:C'],
-            parent: null,
             arrows: {
               'main:B': {
                 x: {target: 'main:A', entryPoint: 'start'},
@@ -116,9 +114,9 @@ describe('fsm', () => {
             }
           },
 
-          'main:A': {type: 'leaf', parent: 'main'},
-          'main:B': {type: 'leaf', parent: 'main'},
-          'main:C': {type: 'leaf', parent: 'main'}
+          'main:A': {type: 'leaf'},
+          'main:B': {type: 'leaf'},
+          'main:C': {type: 'leaf'}
 
         },
 
@@ -141,7 +139,6 @@ describe('fsm', () => {
           main: {
             type: 'graph',
             nodes: ['main:A'],
-            parent: null,
             arrows: {
               'main:A': {
                 self: {target: 'main:A', entryPoint: 'start'}
@@ -154,7 +151,6 @@ describe('fsm', () => {
 
           'main:A': {
             type: 'leaf',
-            parent: 'main'
           }
 
         },
@@ -188,10 +184,9 @@ describe('fsm', () => {
             entryPoints: {
               start: {target: 'main:A', entryPoint: 'start'}
             },
-            parent: null
           },
 
-          'main:A': {type: 'leaf', parent: 'main'}
+          'main:A': {type: 'leaf'}
 
         },
 
@@ -217,7 +212,6 @@ describe('fsm', () => {
 
           main: {
             type: 'graph',
-            parent: null,
             nodes: ['main:A', 'main:B'],
             arrows: {
               //this should never be used (and we want to make sure it's never used)
@@ -232,7 +226,6 @@ describe('fsm', () => {
 
           'main:A': {
             type: 'graph',
-            parent: 'main',
             nodes: ['main:A:A', 'main:A:B'],
             arrows: {
               //this one is the one meant to be followed
@@ -245,9 +238,9 @@ describe('fsm', () => {
             }
           },
 
-          'main:B': {type: 'leaf', parent: 'main'},
-          'main:A:A': {type: 'leaf', parent: 'main:A'},
-          'main:A:B': {type: 'leaf', parent: 'main:A'}
+          'main:B': {type: 'leaf'},
+          'main:A:A': {type: 'leaf'},
+          'main:A:B': {type: 'leaf'}
 
         },
 
@@ -272,7 +265,6 @@ describe('fsm', () => {
           'main': {
             type: 'graph',
             nodes: ['main:A', 'main:B'],
-            parent: null,
             entryPoints: {
               start: {target: 'main:A', entryPoint: 'start'}
             },
@@ -286,7 +278,6 @@ describe('fsm', () => {
           'main:A': {
             type: 'graph',
             nodes: ['main:A:A', 'main:A:B'],
-            parent: 'main',
             entryPoints: {
               start: {target: 'main:A:A', entryPoint: 'start'}
             },
@@ -297,9 +288,9 @@ describe('fsm', () => {
             }
           },
 
-          'main:A:A': {type: 'leaf', parent: 'main:A'},
-          'main:A:B': {type: 'leaf', parent: 'main:A'},
-          'main:B': {type: 'leaf', parent: 'main'}
+          'main:A:A': {type: 'leaf'},
+          'main:A:B': {type: 'leaf'},
+          'main:B': {type: 'leaf'}
 
         },
 
@@ -324,7 +315,6 @@ describe('fsm', () => {
           'main': {
             type: 'graph',
             nodes: ['main:A'],
-            parent: null,
             arrows: {
               'main:A': {
                 x: {target: 'main:A', entryPoint: 'start'}
@@ -338,7 +328,6 @@ describe('fsm', () => {
           'main:A': {
             type: 'graph',
             nodes: ['main:A:A', 'main:A:B'],
-            parent: 'main',
             arrows: {
               'main:A:A': {
                 x: {target: 'main:A:B', entryPoint: 'start'}
@@ -350,8 +339,8 @@ describe('fsm', () => {
             }
           },
 
-          'main:A:A': {type: 'leaf', parent: 'main:A'},
-          'main:A:B': {type: 'leaf', parent: 'main:A'},
+          'main:A:A': {type: 'leaf'},
+          'main:A:B': {type: 'leaf'},
 
         },
 
@@ -376,7 +365,6 @@ describe('fsm', () => {
           'main': {
             type: 'graph',
             nodes: ['main:A'],
-            parent: null,
             arrows: {
               'main:A': {
                 x: {target: 'main:A', entryPoint: 'history'}
@@ -390,7 +378,6 @@ describe('fsm', () => {
           'main:A': {
             type: 'graph',
             nodes: ['main:A:A', 'main:A:B'],
-            parent: 'main',
             arrows: {
               'main:A:A': {
                 x: {target: 'main:A:B', entryPoint: 'start'}
@@ -403,8 +390,8 @@ describe('fsm', () => {
             }
           },
 
-          'main:A:A': {type: 'leaf', parent: 'main:A'},
-          'main:A:B': {type: 'leaf', parent: 'main:A'},
+          'main:A:A': {type: 'leaf'},
+          'main:A:B': {type: 'leaf'},
 
         },
 
@@ -428,53 +415,49 @@ describe('fsm', () => {
 
           'main': {
             type: 'graph',
-            parent: null,
-            nodes: ['composite'],
+            nodes: ['main:composite'],
             arrows: {
-              "composite": {
-                self: {target: "composite", entryPoint: 'recent'}
+              "main:composite": {
+                self: {target: "main:composite", entryPoint: 'recent'}
               }
             },
             entryPoints: {
-              start: {target: 'composite', entryPoint: 'recent'}
+              start: {target: 'main:composite', entryPoint: 'recent'}
             }
           },
 
-          'composite': {
+          'main:composite': {
             type: 'composite',
-            parent: 'main',
-            nodes: ["subgraph"]
+            nodes: ["main:composite:subgraph"]
           },
 
-          'subgraph': {
+          'main:composite:subgraph': {
             type: 'graph',
-            parent: 'composite',
-            nodes: ['leaf'],
+            nodes: ['main:composite:subgraph:leaf'],
             arrows: {
             },
             entryPoints: {
-              start: {target: 'leaf', entryPoint: 'start'},
-              recent: {target: 'subgraph:recent', entryPoint: 'start'}
+              start: {target: 'main:composite:subgraph:leaf', entryPoint: 'start'},
+              recent: {target: 'main:composite:subgraph:recent', entryPoint: 'start'}
             }
           },
 
-          'leaf': {
+          'main:composite:subgraph:leaf': {
             type: 'leaf',
-            parent: 'subgraph',
           }
         
         },
 
         FSMState: {
-          'main': 'composite',
-          'subgraph': 'leaf'
+          'main': 'main:composite',
+          'main:composite:subgraph': 'main:composite:subgraph:leaf'
         },
 
-        arrows: [[['leaf', 'self'], ['subgraph', 'self'], ['composite', 'self']]],
+        arrows: [[['main:composite:subgraph:leaf', 'self'], ['main:composite:subgraph', 'self'], ['main:composite', 'self']]],
 
         expectedRes: {
-          'main': 'composite',
-          'subgraph': 'leaf'
+          'main': 'main:composite',
+          'main:composite:subgraph': 'main:composite:subgraph:leaf'
         }
 
       }));
@@ -485,7 +468,6 @@ describe('fsm', () => {
 
           'main': {
             type: 'graph',
-            parent: null,
             nodes: ['main:A', 'main:B'],
             arrows: {
               'main:B': {
@@ -500,7 +482,6 @@ describe('fsm', () => {
 
           'main:A': {
             type: 'graph',
-            parent: 'main',
             nodes: ['main:A:A', 'main:A:B', 'main:A:C'],
             arrows: {
               'main:A:A': {
@@ -517,11 +498,11 @@ describe('fsm', () => {
             }
           },
 
-          'main:A:A': {type: 'leaf', parent: 'main'},
-          'main:A:B': {type: 'leaf', parent: 'main'},
-          'main:A:C': {type: 'leaf', parent: 'main'},
+          'main:A:A': {type: 'leaf'},
+          'main:A:B': {type: 'leaf'},
+          'main:A:C': {type: 'leaf'},
 
-          'main:B': {type: 'leaf', parent: 'main'}
+          'main:B': {type: 'leaf'}
 
         },
 
@@ -555,12 +536,10 @@ describe('fsm', () => {
           main: {
             type: 'composite',
             nodes: ['main:A', 'main:B'],
-            parent: null
           },
 
           'main:A': {
             type: 'graph',
-            parent: 'main',
             arrows: {
               'main:A:A': {
                 x: {target: 'main:A:B', entryPoint: 'start'}
@@ -570,12 +549,11 @@ describe('fsm', () => {
             entryPoints: {start: {target: 'main:A:A', entryPoint: 'start'}}
           },
 
-          'main:A:A': {type: 'leaf', parent: 'main:A'},
-          'main:A:B': {type: 'leaf', parent: 'main:A'},
+          'main:A:A': {type: 'leaf'},
+          'main:A:B': {type: 'leaf'},
 
           'main:B': {
             type: 'graph',
-            parent: 'main',
             arrows: {
               'main:B:A': {
                 x: {target: 'main:B:B', entryPoint: 'start'}
@@ -585,8 +563,8 @@ describe('fsm', () => {
             entryPoints: {start: {target: 'main:B:A', entryPoint: 'start'}}
           },
 
-          'main:B:A': {type: 'leaf', parent: 'main:B'},
-          'main:B:B': {type: 'leaf', parent: 'main:B'},
+          'main:B:A': {type: 'leaf'},
+          'main:B:B': {type: 'leaf'},
 
         },
 
@@ -619,19 +597,17 @@ describe('fsm', () => {
                 x: {target: 'main:B', entryPoint: 'start'}
               }
             },
-            parent: null,
             entryPoints: {start: {target: 'main:A', entryPoint: 'start'}}
           },
 
           'main:A': {
             type: 'composite',
-            parent: 'main',
             nodes: ['main:A:A', 'main:A:B']
           },
 
-          'main:A:A': {type: 'leaf', parent: 'main:A'},
-          'main:A:B': {type: 'leaf', parent: 'main:A'},
-          'main:B': {type: 'leaf', parent: 'main'}
+          'main:A:A': {type: 'leaf'},
+          'main:A:B': {type: 'leaf'},
+          'main:B': {type: 'leaf'}
 
         },
 
@@ -657,7 +633,6 @@ describe('fsm', () => {
           main: {
             type: 'graph',
             nodes: ['main:A', 'main:B'],
-            parent: null,
             arrows: {
               'main:A': {x: {target: 'main:B', entryPoint: 'start'}}
             }
@@ -665,13 +640,12 @@ describe('fsm', () => {
 
           'main:A': {
             type: 'composite',
-            parent: 'main',
             nodes: ['main:A:A', 'main:A:B']
           },
 
-          'main:A:A': {type: 'leaf', parent: 'main:A'},
-          'main:A:B': {type: 'leaf', parent: 'main:A'},
-          'main:B': {type: 'leaf', parent: 'main'},
+          'main:A:A': {type: 'leaf'},
+          'main:A:B': {type: 'leaf'},
+          'main:B': {type: 'leaf'},
 
         },
 
@@ -693,7 +667,6 @@ describe('fsm', () => {
 
           'main': {
             type: 'graph',
-            parent: null,
             nodes: ['main:A', 'main:B'],
             arrows: {
               'main:A': {y: {target: 'main:B', entryPoint: 'start'}}
@@ -703,7 +676,6 @@ describe('fsm', () => {
 
           'main:A': {
             type: 'graph',
-            parent: 'main',
             nodes: ['main:A:A', 'main:A:B'],
             arrows: {
               'main:A:A': {x: {target: 'main:A:B', entryPoint: 'start'}}
@@ -713,14 +685,13 @@ describe('fsm', () => {
 
           'main:A:A': {
             type: 'composite',
-            parent: 'main:A',
             nodes: ['main:A:A:A', 'main:A:A:B']
           },
 
-          'main:A:A:A': {type: 'leaf', parent: 'main:A:A'},
-          'main:A:A:B': {type: 'leaf', parent: 'main:A:A'},
-          'main:A:B': {type: 'leaf', parent: 'main:A'},
-          'main:B': {type: 'leaf', parent: 'main'}
+          'main:A:A:A': {type: 'leaf'},
+          'main:A:A:B': {type: 'leaf'},
+          'main:A:B': {type: 'leaf'},
+          'main:B': {type: 'leaf'}
 
         },
 
@@ -747,7 +718,6 @@ describe('fsm', () => {
           'main': {
             type: 'graph',
             nodes: ['main:A', 'main:B'],
-            parent: null,
             arrows: {
               'main:A': {
                 x: {target: 'main:B', entryPoint: 'p'}
@@ -761,19 +731,16 @@ describe('fsm', () => {
 
           'main:A': {
             type: 'leaf',
-            parent: 'main'
           },
 
           'main:B': {
             type: 'composite',
             nodes: ['main:B:A', 'main:B:B'],
-            parent: 'main'
           },
 
           'main:B:A': {
             type: 'graph',
             nodes: ['main:B:A:A', 'main:B:A:B'],
-            parent: 'main:B',
             arrows: {
               'main:B:A:A': {
                 x: {target: 'main:B:A:B', entryPoint: 'start'}
@@ -789,7 +756,6 @@ describe('fsm', () => {
           'main:B:B': {
             type: 'graph',
             nodes: ['main:B:B:A', 'main:B:B:B'],
-            parent: 'main:B',
             arrows: {
               'main:B:B:A': {
                 x: {target: 'main:B:B:B', entryPoint: 'start'}
@@ -804,22 +770,18 @@ describe('fsm', () => {
 
           'main:B:B:A': {
             type: 'leaf',
-            parent: 'main:B:B'
           },
 
           'main:B:B:B': {
             type: 'leaf',
-            parent: 'main:B:B'
           },
 
           'main:B:A:A': {
             type: 'leaf',
-            parent: 'main:B:A'
           },
 
           'main:B:A:B': {
             type: 'leaf',
-            parent: 'main:B:A'
           }
 
         },
@@ -852,7 +814,6 @@ describe('fsm', () => {
 
           'main': {
             type: 'graph',
-            parent: null,
             nodes: ['main:A', 'main:B', 'main:C'],
             arrows: {
               'main:A': {
@@ -865,14 +826,13 @@ describe('fsm', () => {
 
           'main:A': {
             type: 'composite',
-            parent: 'main',
             nodes: ['main:A:A', 'main:A:B']
           },
 
-          'main:A:A': {type: 'leaf', parent: 'main:A'},
-          'main:A:B': {type: 'leaf', parent: 'main:A'},
-          'main:B': {type: 'leaf', parent: 'main'},
-          'main:C': {type: 'leaf', parent: 'main'}
+          'main:A:A': {type: 'leaf'},
+          'main:A:B': {type: 'leaf'},
+          'main:B': {type: 'leaf'},
+          'main:C': {type: 'leaf'}
 
         },
 

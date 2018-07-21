@@ -15,12 +15,12 @@ describe("dispatcher", () => {
   it("calls bound methods based on the FSM state", () => {
     const graph = {
       'main': {type: 'graph', nodes: ['main:A', 'main:B']},
-      'main:A': {type: 'leaf', parent: 'main'},
-      'main:B': {type: 'graph', nodes: ['main:B:A', 'main:B:B'], parent: 'main'},
-      'main:B:A': {type: 'leaf', parent: 'main:B'},
-      'main:B:B': {type: 'composite', nodes: ['main:B:B:A', 'main:B:B:B'], parent: 'main:B'},
-      'main:B:B:A': {type: 'leaf', parent: 'main:B:B'},
-      'main:B:B:B': {type: 'leaf', parent: 'main:B:B'}
+      'main:A': {type: 'leaf'},
+      'main:B': {type: 'graph', nodes: ['main:B:A', 'main:B:B']},
+      'main:B:A': {type: 'leaf'},
+      'main:B:B': {type: 'composite', nodes: ['main:B:B:A', 'main:B:B:B']},
+      'main:B:B:A': {type: 'leaf'},
+      'main:B:B:B': {type: 'leaf'}
     };
 
     const FSMState = {
@@ -107,8 +107,8 @@ describe("dispatcher", () => {
       };
       const graph = {
         'main': {type: 'graph', nodes: ['main:level1']},
-        'main:level1': {type: 'composite', parent: 'main', nodes: ['main:level1:level2']},
-        'main:level1:level2': {type: 'leaf', parent: 'main:level1'}
+        'main:level1': {type: 'composite', nodes: ['main:level1:level2']},
+        'main:level1:level2': {type: 'leaf'}
       };
       const FSMState = {
         'main': 'main:level1'
@@ -300,11 +300,9 @@ describe("dispatcher", () => {
       'main:A': {
         type: 'composite',
         nodes: ['main:A:A'],
-        parent: 'main'
       },
       'main:A:A': {
         type: 'leaf',
-        parent: 'main:A'
       }
     };
 
@@ -359,14 +357,14 @@ describe("dispatcher", () => {
           nodes: ['main:target', 'main:graph_with_leaving_a'],
           arrows: {}
         },
-        'main:target': {type: 'leaf', parent: 'main'},
+        'main:target': {type: 'leaf'},
         'main:graph_with_leaving_a': {
           type: 'graph', 
           nodes: ['main:graph_with_leaving_a:a', 'main:graph_with_leaving_a:b'],
           arrows: {}
         },
-        'main:graph_with_leaving_a:a': {type: 'leaf', parent: 'main:graph_with_leaving_a'},
-        'main:graph_with_leaving_a:b': {type: 'leaf', parent: 'main:graph_with_leaving_a'}
+        'main:graph_with_leaving_a:a': {type: 'leaf'},
+        'main:graph_with_leaving_a:b': {type: 'leaf'}
       };
 
       const FSMState = {

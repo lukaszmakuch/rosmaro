@@ -1,6 +1,6 @@
 import map from 'lodash/map';
 import {initState, mergeNewFSMStates} from './state';
-import {nonEmptyArrow} from './../utils/all';
+import {nonEmptyArrow, extractParent} from './../utils/all';
 export {initState};
 
 // result {newFSMState: {}, target: 'a:b:c', entryPoint: 'p'}
@@ -10,7 +10,7 @@ const followUp = ({arrow, graph}) => {
 
   // if arrow is [['a:b', 'x'], ['a', 'y']] then srcNode is 'a:b' and the arrowName is 'x'
   const [[srcNode, arrowName], ...higherArrows] = arrow;
-  const parent = graph[srcNode].parent;
+  const parent = extractParent(srcNode);
   const parentIsGraph = graph[parent].type === "graph";
   // only a graph may have arrows
   const arrowTarget = parentIsGraph && (graph[parent].arrows[srcNode] || {})[arrowName];

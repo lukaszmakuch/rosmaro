@@ -126,7 +126,6 @@ describe('model consolidator', () => {
         'main': {
           type: 'graph',
           nodes: ['main:A', 'main:B'],
-          parent: null,
           arrows: {
             'main:A': {
               'x': {target: 'main:B', entryPoint: 'start'},
@@ -141,7 +140,6 @@ describe('model consolidator', () => {
         'main:A': {
           type: 'graph',
           nodes: ['main:A:A', 'main:A:B'],
-          parent: 'main',
           arrows: {
             'main:A:A': {
               'x': {target: 'main:A:B', entryPoint: 'start'},
@@ -153,26 +151,23 @@ describe('model consolidator', () => {
           },
         },
 
-        'main:A:A': {type: 'leaf', parent: 'main:A'},
-        'main:A:B': {type: 'leaf', parent: 'main:A'},
+        'main:A:A': {type: 'leaf'},
+        'main:A:B': {type: 'leaf'},
 
         'main:B': {
           type: 'composite', 
-          parent: 'main',
           nodes: ['main:B:OrthogonalA', 'main:B:OrthogonalB']
         },
 
-        'main:B:OrthogonalA': {type: 'leaf', parent: 'main:B'},
+        'main:B:OrthogonalA': {type: 'leaf'},
 
         'main:B:OrthogonalB': {
           type: 'dynamicComposite', 
-          parent: 'main:B',
         },
 
         'main:B:OrthogonalB:child': {
           type: 'graph',
           nodes: ['main:B:OrthogonalB:child:A'],
-          parent: 'main:B:OrthogonalB',
           arrows: {
             'main:B:OrthogonalB:child:A': {
               'loop': {target: 'main:B:OrthogonalB:child:A', entryPoint: 'start'},
@@ -185,7 +180,6 @@ describe('model consolidator', () => {
 
         'main:B:OrthogonalB:child:A': {
           type: 'leaf',
-          parent: 'main:B:OrthogonalB:child',
         }
 
       },

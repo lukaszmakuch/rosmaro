@@ -65,7 +65,6 @@ const expand = ({
         graph: {
           [newFullNodeName]: {
             type: 'leaf',
-            parent: expandedParent,
           }
         },
         handlers: {
@@ -84,7 +83,6 @@ const expand = ({
           graph: {
             [newFullNodeName]: {
               type: 'graph',
-              parent: expandedParent,
               nodes: getGraphChildrenList(),
               entryPoints: map(updateArrow(newFullNodeName), graphPlan[planNode].entryPoints),
               arrows: mapArrows(updateParentNode(newFullNodeName))(updateArrow(newFullNodeName))(graphPlan[planNode].arrows)(graphPlan[planNode].nodes),
@@ -108,7 +106,6 @@ const expand = ({
           graph: {
             [newFullNodeName]: {
               type: 'composite',
-              parent: expandedParent,
               nodes: getCompositeChildrenList()
             }
           },
@@ -130,7 +127,6 @@ const expand = ({
           graph: {
             [newFullNodeName]: {
               type: 'composite',
-              parent: expandedParent,
               nodes: getDynamicCompositeChildrenList()
             }
           },

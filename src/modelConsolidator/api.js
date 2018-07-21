@@ -41,7 +41,6 @@ const consolidate = ({
       return mergeDeepLeft(
         singleNode({
           type: 'dynamicComposite',
-          parent,
         }),
         consolidate({
           graph: graphPlan,
@@ -59,7 +58,6 @@ const consolidate = ({
         mergeDeepLeft,
         singleNode({
           type: 'composite',
-          parent,
           nodes: map(prefixChildNode, keys(graphPlanDescription.nodes)),
         }),
         keys(graphPlanDescription.nodes).map(child => consolidate({
@@ -74,7 +72,7 @@ const consolidate = ({
     break;
 
     case 'leaf': 
-      return singleNode({type: 'leaf', parent});
+      return singleNode({type: 'leaf'});
     break;
 
     case 'graph':
@@ -82,7 +80,6 @@ const consolidate = ({
         mergeDeepLeft, 
         singleNode({
           type: 'graph',
-          parent,
           nodes: map(prefixChildNode, keys(graphPlanDescription.nodes)),
           arrows: mapArrows(prefixChildNode)(prefixArrow)(graphPlanDescription.arrows)(keys(graphPlanDescription.nodes)),
           entryPoints: map(prefixArrow, graphPlanDescription.entryPoints)
