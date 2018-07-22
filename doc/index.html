@@ -43,46 +43,23 @@
     });
   </script>
 
-
   <script id="doc" type="text/markdown" src="index.html">
 # Getting started
-Don't fight with boolean flags! Draw changes of behavior.
 
----
-
-Rosmaro is a visual [automata-based programming](https://en.wikipedia.org/wiki/Automata-based_programming) library for JavaScript.
-
-It comes with a [visual editor](https://rosmaro.js.org/editor).
-
-You draw a directed graph:
-![Graphical editor](../img/r101_editor.png)
-
-You write code, preferably functional:
-![Functional code](../img/r101_code.png)
-
-You get a stateful object:
-![Stateful object](../img/r101_running.png)
-
-You may want to use Rosmaro to build rich user interfaces, safe back-end services or anything you want!
-
-## Blogs
-- [React and visual automata-based programming](https://medium.com/dailyjs/react-and-visual-automata-based-programming-c1d13e153cde) - building a wizard with many paths in Rosmaro and React
-- [An introduction to visual automata-based programming in Rosmaro](https://medium.freecodecamp.org/an-introduction-to-visual-automata-based-programming-in-rosmaro-100dae8eb969) - basics of Rosmaro in a blog post
-- [Programming without boolean values: To-Do App](https://codeburst.io/programming-without-boolean-values-to-do-app-2455035c87f5) - building a To-Do application without booleans
-- [State management in JavaScript: data-related state and behavior-related state](https://lukaszmakuch.pl/post/behavior-related-state-and-data-related-state)
+TODO
 
 ## Utilities
-- [Rosmaro-React](https://github.com/lukaszmakuch/rosmaro-react) React integration
+TODO
 
 ## License
 Rosmaro is licensed under the MIT license.
 
 # An example
 
-Building a _Rosmaro model_ consists of two steps: 
+Building a Rosmaro model consists of two steps: 
 
 1. Drawing a state machine graph that describes changes of behavior
-1. Coding handlers - pieces of behavior associated with graph nodes
+1. Writing functional code - pieces of behavior to associate with graph nodes
 
 Let's build a model of a cursed prince, who turns into a frog after eating a pizza.
 
@@ -101,7 +78,7 @@ After drawing the graph visible above, __the following JSON is generated automat
     },
     "arrows": {
       "Prince": {
-        "ate pizza": {
+        "ate a pizza": {
           "target": "Frog",
           "entryPoint": "start"
         }
@@ -123,128 +100,191 @@ After drawing the graph visible above, __the following JSON is generated automat
 }
 ```
 
-The graph tells the story of how does the model change over time and what makes it change. At the beginning it behaves like a _Prince_. That's what the arrow from the _start_ entry point pointing at the _Prince_ node is telling us. Then, as soon as the _Prince_ eats a pizza, he follows the arrow called _ate pizza_. The model is not anymore in the _Prince_ state, but in the _Frog_ state.
+The graph tells the story of how does the model change over time and what makes it change. At the beginning it behaves like a `Prince`. That's what the arrow from the `start` entry point pointing at the `Prince` node is telling us. Then, as soon as the `Prince` eats a pizza, he follows the arrow called `ate a pizza`. The `main` graph is not anymore in the `Prince` state, but in the `Frog` state.
 
 Now it's the time to code different behaviors.
 
+>> Hint: writing simple handlers is a lot easier with the `rosmaro-binding-utils` package!
+
 This is the behavior of the _Frog_:
 ```javascript
-const Frog = {
-  introduceYourself: () => "Ribbit! Ribbit!"
+const Frog = ({action, context}) => {
+  switch (action.type) {
+    case 'INTRODUCE_YOURSELF':
+      return {result: "Ribbit! Ribbit!", arrows: [], context};
+    default:
+      return {result: undefined, arrows: [], context};
+  }
 };
 ```
 
-It answers to only one method call - _introduceYourself_. Every single time when it's asked to introduce itself, it makes the _Ribbit!_ sound.
+It reacts to only one action type - `INTRODUCE_YOURSELF`. Every single time when it's asked to introduce itself, it makes the `Ribbit!` sound.
 
 This is the behavior of the _Prince_:
 ```javascript
-const Prince = {
-  introduceYourself: () => "I am The Prince of Rosmaro!",
-  eat: ({dish}) => {
-    if (dish === 'pizza') return {arrow: 'ate pizza'};
+const Prince = ({action, context, node}) => {
+  switch (action.type) {
+    case 'INTRODUCE_YOURSELF':
+      return {result: "I am The Prince of Rosmaro!", arrows: [], context};
+    case 'EAT':
+      const arrows = action.dish === 'pizza'
+        ? [[[node.id, 'ate a pizza']]]
+        : [];
+      return {result: undefined, arrows, context};
+    default:
+      return {result: undefined, arrows: [], context};
   }
 };
 ```
 
-Every time he introduce himself, he says _I am The Prince of Rosmaro!_. When he eats a pizza, he follows the _ate pizza_ arrow.
+Every time he introduces himself, he says `I am The Prince of Rosmaro!`. When he eats a pizza, he follows the _ate a pizza_ arrow.
 
-Let's put it all together.
+The only missing piece is the behavior of the `main` node, that is the parent of both `Prince` and `Frog` nodes. It simply passed the action to its only active child:
 ```javascript
-import makeStorage from 'rosmaro-in-memory-storage';
-import makeLock from 'rosmaro-process-wide-lock';
+const main = ({children, action}) => Object.values(children)[0]({action});
+```
+
+Now it's time to associate code with nodes:
+```javascript
+const bindings = {
+  'main': {handler: main},
+  'main:Prince': {handler: Prince},
+  'main:Frog': {handler: Frog},
+};
+```
+Please notice how bindings are named. The `Prince` handler is assigned to the `main:Prince` node, because `Prince` is the child of `main`.
+
+Let's put it all together!
+```javascript
 import rosmaro from 'rosmaro';
-import graph from './graph.json'; // The generated graph
 
-const Frog = {
-  introduceYourself: () => "Ribbit! Ribbit!"
-};
-
-const Prince = {
-  introduceYourself: () => "I am The Prince of Rosmaro!",
-  eat: ({dish}) => {
-    if (dish === 'pizza') return {arrow: 'ate pizza'};
+const graph = {
+  "main": {
+    "type": "graph",
+    "nodes": {
+      "Prince": "Prince",
+      "Frog": "Frog"
+    },
+    "arrows": {
+      "Prince": {
+        "ate a pizza": {
+          "target": "Frog",
+          "entryPoint": "start"
+        }
+      }
+    },
+    "entryPoints": {
+      "start": {
+        "target": "Prince",
+        "entryPoint": "start"
+      }
+    }
+  },
+  "Prince": {
+    "type": "leaf"
+  },
+  "Frog": {
+    "type": "leaf"
   }
 };
 
-const model = rosmaro({
-  graph,
-  handlers: {Prince, Frog},
-  storage: makeStorage(),
-  lock: makeLock()
-});
+const main = ({children, action}) => Object.values(children)[0]({action});
+
+const Frog = ({action, context}) => {
+  switch (action.type) {
+    case 'INTRODUCE_YOURSELF':
+      return {result: "Ribbit! Ribbit!", arrows: [], context};
+    default:
+      return {result: undefined, arrows: [], context};
+  }
+};
+
+const Prince = ({action, context, node}) => {
+  switch (action.type) {
+    case 'INTRODUCE_YOURSELF':
+      return {result: "I am The Prince of Rosmaro!", arrows: [], context};
+    case 'EAT':
+      const arrows = action.dish === 'pizza'
+        ? [[[node.id, 'ate a pizza']]]
+        : [];
+      return {result: undefined, arrows, context};
+    default:
+      return {result: undefined, arrows: [], context};
+  }
+};
+
+const bindings = {
+  'main': {handler: main},
+  'main:Prince': {handler: Prince},
+  'main:Frog': {handler: Frog},
+};
+
+const model = rosmaro({graph, bindings});
 ```
 
-In order to obtain a working model, we need to provide at least 4 parts:
+The `model` function has the following signature: 
+`({state, action}) => ({state, result})`.
 
-- the state machine graph (generated based on the drawn graph)
-- handlers (code representing different behaviors)
-- a storage (for example, from the [rosmaro-in-memory-storage](https://github.com/lukaszmakuch/rosmaro-in-memory-storage) package)
-- a lock (for example, from the [rosmaro-process-wide-lock](https://github.com/lukaszmakuch/rosmaro-process-wide-lock) package)
-
-The model works like expected:
+Here we can see how does it work:
 ```javascript
-> model.introduceYourself();
-'I am The Prince of Rosmaro!'
-
-> model.eat({dish: 'yakisoba'});
-undefined
-
-> model.introduceYourself();
-'I am The Prince of Rosmaro!'
-
-> model.eat({dish: 'pizza'});
-undefined
-
-> model.introduceYourself();
-'Ribbit! Ribbit!'
+let state;
+[
+  {type: 'INTRODUCE_YOURSELF'},
+  {type: 'EAT', dish: 'yakisoba'},
+  {type: 'INTRODUCE_YOURSELF'},
+  {type: 'EAT', dish: 'pizza'},
+  {type: 'INTRODUCE_YOURSELF'}
+].forEach(action => {
+  const {state: newState, result} = model({state, action});
+  state = newState;
+  console.log(result);
+});
+// I am The Prince of Rosmaro!
+// undefined
+// I am The Prince of Rosmaro!
+// undefined
+// Ribbit! Ribbit!
 ```
+
+When the model is called with no `state`, it generates its initial value based on entry points. Every function call gives us the actual `result` of the call and the new `state`. The new state is meant to be passed to the `model` function the next time we want to handle an action. 
 
 # Graphs
 
 ## Introduction
 
-The graph is the most outer layer of a _Rosmaro model_. It is meant to represent all of the possible changes of behavior. 
+The graph is the most outer layer of a Rosmaro model. It is meant to represent all of the possible changes of behavior. 
 
-There are four types of nodes:
+There are five types of nodes:
 
 - leaves
 - composites
 - dynamic composites
 - graphs
+- external models
 
-The model graph is represented by a collection of nodes, where each node has a unique name. The root node of the model graph is __the _main_ node, which is mandatory__. It may be of any of the supported node types, even a leaf.
+The root node of the model graph is __the `main` node, which is mandatory__. It may be of any of the supported node types, even a leaf.
 
 Let's take a look at [the example graph](#an-example) one more time. It's a collection of three nodes:
 
-- a graph called _main_
-- a leaf called _Prince_
-- a leaf called _Frog_
+- a graph called `main`
+- a leaf called `Prince`
+- a leaf called `Frog`
 
-What's important and what's going to be explained in details later in this chapter, is that local names of nodes of a graph are not directly connected to any node. It means that the _Prince_ local node within the _main_ graph could be renamed to _Human_ and still be linked to the _Prince_ node.
-
-The structure used to build the model graph looks like this:
-
-1. Node A
-  1. Local node A (underlaying node: Node B)
-  1. Local node B (underlaying node: Node C)
-1. Node B
-1. Node C
-  1. Local node A (underlaying node: Node D)
-1. Node D
+Both `Prince` and `Frog` are leaves. The `main` graph has two children, which are also called `Prince` and `Frog`. Their underlaying nodes are `Prince` and `Frog`, respectively.
 
 ## The Rosmaro Editor
 
 The recommended way of drawing a graph is using the [Rosmaro Editor](https://rosmaro.js.org/editor). To get started you don't need to install anything, as it is available on-line. A new graph may be created, or an existing JSON file may be imported.
 
-However, if you only want, you cen actually code parts of the graph or even the whole graph, as the JSON file generated by the editor is meant to be human-readable.
+However, if you only want, you can actually code parts of the graph or even the whole graph, as the JSON file generated by the editor is meant to be human-readable.
 
 ## Leaves
 
-Leaves are the basic nodes. They have no children. All they have is a name, so they can be used as underlaying nodes for children of [graphs](#graphs-leaves) or [composites](#graphs-leaves). It also allows us to associate them with [handlers](#handlers).
+Leaves are the basic nodes. They have no children. All they have is a name, so they can be used as underlaying nodes for children of [graphs](#graphs-leaves) or [composites](#graphs-leaves).
 
 Leaves themselves have no visualization as they have no children.
 
-Here's an example model graph where _main_ is a leaf:
+Here's an example model graph where `main` is a leaf:
 ```json
 {
   "main": {"type": "leaf"}
@@ -254,13 +294,13 @@ Here's an example model graph where _main_ is a leaf:
 Entry points are totally __ignored__ when the target is a leaf. It's because a leaf cannot have different states.
 
 ## Composites
-Composites are a way to introduce orthogonal states. If there's a node _A_ and there's a node _B_, we can create a composite _C_ with _A_ and _B_ as underlaying nodes. That way if the model is in the _C_ state, it has both the behavior of _A_ and the behavior of _B_.
+Composites are a way to introduce orthogonal regions. If there's a node `A` and there's a node `B`, we can create a composite `C` with `A` and `B` as underlaying nodes. That way if the model is in the `C` state, it has both the behavior of `A` and the behavior of `B`.
 
-This is what a composite with two local nodes (_First composed node_ and _Second composed node_) looks like.
+This is what a composite with two local nodes (`First composed node` and `Second composed node`) looks like.
 
 ![Composite](img/composite.png)
 
-The code, assuming there are some nodes _A_ and _B_ which are used as underlaying nodes for _First composed node_ and _Second composed node_, looks like this.
+The code, assuming there are some nodes `A` and `B` which are used as underlaying nodes for `First composed node` and `Second composed node`, looks like this.
 ```json
 {
   // some main
@@ -278,7 +318,7 @@ The code, assuming there are some nodes _A_ and _B_ which are used as underlayin
 
 Composites are __transparent for entry points__. Here's an example of how does it work.
 
-There's a graph, where _some node_ follows the _action_ arrow and enter the _p_ entry point of the _composite_.
+There's a graph, where `some node` follows the `action` arrow and enter the `p` entry point of the `composite`.
 
 ![arrow to a composite](img/arrow_to_composite_graph.png)
 
@@ -286,17 +326,17 @@ The composite composes two graphs together.
 
 ![arrow to a composite](img/arrow_to_composite_composite.png)
 
-_Subgraph A_ has an entry point _p_ which points at node _B_.
+Subgraph `A` has an entry point `p` which points at node `B`.
 
 ![arrow to a composite](img/arrow_to_composite_subgraph_a.png)
 
-_Subgraph B_ has an entry point _p_ which points at node _A_.
+Subgraph `B` has an entry point `p` which points at node `A`.
 
 ![arrow to a composite](img/arrow_to_composite_subgraph_b.png)
 
 In such a situation, the entered __entry point is required to be present in both graph__.
 
-To sum it up, the result of _main:some node_ following the _action_ arrow to enter _composite_ through the entry point _p_ is setting the model to _(main:composite:subgraph A:B, main:composite:subgraph B:A)_.
+To sum it up, the result of `main:some node` following the `action` arrow to enter `composite` through the entry point `p` is setting the model to _(main:composite:subgraph A:B, main:composite:subgraph B:A)_.
 
 Composites are __transparent to arrows followed by their children__. If at least one child follows some arrow, the whole composite follows this arrow. If two or more children follow some arrows, the composite follows those few arrows simultaneously.
 
@@ -318,7 +358,7 @@ Let's take a look at this regular composite.
 }
 ```
 
-The main composite has two chilren: First and Second. They are all leafs defined by the Child node. The number of main's children never changes. 
+The `main` composite has two children: `First` and `Second`. They are all leaves defined by the `Child` node. The number of main's children never changes. 
 
 The same graph structure may be achieved using a dynamic composite.
 
@@ -326,23 +366,24 @@ The same graph structure may be achieved using a dynamic composite.
 {
   "main": {
     "type": "dynamicComposite",
-    "nodeTemplate": "leaf"
+    "child": "Child"
   },
   "Child": {"type": "leaf"}
 }
 ```
 
-The handler of the main node must define a function of the context which returns local names of the children.
+The binding of the `main` node must define a function of the context which returns local names of the children.
 
 ```javascript
 {
-  main: {
-    nodes: ({ctx}) => ctx.myChildren
+  'main': {
+    nodes: ({context}) => context.myChildren,
+    handler: // ...
   }
 }
 ```
 
-This dynamic composite associated with the handler visible above results in a graph identical to the regular composite described at the beginning of this section, when the context looks like this.
+This dynamic composite associated with the binding visible above results in a graph identical to the regular composite described at the beginning of this section, when the context looks like this.
 ```javascript
 {
   myChildren: ["First", "Second"]
@@ -373,9 +414,7 @@ Then the graph equals the following regular composite.
 }
 ```
 
-What's important to note is that __when a dynamically generated child is removed, its current nodes are forgotten__. So if there were three dynamic children: First, Second and Third and we removed the Second one, the next time it appears it behaves like it never existed.
-
-If you find this helpful, you may also be interested in [context slices](#handlers-context-slices).
+What's important to note is that __when a dynamically generated child is removed, its current nodes are forgotten__. So if there were three dynamic children: `First`, `Second` and `Third` and we removed the `Second` one, the next time it appears it behaves like it never existed.
 
 ## Graphs
 Graphs are the most important type of nodes. 
@@ -438,355 +477,199 @@ Graphs are made of:
 
 - at least one local node
 - any number of arrows
-- the required _start entry point_
-- the special _recent node_
+- the required `start` entry point
+- the special `recent` node
 - any number custom entry points
 
 At any given time, there's just one active graph node. 
 
-There are two local nodes in the screen-shot above: _A_ and _B_. They must be associated with some actual nodes, like leaves, composites or other graphs. It's done by selecting the _underlaying node_.
+There are two local nodes in the screen-shot above: `A` and `B`. They must be associated with some actual nodes, like leaves, composites or other graphs. It's done by selecting the underlaying node.
 
 Entry points specify which local node is going to be active once a transition to the graph occurs.
 
-Only one entry point is mandatory and it's the _start entry point_. It cannot point at the _recent node_. Except this one, there may be any number of custom entry points.
+Only one entry point is mandatory and it's the `start` entry point. It cannot point at the `recent` node. Except this one, there may be any number of custom entry points.
 
-An arrow from an entry point to a node means that when the graph is entered through that entry point, the active node is going to be the node the arrow is pointing at. The arrow also specify an entry point. In the picture visible above, the _start entry point_ is pointing at the node _A_ and specifies that it should be entered through the "beginning" entry point point. Arrows may be pointing just from entry points and never at entry points. Also, there may be just one arrow from one entry point.
+An arrow from an entry point to a node means that when the graph is entered through that entry point, the active node is going to be the node the arrow is pointing at. The arrow also specify an entry point. In the picture visible above, the `start` entry point is pointing at the `A` node and specifies that it should be entered through the `beginning` entry point point. Arrows may be pointing just from entry points and never at entry points. Also, there may be just one arrow from one entry point.
 
-There's one special node and it's the _recent node_. It symbolizes the last node which was active, before the graph was left. If the graph has never been entered, it's the node the _start entry point_ is connected to. 
-In the picture above we can see that if the graph is entered through the _history_ entry point, then it's most recent active child is going to be entered through the _going back to the past_ entry point.
+There's one special node and it's the `recent` node. It symbolizes the last node which was active, before the graph was left. If the graph has never been entered, it's the node the `start` entry point is connected to. 
+In the picture above we can see that if the graph is entered through the `history` entry point, then it's most recent active child is going to be entered through the `going back to the past` entry point.
 
-Arrows between nodes symbolize how does the behavior change. Here, when the current node is _A_ and it follows the arrow _going for a walk_, it changes the current node of the graph to _B_ which is entered through the _start_ entry point.
+Arrows between nodes symbolize how does the behavior change. Here, when the current node is `A` and it follows the `going for a walk` arrow, it changes the current node of the graph to `B` which is entered through the `start` entry point.
 
 Loops are allowed.
 
-All the nodes visible when drawing a graph are local nodes. They are not available outside the graph that's being edited. The actual node, which is entered when a local node is entered, is picked using the _underlaying node_ select field.
+All the nodes visible when drawing a graph are local nodes. They are not available outside the graph that's being edited. The actual node, which is entered when a local node is entered, is picked using the underlaying node select field.
 
-If a local node follows an arrow, which is not connected to any other local node, it makes the whole graph follow this arrow. It works very similar to event bubbling.
+If a local node follows an arrow, which is not connected to any other local node, the whole graph may follow this arrow. It works very similar to event bubbling. To make it work we need to extend the arrows returned by the handler. Let's say e leaf follows an arrow like this:
+```javascript
+[
+  [['main:subgraph:A', 'arrow_found_in_main']]
+]
+```
+To make the `subgraph` node follow the `arrow_found_in_main` arrow if there's no such arrow within the `subgraph` itself, the arrow must be extended in the following way:
+```javascript
+[
+  [['main:subgraph:A', 'arrow_found_in_main'], ['main:subgraph', 'arrow_found_in_main']]
+]
+```
 
-# Handlers
+## External nodes
+
+Every Rosmaro model is built based on a description of a graph and its behavior. It looks like this:
+```
+{graph, bindings}
+```
+Objects like these may be included within bindings for external nodes. It enables us to reuse once created Rosmaro models.
+
+Here's an example model graph where `main` is an external model:
+```json
+{
+  "main": {"type": "external"}
+}
+```
+
+# Bindings
 
 ## Introduction
 
-While the graph is just data representing how does the behavior change, handlers are functions which represent the actual behavior.
+While the graph is just data representing how does the behavior change, bindings represent the actual behavior.
 
-Although it's not necessary, all handlers may be made of pure functions, which are actually the preferred choice.
+Because a Rosmaro model is a pure function, all bindings must have no side effects.
 
-When a model method is called, it's redirected to the appropriate handler picked based upon the state of the state machine. 
+When an action is passed to the model, it's redirected to the appropriate handler picked based on the state of the state machine. 
 
-Let's assume that the current node is _A_ (which is a leaf) and that this is its handler:
+Let's assume that the current node is `A` (which is a leaf) and that this is its binding:
 ```javascript
 const A = {
-  myMethod: () => "myMethodResult"
+  handler: ({action, context}) => ({
+    result: {'A got': action},
+    arrows: [],
+    context,
+  })
 };
 ```
 
 Then when we call the model in this way:
 ```javascript
-> model.myMethod()
+model({state, action: {type: 'TEST'}})
 ```
 
-The result is gong to be
+The result is gong to be something like this:
 ```
-'myMethodResult'
+{result: {'A got': {type: 'TEST'}}, state: /*...*/}
 ```
 
-It's not required for handlers to handle all types of methods or always return something. __If we call a non-existent method, we simply get undefined as the result__:
+__Arrows must always be successfully followed__. If an arrow cannot be followed, an error is thrown.
+
+## Node bindings
+
+A binding is a node's behavior specification. It is an object associated with a graph node. It may have up to three parts:
+
+1. `handler` - the function actually handling actions.
+1. `lens` - a factory of a [Ramda lens](https://ramdajs.com/docs/#lens) specifying the shape and content of the context available for the `handler`
+1. `nodes` - a function of the context returning the list of children. It's used only by dynamic composites.
+
+The `handler` is a function meant to consume actions. It has the following signature:
 ```javascript
-> model.nonExistentMethod()
-undefined
-```
-
-However, __arrows must always be successfully followed__. A request to follow an arrow is bubbling up the hierarchy unless one of its ancestors may follow it. If the arrow cannot be followed, an error is thrown.
-
-## Method handlers
-
-Rosmaro models may be called without any parameters or with only one object.
-```
-> model.myMethod();
-> model.myMethod({paramA, paramB});
-```
-The complete example of a method handler for _myMethod_ looks like this:
-```javascript
-{
-  myMethod: ({paramA, paramB, ctx, thisModel, thisModelNode}) => ({
-    arrow: 'arrow to follow',
-    ctx: newCtx,
-    res: 'method call result'
-  })
-}
-```
-
-As we can see, a method handler takes one object. It contains all the fields which were passed during the model method call (_paramA_ and _paramB_) and few extra ones, which include _ctx_, _thisModel_ and _thisModelNode_. The result of a handler method call may be one of the following forms:
-```javascript
-// no arrow is followed
-// the context is not altered
-// the result is undefined
-undefined
-
-// 'x' is the arrow to follow
-// {a: 123} is the new context
-// 'abc' is the call result
-{arrow: 'x', ctx: {a: 123}, res: 'abc'}
-
-// 'x' is the arrow to follow
-// the context is not altered
-// the result is undefined
-{arrow: 'x'}
-
-// no arrow is followed
-// the context is not altered
-// {res: 'freedom'} is the result
-{res: {res: 'freedom'}}
-
-// {anything: 'else'} is the call result
-{anything: 'else'}
-```
-
-_ctx_ is the context of the model. It's a plain old JavaScript object which must be serializable and is passed to all method handlers. This is the dictionary structure where data-related state lives in. It must __never be mutated__. Returning a new version of the context by a method handler is the only way how a change to the context may be introduced. It makes it very __similar to redux__. By default the context is an empty object. 
-
-The most important thing to remember when it comes to the context is how does it behave when composites are used. Let's say that the context looks like this:
-```javascript
-{a: 10, b: 20}
-```
-Then we have two composed nodes: _A_ and _B_ and both of them perform a transition by simultaneously following some arrows.
-
-The handler for the _A_ node gets the current context and changes the _a_ field:
-```javascript
-{a: 10, b: 20} -> {a: 11, b: 20} 
-```
-
-The handler for the _B_ node gets the current context and changes the _b_ field:
-```javascript
-{a: 10, b: 20} -> {a: 10, b: 40} 
-```
-
-The result is merged by applying differences between the current node and new versions of the context returned by all composed nodes. It makes the final context look like this:
-```javascript
-{a: 11, b: 40} 
-```
-
-_thisModel_ is a reference to the whole __Rosmaro model__. What's very important is that in order to avoid the model going into an inconsistent state, one method call must finish before another one starts. That's why calling a model method from within a method handler will __always return a Promise__. Awaiting for this promise to resolve within a method handler will __always lead a deadlock__! It happens because a method handler cannot return, as it's waiting for the method call to finish, and the method call doesn't even start executing, because the previous method call (which is currently handled by the handler) hasn't finished yet.
-
-Even thought it may seem to be not so helpful, there are use cases where it turns out to be quite handy. An example may be browser-based user interface, where a handler's _render_ method returns a VDOM node which event listener uses _thisModel_. Here is an example of a [snabbdom](https://github.com/snabbdom/snabbdom) event listener calling a __Rosmaro model__ taken from the code of the [Rosmaro Editor](https://rosmaro.js.org/editor):
-```javascript
-h('input.ctrl-button', {
-  props: {type: 'button', value: 'generate code'},
-  on: {click: () => thisModel.generateCode()}
+({action, context, node, children}) => ({
+  result,
+  arrows,
+  context
 })
 ```
 
-This works as expected and __never causes a deadlock__.
+The `action` parameter is the action to handle, like `{type: 'SEARCH', what: 'kitties'}`.
 
-Moreover, because the _generateCode_ method call happens when the button is clicked and not before the handler returns, the call is fully synchronous if the locking mechanism, storage mechanism and the handler for _generateCode_ are synchronous themselves.
+The `context` is a model-wide bag of data, shaped by the lens attached to the node and those attached to its ancestors. It's where [the data-related state](https://lukaszmakuch.pl/post/behavior-related-state-and-data-related-state) lives in. By default it's `undefined`.
 
-_thisModelNode_ is very similar to _thisModel_. It's also an object which may be used to call Rosmaro model methods. However, only methods defined by the handler that received it and handlers of its children are going to be called.
+The `node` is an object which holds the ID of the node the handler is attached to, like `main:a:b:c`. An example:
+```
+{id: 'main:a:b:c'}
+```
 
-It means that when there's an active composite with two children and each of them responds to the _myMethod_ method, calling _thisModel.myMethod_ actually calls two methods, while calling _thisNode.myMethod_ from within a child's handler calls only one method.
-
-When it comes to method call results, things are straightforward in case of leaves and graphs. The result is what the method handler returns as the result. However, things get a bit (but just a bit) more complicated when composite nodes are used. Let's take a look at the following composite.
-
-![composite](img/composite.png)
-
-Let's assume it's the _main node_ of a _Rosmaro model_. The underlaying node of the _First composed node_ local node is a leaf _A_, and the underlaying node of the _Second composed node_ local node is a leaf _B_.
-
-Here's the handler of _A_.
+The `children` parameter is an object which keys are names of the children of the node, and values are functions which allow to call them.
+Let's say the current node has two children: `A` and `B`. Then within the handler we can write code like that:
 ```javascript
-const A = {
-  saySomething: () => "Hello"
-};
-```
+({action, context, node, children}) => {
 
-And here's the handler of _B_.
-```javascript
-const B = {
-  saySomething: () => "World"
-};
-```
+  // Calling the child named A.
+  const ({
+    result: AResult,
+    context: AContext,
+    arrows: AArrows
+  }) = children['A']({action}); // Please notice we pass only the action.
+  
+  // Calling the child named B.
+  const ({
+    result: BResult,
+    context: BContext,
+    arrows: BArrows
+  }) = children['B']({action}); // Please notice we pass only the action.
 
-If we call the _saySomething__ method of the model, we get the following result:
-```
-{'First composed node': 'Hello', 'Second composed node': 'World'}
-```
-It's because both nodes, _A_ and _B_, responded to the call, as they were composed together. What's worth noticing, is that local names of composite children are used instead of _A_ and _B_. It's the only way how it may be warranted that everything is going to be returned, because two different children of a composite may use the same actual node as their underlaying nodes. It also becomes very handy when we want alter the result of a composite.
-
-## Altering results
-In the example above the result we got was a map between values actually returned by leaf handlers and local names of composed nodes. However, in most cases a result like this is not what we would like. The desired output could look like this:
-```
-'Hello World!'
-```
-In order to achieve this, we will associate a handler with the composite itself. It will alter the result call. The composite is our _main_ node, so let's write a result altering handler.
-```javascript
-const main = {
-  afterSaySomething: ({res}) => 
-    res['First composed node'] + ' ' + res['Second composed node'] + '!'
+  return {
+    result: somehowMergeResults(AResult, BResult),
+    context: somehowMergeContext(AContext, BContext),
+    arrows: somehowMergeArrows(AArrows, BArrows),
+  };
 }
 ```
 
-The method which result we want to alter is called _saySomething_, so the result altering function needs to be placed under the _afterSaySomething_ key. It always follows the pattern of prefixing the method name with _after_ and making the first letter of the method name capital.
+Handlers of nodes which have only one children, like graphs, are also passed a `children` object. It simply has just one value.
 
-The result altering function takes just one argument and it's the original result, what in case of a composite has the following form:
+The returned `result` may be of any type. It's the `result` property returned by the model function.
+The `context` returned by calling a child is seen through the lens for the parent node. It means that the shape of the `context` passed to the parent and the `contexts` returned by the children is the same. If you use this low level API, then it's up to you to merge the contexts returned by the children into the one passed to the parent handler.
+Both `arrows` returned by a child and the `arrows` meant to be returned by the parent have the following format:
+```javascript
+[
+  // The first arrow:
+  [['main:parent:A', 'x']],
+  // The second arrow:
+  [['main:parent:B', 'y']],
+]
 ```
+If we want the arrow to "bubble up", that is the `parent` node to follow `x` and `y`, it needs to be extended this way:
+```javascript
+[
+  // The first arrow:
+  [['main:parent:A', 'x'], ['main:parent', 'x']],
+  // The second arrow:
+  [['main:parent:B', 'y'], ['main:parent', 'y']],
+]
+```
+
+The `lens` factory is a function which takes the local node name and returns a [Ramda lens](https://ramdajs.com/docs/#lens). Here's an example of a lens which picks the part of the context denoted by the key named after the local name of the node (like `c` in the case of `main:a:b:c`):
+```javascript
+import {lensProp} from 'ramda';
+// ...
+
 {
-  'local child name': 'underlaying node result', 
-  'another local child name': 'another underlaying node result'
-}
-```
-That's why _"Hello"_ is present under the _First composed node_ key and _"World"_ is present under the _Second composed node_ key.
-
-This technique turns out to be helpful everywhere where the result is build from pieces returned by composed nodes. Here's an example of a part of view being composed out of few smaller parts returned by children of a composite:
-
-```javascript
-{
-  afterRender: ({res}) => 
-    h('div.editor', {}, [
-      h('div.main-screen', {}, [
-        h('div.node-list', {}, res.nodeList),
-        res.graphView
-      ]),
-      h('div.toolbar', {}, res.toolbar)
-    ])
+  lens: ({localNodeName}) => lensProp(localNodeName),
+  // ...
 }
 ```
 
-## Initial context
-
-The context of a freshly created _Rosmaro model_ is an empty object. 
-
-Let's imagine, that a [method handler](#handlers-method-handlers) is supposed to return the name of somebody. The name is, most of the time, stored within the context. And that's the tricky part - it's there just most of the times. At the beginning, when the context is empty, it's not there.
-
-The handler may be implemented like this.
-```javascript
-const SomeHandler = {
-  readName: ({ctx}) => ctx.name || 'Unknown person'
-};
-```
-
-However, it is an unnecessary conditional statement (_||_), which in the worst scenario may be repeated over and over again. A better way to tackle this is to specify the _initial context_. It is used every time __when the context is empty and only then__.
-
-The same result, without an explicit conditional statement.
-```
-const SomeHandler = {
-  initCtx: {name: 'Unknown person'},
-  readName: ({ctx}) => ctx.name
-};
-```
-
-If you find this helpful, you may also be interested in [context slices](#handlers-context-slices).
-
-## Context slices
-
-The context, by default, is shared among all method handlers. It is a good way to start, because some models may be simple enough to not need any extra separation. However, when the number of nodes grows, and especially when we introduce composites or sub-graphs, it becomes easier to make a mistake and modify some part of the context which wasn't supposed to be modified.
-
-Context slices help to solve this problem by making handlers of some nodes (and handlers of their children) operate on narrow slices of the whole context.
-
-Let's assume the whole, model-wide context looks like this.
+The `nodes` function looks like in the example above:
 ```javascript
 {
-  personName: 'John',
-  pet: {
-    name: 'Tom'
-  }
+  nodes: ({context}) => context.myChildren,
+  // ...
 }
 ```
+It gets the context (as an object property) and returns a list of strings representing the names of children.
 
-If there's some node that specializes in handling actions related to the pet and doesn't need to access the name of the owner, we can narrow the context down. Now the handler of the _Pet_ node, and handlers of its children (if it's a graph or a composite) will see just a part of the context.
-```javascript
-const PetNodeHandler = {
-  ctxSlice: 'pet',
-  method: ({ctx}) {
-    // ctx is {name: 'Tom'} 
-  }
-};
-```
 
-Any new context returned by a handler which operates on a slice of the whole context will modify just this slice and leave the rest untouched.
 
-If you find this helpful, you may also be interested in [context lenses](#handlers-context-lenses) or [the initial context](#handlers-initial-context).
 
-## Context lenses
 
-Context lenses are meant to be used when simple context slices are not sufficient. A lens is built of two functions:
 
-- a function that zooms the context in
-- a function that zooms the context out
 
-Rosmaro uses [Rambda lenses](http://ramdajs.com/docs/#lens).
 
-Let's say the context looks like this.
-```javascript
-{
-  First: {name: 'Solange'},
-  Second: {name: 'Łukasz'}
-}
-```
 
-Within the graph there's a composite with two children: First and Second.
 
-![A composite with two children: First and Second](img/composite_first_second.png)
 
-We can then specify a lens factory. In this example, the produced lens slices the context based on the local name of the node.
 
-```javascript
-import {lensPath} from 'ramda';
 
-const localNodeLens = ({localNodeName}) => lensPath([localNodeName]);
 
-const First = {
-  ctxLens: localNodeLens,
-  method: ({ctx}) {
-    // ctx is {name: 'Solange'}
-  }
-};
-
-const Second = {
-  ctxLens: localNodeLens,
-  method: ({ctx}) {
-    // ctx is {name: 'Łukasz'}
-  }
-};
-```
-
-This turns out to be especially helpful when working with dynamic composites, when the local node name is often some kind of ID.
-
-## Method autorun
-
-When a transition to a different node occurs, __the _run_ method of the whole model is called automatically__.
-
-```javascript
-const Choice = {
-  run: ({ctx}) => ({
-    arrow: ctx.pet === 'cat' ? 'has a cat' : 'has no cat'
-  })
-}
-```
-
-It may cause a transition, which may lead to a state which responds to the _run_ method by causing another transition and so on. It is an elegant way of implementing choice states.
-
-The method call result is always the result of the first method call, without the results of the automatically called _run_ methods.
-
-## Renaming methods
-
-Let's take a look at the following handler.
-```javascript
-const ActiveNode = {
-  a: () => 'the result of a()'
-};
-```
-
-Calling _model.a()_ gives us _the result of a()_.
-
-We can specify a way how method names change.
-
-```javascript
-const ActiveNode = {
-  methodMap: {
-    x: 'a'
-  },
-  a: () => 'the result of a()'
-};
-```
-
-Thanks to this change we can call _model.x()_ and still get _the result of a()_.
 
 # Building a model
 
@@ -794,28 +677,22 @@ Thanks to this change we can call _model.x()_ and still get _the result of a()_.
 
 The graph is just pure, immutable data.
 
-The handlers are (preferably) just pure functions.
+The bindings are made of pure functions.
 
 Building a _Rosmaro model_ is how we put them together.
 
-The built model redirects method calls to appropriate handlers based upon the current node of the graph. The current graph node and context of the model are stored using a storage mechanism we provide. Method calls may also be synchronized using some provided locking mechanism.
+The built model redirects method calls to appropriate handlers based upon the current node of the graph. The current graph node and context of the model are provided as the `state` parameter. 
 
 The Rosmaro factory function comes from the [rosmaro package](https://www.npmjs.com/package/rosmaro).
 ```no-highlight
 $ npm i rosmaro --save
 ```
 
-Below is an example of how we call it.
+This is how we call it.
 ```javascript
 import rosmaro from 'rosmaro';
 
-const model = rosmaro({
-  graph,
-  handlers,
-  storage,
-  lock,
-  afterTransition
-});
+const model = rosmaro({graph, bindings});
 ```
 
 ## Graph
@@ -830,128 +707,22 @@ const graph = {
 };
 ```
 What's important to node is that what the Rosmaro factory expects is actually a plain old JavaScript object.
-Let's assume the graph is stored in a file called _graph.json_. Then we load it like this:
+Let's assume the graph is stored in a file called `graph.json`. Then we load it like this:
 ```javascript
 import graph from './graph.json'
 ```
 
-## Handlers
+## Bindings
 
-_handlers_ reflect the structure of the _graph_. For example, if we wanted to associate two handlers, we would do it like this:
+Bindings define the behavior of nodes. They are assigned to full node names, like this:
 ```javascript
 const handlers = {
-  'another node': {/* ... */},
-  'yet another node': {/* ... */},
+  'main': {/* ... */},
+  'main:the_first_child_of_main': {/* ... */},
+  'main:the_second_child_of_main': {/* ... */},
+  'main:the_second_child_of_main:the_only_child_of_the_second_child_of_main': {/* ... */},
 };
 ```
-
-## Storage
-
-The _storage_ is an object with the following signature.
-```javascript
-const storage = {
-  get: () => data,
-  set: newData => undefined
-};
-```
-
-Calling the _get_ method returns what was set using the _set_ method. It may return the result immediately or __return a Promise which__ resolves to it. If nothing has been set, it returns _undefined_.
-
-The _set_ method takes some object and stores it. It may return immediately or __return a Promise__ which resolves to undefined. If it's called with any falsy value, it's meant to remove previously stored data.
-
-Both _get_ and _set_ may throw errors, but those __errors must be Error objects__. Otherwise they cannot be handled correctly.
-
-Here's a list of recommended storage mechanisms.
-Name | Description | Url
---- | --- | ---
-rosmaro-in-memory-storage | In-memory storage. | [github.com/lukaszmakuch/rosmaro-in-memory-storage](https://github.com/lukaszmakuch/rosmaro-in-memory-storage)
-If you know a compatible storage which is not mentioned above, let me know and it'll be included! :)
-
-## Lock
-
-The _lock_ is a function with the following signature.
-```javascript
-const lock = () => unlock;
-```
-
-Calling the _lock_ function gives us the _unlock_ function. It may return it immediately or __return a Promise__ which resolves to it. 
-
-Getting the _unlock_ function means that a lock has been acquired. It's not possible to get another _unlock_ function unless the previously obtained _unlock_ function is called.
-
-Calling the _unlock_ function returns _undefined_ or _a Promise_ which if resolved indicates that the previously acquired lock has been released.
-
-Both _lock_ and _unlock_ may throw errors, but those __errors must be Error objects__. Otherwise they cannot be handled correctly.
-
-A locking mechanism may be very useful, especially when the storage or some method handler is asynchronous, in order to prevent the model from going into inconsistent state.
-
-Name | Description | Url
---- | --- | ---
-rosmaro-process-wide-lock | Process-wide, in-memory lock. | [github.com/lukaszmakuch/rosmaro-process-wide-lock](https://github.com/lukaszmakuch/rosmaro-process-wide-lock)
-
-If you know a compatible locking mechanism which is not mentioned above, let me know and it'll be included! :)
-
-## Transition listener
-
-_afterTransition_ is a listener function that takes no arguments and is executed after every transition. It is executed exactly after the the method call is handled, the state is updated and the lock is released and before the method call result is returned.
-
-# Special methods
-
-Below is a list of special methods which don't originate from [method handlers](#handlers).
-
-You may also be interested in [lifecycle hooks](#handlers-lifecycle-hooks).
-
-## .remove()
-
-The _remove_ method is the way to safely remove a _Rosmaro model_. 
-
-It does the following things:
-
-1. acquires a lock
-2. removes stored model data (by calling _storage.set(undefined)_)
-3. calls _afterLeft_ [lifecycle hooks](#handlers-lifecycle-hooks) of all nodes, __including _main___
-4. releases the lock
-
-In most cases, especially when the model is eternal or can be safely garbage collected together with all of its dependencies, it's not necessary to use it.
-
-However, in some cases it may be useful. For example, when the state of the model shouldn't stay forever in the application database and if some side effects are required to remove some external resources as well. 
-
-# Error handling
-
-When developing method handlers, we should do our best to _avoid uncaught errors_ (or rejected Promises).
-
-However, sometimes errors may be thrown due to reasons we cannot fully control. This requires special attention especially when Rosmaro is used to model the behavior of some back-end services, as errors there may affect many users.
-
-What's crucial in order to make error handling successful, is to __always throw Error objects__. Otherwise Rosmaro cannot handle errors correctly. Keeping this in mind, let's dig a bit deeper into this.
-
-Basically, there are few moments of handling a method call when errors may occur:
-1. acquiring the lock
-2. reading from the storage
-3. handling the method call
-4. writing to the storage
-5. releasing the lock
-
-The most dangerous scenario is when a lock is acquired but never released.
-
-Rosmaro does its best to avoid such a situation by calling _unlock_ even if an error is thrown (or a Promise is rejected) in any of the following steps:
-
-2. reading from the storage
-3. handling the method call
-4. writing to the storage
-
-If an error occurs, the lock is released and the error that caused the failure is thrown. That way a _Rosmaro model_ is transparent to errors.
-
-But there's another case, which is a bit more problematic. It happens when two errors are thrown. One within one of the following steps:
-
-2. reading from the storage
-3. handling the method call
-4. writing to the storage
-
-And one when calling the _unlock_ method. What makes this case complicated is that there are two reasons why did the method call failed:
-
-- handling the call itself failed (error 1)
-- unlocking in emergency mode failed (error 2)
-
-The error which is finally thrown is _error 2_ with an extra _previous_ property set to _error 1_. That's why it's important to __always throw Error objects__, because otherwise it may be not possible to set the _previous_ property.
 
   </script>
 </head>
