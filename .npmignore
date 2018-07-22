@@ -3,4 +3,4 @@ src
 logo.png
 example-graph.png
 **/*.test.js
-src/testUtils.js
+dist/testUtils.js
