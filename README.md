@@ -54,7 +54,7 @@ const Prince = handler({
 
 3. Enjoy your `({state, action}) => ({state, result})` function!
 
-```
+```javascript
 [
   {type: 'INTRODUCE_YOURSELF'},
   {type: 'EAT', dish: 'yakisoba'},
@@ -68,7 +68,16 @@ const Prince = handler({
 
 [The complete code of this example](https://github.com/lukaszmakuch/cursed-prince/blob/with-rosmaro-binding-utils/index.js) can be found on GitHub.
 
-# Utilities
+## Documentation
+- [An example](https://rosmaro.js.org/doc/#an-example)
+- [Building a model](https://rosmaro.js.org/doc/#building-a-model)
+- [About drawing Rosmaro graphs](https://rosmaro.js.org/doc/#graphs)
+- [About writing Rosmaro code](https://rosmaro.js.org/doc/#bindings)
+
+# Blog posts
+- [State management in JavaScript: data-related state and behavior-related state](https://lukaszmakuch.pl/post/behavior-related-state-and-data-related-state)
+
+## Utilities
 * [rosmaro-binding-utils](https://github.com/lukaszmakuch/rosmaro-binding-utils) - makes writing simple Rosmaro handlers easier.
 
 
