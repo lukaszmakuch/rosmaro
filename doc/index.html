@@ -77,7 +77,9 @@ Rosmaro models support:
 * **Subgraphs** - nodes of state machines may contain other state machines.
 
 
+# Utilities
 
+* [rosmaro-binding-utils](https://github.com/lukaszmakuch/rosmaro-binding-utils) - makes writing simple Rosmaro handlers easier.
 
 ## License
 Rosmaro is licensed under the MIT license.
@@ -132,9 +134,9 @@ The graph tells the story of how does the model change over time and what makes 
 
 Now it's the time to code different behaviors.
 
->> Hint: writing simple handlers is a lot easier with the [rosmaro-binding-utils](https://github.com/lukaszmakuch/rosmaro-binding-utils) package!
+>> Hint: writing simple handlers is a lot easier with the [rosmaro-binding-utils](https://github.com/lukaszmakuch/rosmaro-binding-utils) package! Take a look [how does this example look written using rosmaro-binding-utils](https://github.com/lukaszmakuch/cursed-prince/blob/with-rosmaro-binding-utils/index.js).
 
-This is the behavior of the _Frog_:
+This is the behavior of the `Frog`:
 ```javascript
 const Frog = ({action, context}) => {
   switch (action.type) {
@@ -148,7 +150,7 @@ const Frog = ({action, context}) => {
 
 It reacts to only one action type - `INTRODUCE_YOURSELF`. Every single time when it's asked to introduce itself, it makes the `Ribbit!` sound.
 
-This is the behavior of the _Prince_:
+This is the behavior of the `Prince`:
 ```javascript
 const Prince = ({action, context, node}) => {
   switch (action.type) {
@@ -165,7 +167,7 @@ const Prince = ({action, context, node}) => {
 };
 ```
 
-Every time he introduces himself, he says `I am The Prince of Rosmaro!`. When he eats a pizza, he follows the _ate a pizza_ arrow.
+Every time he introduces himself, he says `I am The Prince of Rosmaro!`. When he eats a pizza, he follows the `ate a pizza` arrow.
 
 The only missing piece is the behavior of the `main` node, that is the parent of both `Prince` and `Frog` nodes. It simply passed the action to its only active child:
 ```javascript
