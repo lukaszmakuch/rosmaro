@@ -1,7 +1,7 @@
 {
   "name": "rosmaro",
   "license": "MIT",
-  "description": "Visual automata-based programming",
+  "description": "Visual automata-based programming in functional JavaScript.",
   "keywords": [
     "fsm",
     "visual programming",
@@ -9,7 +9,7 @@
     "automata-based programming",
     "functional programming"
   ],
-  "version": "0.8.0",
+  "version": "0.8.1",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
   "dependencies": {
     "ramda": "^0.25.0"

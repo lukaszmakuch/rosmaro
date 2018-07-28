@@ -80,6 +80,5 @@ const Prince = handler({
 ## Utilities
 * [rosmaro-binding-utils](https://github.com/lukaszmakuch/rosmaro-binding-utils) - makes writing simple Rosmaro handlers easier.
 
-
 ## License
 Rosmaro is licensed under the MIT license.
