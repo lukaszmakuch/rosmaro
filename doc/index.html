@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width">
 
-  <title>Rosmaro - visual automata-based programming</title>
+  <title>Rosmaro - visual automata-based programming in functional JavaScript</title>
 
   <!-- highlighter -->
   <link rel="stylesheet"
@@ -44,12 +44,40 @@
   </script>
 
   <script id="doc" type="text/markdown" src="index.html">
-# Getting started
+# Read Me
 
-TODO
+Reacting to the same action in different ways due to what happened in the past may be a challenge.
 
-## Utilities
-TODO
+Rosmaro is a framework for writing functions like this:
+```javascript
+({state, action}) => ({state, result})
+```
+
+It places great emphasis on two programming paradigms:
+
+* **Visual programming** - changes of behavior are drawn using the [Rosmaro visual editor](https://rosmaro.js.org/editor/).
+* **Functional programming** - the whole model is a pure function built out of pure functions and pure data.
+
+First, you draw a graph. Then, you assign functional code to its nodes.
+
+![Rosmaro dispatch](img/dispatch-illustration.jpeg)
+
+It gives you:
+
+* **Automata-based  dispatch** - actions are dispatched to handlers based on the current node of the state machine. There's no need to check the current state.
+* **The right model for the job** - the behavior-related state is expressed by a state machine, while the data-related state lives in a dictionary.
+* **Existing tooling** - it's easy to use with [redux](https://redux.js.org) and [redux-saga](https://redux-saga.js.org).
+
+Rosmaro models support:
+
+* **Node multiplication** - a node may be multiplied using a function of the context.
+* **Reuse and composition** - models may be included within other models.
+* **Lenses** - thanks to [Ramda lenses](https://ramdajs.com/docs/#lens) the shape and size of your data-related state may be easily adjusted.
+* **Orthogonal regions** - multiple regions may be active at the same time. One of the ways to avoid state explosion.
+* **Subgraphs** - nodes of state machines may contain other state machines.
+
+
+
 
 ## License
 Rosmaro is licensed under the MIT license.
@@ -247,6 +275,8 @@ let state;
 ```
 
 When the model is called with no `state`, it generates its initial value based on entry points. Every function call gives us the actual `result` of the call and the new `state`. The new state is meant to be passed to the `model` function the next time we want to handle an action. 
+
+[The code of this example](https://github.com/lukaszmakuch/cursed-prince) is on GitHub.
 
 # Graphs
 
