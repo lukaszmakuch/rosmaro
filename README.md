@@ -78,7 +78,9 @@ const Prince = handler({
 - [State management in JavaScript: data-related state and behavior-related state](https://lukaszmakuch.pl/post/behavior-related-state-and-data-related-state)
 
 ## Utilities
+* [rosmaro-redux](https://github.com/lukaszmakuch/rosmaro-redux) - connects Rosmaro, **[Redux](https://redux.js.org) and [Redux-Saga](https://redux-saga.js.org)**.
 * [rosmaro-binding-utils](https://github.com/lukaszmakuch/rosmaro-binding-utils) - makes writing simple Rosmaro handlers easier.
+* [rosmaro-tools](https://github.com/lukaszmakuch/rosmaro-tools) - CLI tooling for Rosmaro.
 
 ## License
 Rosmaro is licensed under the MIT license.
