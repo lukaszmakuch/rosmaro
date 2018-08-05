@@ -77,8 +77,12 @@ const Prince = handler({
 # Blog posts
 - [State management in JavaScript: data-related state and behavior-related state](https://lukaszmakuch.pl/post/behavior-related-state-and-data-related-state)
 
+# Examples
+* [Bunny App](https://github.com/lukaszmakuch/Rosmaro-React-example-Bunny-App) a wizard implemented in Rosmaro, React, Redux and Redux-Saga.
+
 ## Utilities
 * [rosmaro-redux](https://github.com/lukaszmakuch/rosmaro-redux) - connects Rosmaro, **[Redux](https://redux.js.org) and [Redux-Saga](https://redux-saga.js.org)**.
+* [rosmaro-react](https://github.com/lukaszmakuch/rosmaro-react) - connects Rosmaro and **[React](https://reactjs.org)**.
 * [rosmaro-binding-utils](https://github.com/lukaszmakuch/rosmaro-binding-utils) - makes writing simple Rosmaro handlers easier.
 * [rosmaro-tools](https://github.com/lukaszmakuch/rosmaro-tools) - CLI tooling for Rosmaro.
 
