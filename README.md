@@ -56,11 +56,11 @@ const Prince = handler({
 
 ```javascript
 [
-  {type: 'INTRODUCE_YOURSELF'},
-  {type: 'EAT', dish: 'yakisoba'},
-  {type: 'INTRODUCE_YOURSELF'},
-  {type: 'EAT', dish: 'pizza'},
-  {type: 'INTRODUCE_YOURSELF'}
+  {type: 'INTRODUCE_YOURSELF'}, // 'I am The Prince of Rosmaro!'
+  {type: 'EAT', dish: 'yakisoba'}, // undefined
+  {type: 'INTRODUCE_YOURSELF'}, // 'I am The Prince of Rosmaro!'
+  {type: 'EAT', dish: 'pizza'}, // undefined
+  {type: 'INTRODUCE_YOURSELF'} // 'Ribbit! Ribbit!'
 ].forEach(action => console.log(
   ({state} = model({state, action})).result.data
 ));
