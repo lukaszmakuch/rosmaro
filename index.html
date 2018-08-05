@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1">
-    <meta name="description" content="A visual automata-based programming library for JavaScript.">
+    <meta name="description" content="Visual automata-based programming in functional JavaScript.">
     <meta name="author" content="Łukasz Makuch">
     <link rel="icon" href="img/favicon.ico">
     <title>Rosmaro - visual automata-based programming</title>
@@ -16,8 +16,8 @@
     <header class="page-header">
       <img src="img/logo.png" class="page-logo" alt="Walrus" />
       <h1 class="main-header">Rosmaro</h1>
-      <h2 class="slogan">Don't fight with boolean flags!<br/> Draw changes of behavior.</h2>
-      <p>Use visual automata-based programming to build rich user interfaces, stateful services or anything you want!</p>
+      <h2 class="slogan">A visual automata-based programming framework for writing functions like <code class="javascript">({state,&nbsp;action})&nbsp;=> ({state,&nbsp;result})</code>.</h2>
+      <p>Don't fight with boolean flags! Draw changes of behavior!</p>
     </header>
 
     <nav class="page-menu">
@@ -44,7 +44,7 @@
         <div class="r101-step-description">
           <div class="r101-description-container">
             <h3>Code different behaviors.</h3>
-            <p>Associate drawn nodes with code handling method calls.</p>
+            <p>Associate drawn nodes with functional code.</p>
           </div>
         </div>
         <div class="r101-step-content">
@@ -56,11 +56,11 @@
         <div class="r101-step-description">
           <div class="r101-description-container">
             <h3>Have fun!</h3>
-            <p>The model is stateful. <br/>Method calls are dispatched based upon the graph.</p>
+            <p>Function&nbsp;calls&nbsp;are&nbsp;dispatched to&nbsp;the&nbsp;current&nbsp;node&nbsp;of&nbsp;the&nbsp;graph.</p>
           </div>
         </div>
         <div class="r101-step-content">
-          <img src="img/r101_running.png" alt="the model is stateful" />
+          <img src="img/r101_running.png" alt="automata-based dispatch" />
         </div>
       </div>
     </section>
@@ -89,20 +89,21 @@
               <h3>The right model for the job</h3>
               <p>The behavior-related state is expressed by a state machine, while the data-related state lives in a dictionary.</p>
             </section>
+
             <section class="single-characteristic">
-              <h3>Async / await just works</h3>
-              <p>The whole model may be fully synchronous, but if anything needs to be asynchronous, it just works.</p>
+              <h3>Reuse and composition</h3>
+              <p>Models may be included within other models.</p>
             </section>
           </div>
 
           <div class="col">
             <section class="single-characteristic">
               <h3>Graph-based dispatch</h3>
-              <p>Method calls are dispatched based on the current node of the state machine. There's no need to check the current state.</p>
+              <p>Function calls are dispatched based on the current node of the state machine. There's no need to check the current state.</p>
             </section>
             <section class="single-characteristic">
-              <h3>Ready for the server</h3>
-              <p>Locking prevents the model from going into an inconsistent state. <br>The storage may be asynchronous.</p>
+              <h3>Existing tooling</h3>
+              <p>There are <a href="https://rosmaro.js.org/doc/#utilities">utilities</a> to use Rosmaro with <strong>React</strong>, <strong>Redux</strong> and <strong>Redux-Saga</strong>.</p>
             </section>
           </div>
         </div>
@@ -111,7 +112,7 @@
     </div>
 
     <footer class="page-footer">
-      <p>The Rosmaro project was started by Łukasz Makuch in 2016.</p>
+      <p>The Rosmaro project was started by <a href="https://lukaszmakuch.pl">Łukasz Makuch</a> in 2016.</p>
     </footer>
 
   </body>

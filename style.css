@@ -51,6 +51,11 @@ h2.section-header {
 .page-footer p {
   margin: 2em;
 }
+
+.page-footer a {
+  text-decoration: none;
+  color: #fff;
+}
 /*footer - end*/
 
 /*menu - start*/
