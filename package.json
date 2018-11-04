@@ -9,7 +9,7 @@
     "automata-based programming",
     "functional programming"
   ],
-  "version": "0.8.2",
+  "version": "0.8.3",
   "author": "Łukasz Makuch <kontakt@lukaszmakuch.pl> (http://lukaszmakuch.pl)",
   "dependencies": {
     "ramda": "^0.25.0"
