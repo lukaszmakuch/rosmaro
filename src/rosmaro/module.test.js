@@ -62,7 +62,7 @@ const arrowFollowingHandler = (expectedActionType, arrowToFollow) => ({action, n
 
 describe('rosmaro', () => {
 
-  it ('sets the initial context to undefined', () => {
+  it('sets the initial context to undefined', () => {
     const graph = {
       'main': {type: 'leaf'}
     };
