@@ -27,7 +27,7 @@
   },
   "main": "./dist/index.js",
   "scripts": {
-    "build": "rm -rf dist && babel src -d dist",
+    "build": "rm -rf dist && babel src -d dist --ignore **/*.test.js,src/testUtils.js",
     "test": "./node_modules/.bin/jest --watch",
     "prepublish": "npm run build"
   }
