@@ -38,13 +38,12 @@ export const identityLens = lens(identity, identity);
 export const nonEmptyArrow = arrow => arrow.some(([source, name]) => name != undefined)
 
 export const removeUnusedFSMState = ({newFSMState, graph}) => {
-  const minimalFSMState = Object.keys(graph).reduce((FSMState, node) => {
+  let minimalFSMState = {};
+  Object.keys(graph).forEach(node => {
     const existingState = newFSMState[node];
-    if (!existingState) return FSMState;
-    return {
-      ...FSMState,
-      [node]: newFSMState[node]
-    };
-  }, {});
+    if (existingState) {
+      minimalFSMState[node] = newFSMState[node];
+    }
+  });
   return minimalFSMState;
 };
