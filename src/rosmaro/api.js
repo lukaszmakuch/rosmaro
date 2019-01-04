@@ -14,8 +14,8 @@ export default (modelDescription) => {
 
     // {graph, handlers, lenses}
     const modelParts = expandGraph({
-      plan: consolidatedModel, 
-      context: context
+      context: context,
+      plan: consolidatedModel
     });
 
     // FSMState
@@ -34,17 +34,17 @@ export default (modelDescription) => {
       lenses: modelParts.lenses,
     });
 
-    // adds newFSMState
+    // newFSMState
     const newFSMState = fsm({
       graph: modelParts.graph, 
       FSMState: FSMState, 
       arrows: dispatchRes.arrows
     });
 
-    // adds newModelParts (so we know the new graph)
+    // newModelParts (so we know the new graph)
     const newModelParts = expandGraph({
-      plan: consolidatedModel, 
-      context: dispatchRes.context
+      context: dispatchRes.context,
+      plan: consolidatedModel
     });
 
     const anyArrowFollowed = dispatchRes.arrows.some(nonEmptyArrow);
