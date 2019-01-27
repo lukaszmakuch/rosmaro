@@ -78,6 +78,7 @@ const Prince = handler({
 - [A JavaScript framework for functions of state and action](https://lukaszmakuch.pl/post/a-javascript-framework-for-functions-of-state-and-action)
 - [Decomposing the TodoMVC app with state diagrams](https://lukaszmakuch.pl/post/decomposing-the-todomvc-app-with-state-diagrams)
 - [An overview of the Rosmaro-TodoMVC app codebase](https://lukaszmakuch.pl/post/an-overview-of-the-rosmaro-todomvc-app-codebase)
+- [Testing the TodoMVC app](https://lukaszmakuch.pl/post/testing-the-todomvc-app)
 - [State management in JavaScript: data-related state and behavior-related state](https://lukaszmakuch.pl/post/behavior-related-state-and-data-related-state)
 
 
