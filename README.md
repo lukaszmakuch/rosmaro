@@ -74,7 +74,7 @@ const Prince = handler({
 - [About drawing Rosmaro graphs](https://rosmaro.js.org/doc/#graphs)
 - [About writing Rosmaro code](https://rosmaro.js.org/doc/#bindings)
 
-# Blog posts
+## Blog posts
 - [A JavaScript framework for functions of state and action](https://lukaszmakuch.pl/post/a-javascript-framework-for-functions-of-state-and-action)
 - [Decomposing the TodoMVC app with state diagrams](https://lukaszmakuch.pl/post/decomposing-the-todomvc-app-with-state-diagrams)
 - [An overview of the Rosmaro-TodoMVC app codebase](https://lukaszmakuch.pl/post/an-overview-of-the-rosmaro-todomvc-app-codebase)
@@ -82,7 +82,7 @@ const Prince = handler({
 - [State management in JavaScript: data-related state and behavior-related state](https://lukaszmakuch.pl/post/behavior-related-state-and-data-related-state)
 
 
-# Examples
+## Examples
 - [Bunny App](https://github.com/lukaszmakuch/Rosmaro-React-example-Bunny-App) a wizard implemented in Rosmaro, React, Redux and Redux-Saga.
 - [TodoMVC](https://github.com/lukaszmakuch/todomvc-rosmaro) the famous TodoMVC demo app
 - [bool-less-todo](https://github.com/lukaszmakuch/bool-less-todo) a todo app implemented without boolean values and without variables
