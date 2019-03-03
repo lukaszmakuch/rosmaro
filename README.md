@@ -88,6 +88,7 @@ const Prince = handler({
 - [bool-less-todo](https://github.com/lukaszmakuch/bool-less-todo) a todo app implemented without boolean values and without variables
 
 ## Utilities
+- [rosmaro-snabbdom-starter](https://github.com/lukaszmakuch/rosmaro-snabbdom-starter) - a zero configuration Rosmaro Snabbdom starter.
 - [rosmaro-redux](https://github.com/lukaszmakuch/rosmaro-redux) - connects Rosmaro, **[Redux](https://redux.js.org) and [Redux-Saga](https://redux-saga.js.org)**.
 - [rosmaro-react](https://github.com/lukaszmakuch/rosmaro-react) - connects Rosmaro and **[React](https://reactjs.org)**.
 - [rosmaro-binding-utils](https://github.com/lukaszmakuch/rosmaro-binding-utils) - makes writing simple Rosmaro handlers easier.
