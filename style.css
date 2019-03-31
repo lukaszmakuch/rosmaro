@@ -206,6 +206,10 @@ h2.section-header {
   display: flex;
 }
 
+.r101-step, .screencast-container {
+  box-shadow: 30px 50px 60px -30px rgba(0, 0, 0, 0.7);
+}
+
 .r101-step-content {
   background: url(img/screenshot_bg.jpg);
   display: flex;
