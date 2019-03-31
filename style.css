@@ -15,6 +15,12 @@ h2.section-header {
   font-weight: 300;
 }
 
+@media (max-width: 415px) {
+  h2.slogan {
+    font-size: 1em;
+  }
+}
+
 /* new header  - start*/
 .page-header {
   display: flex;
@@ -168,7 +174,6 @@ h2.section-header {
   }
 }
 .single-characteristic {
-
   padding: 1em;
 }                      
 
@@ -208,6 +213,32 @@ h2.section-header {
 
 .r101-step, .screencast-container {
   box-shadow: 30px 50px 60px -30px rgba(0, 0, 0, 0.7);
+}
+
+.screencast-container {
+  width: 300px;
+  height: 169px;
+}
+
+@media (min-width: 400px) {
+  .screencast-container {
+    width: 400px;
+    height: 225px;
+  }
+}
+
+@media (min-width: 600px) {
+  .screencast-container {
+    width: 600px;
+    height: 338px;
+  }
+}
+
+@media (min-width: 800px) {
+  .screencast-container {
+    width: 800px;
+    height: 450px;
+  }
 }
 
 .r101-step-content {
