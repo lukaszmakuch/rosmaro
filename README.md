@@ -9,6 +9,8 @@ Rosmaro is a framework for writing functions like this:
 ({state, action}) => ({state, result})
 ```
 
+![Rosmaro dispatch](https://rosmaro.js.org/doc/img/dispatch_illustration.gif)
+
 Check out [the Rosmaro documentation at rosmaro.js.org](http://rosmaro.js.org/doc/)!
 
 Get Rosmaro using npm: `npm i rosmaro`.
@@ -19,7 +21,6 @@ Rosmaro places great emphasis on two programming paradigms:
 
 First, you draw a graph. Then, you assign functional code to its nodes.
 
-![Rosmaro dispatch](https://rosmaro.js.org/doc/img/dispatch_illustration.gif)
 It gives you:
 * **Automata-based  dispatch** - actions are dispatched to handlers based on the current node of the state machine. There's no need to check the current state.
 * **The right model for the job** - the behavior-related state is expressed by a state machine, while the data-related state lives in a dictionary.
@@ -31,6 +32,10 @@ Rosmaro models support:
 * **Lenses** - thanks to [Ramda lenses](https://ramdajs.com/docs/#lens) the shape and size of your data-related state may be easily adjusted.
 * **Orthogonal regions** - multiple regions may be active at the same time. One of the ways to avoid state explosion.
 * **Subgraphs** - nodes of state machines may contain other state machines.
+
+## News
+
+- [🖥 A screencast about building a Ticket Vending Machine](https://www.youtube.com/watch?v=JpFn4Q81f14)
 
 ## An example
 
