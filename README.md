@@ -19,7 +19,7 @@ Rosmaro places great emphasis on two programming paradigms:
 
 First, you draw a graph. Then, you assign functional code to its nodes.
 
-![Rosmaro dispatch](https://rosmaro.js.org/doc/img/dispatch-illustration.jpeg)
+![Rosmaro dispatch](https://rosmaro.js.org/doc/img/dispatch_illustration.gif)
 It gives you:
 * **Automata-based  dispatch** - actions are dispatched to handlers based on the current node of the state machine. There's no need to check the current state.
 * **The right model for the job** - the behavior-related state is expressed by a state machine, while the data-related state lives in a dictionary.
